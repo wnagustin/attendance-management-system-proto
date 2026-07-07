@@ -4,18 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Attendance Monitoring System</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
-    <style type="text/theme">
-        @theme {
-            --animate-fade-in: fade-in 0.2s ease-out;
+    <style>
+        .animate-fade-in {
+            animation: fadeIn 0.2s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
         }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen text-gray-800 font-sans antialiased text-[14px] sm:text-base transition-colors duration-200">
 
-    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 grid grid-cols-1 md:grid-cols-3 items-center gap-4 shadow-xs">
+    <div id="first-time-reg-overlay" class="hidden fixed inset-0 bg-slate-900/90 flex items-center justify-center p-4 z-[100] backdrop-blur-xs">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md text-center border border-gray-200 animate-fade-in">
+            <span class="text-4xl block mb-3">🛠️</span>
+            <h2 class="text-xl font-bold text-gray-900 mb-2">First-Time Setup Initialization</h2>
+            <p class="text-xs text-gray-500 mb-5">Welcome to your Attendance Monitoring System. Please configure your new custom primary administrator login access criteria below.</p>
+            
+            <div class="space-y-4 text-left">
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Choose Username</label>
+                    <input type="text" id="reg-admin-user" placeholder="e.g., system_admin" class="w-full px-3 py-2 border border-gray-300 bg-white text-gray-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Choose Password</label>
+                    <input type="password" id="reg-admin-pass" placeholder="••••••••" class="w-full px-3 py-2 border border-gray-300 bg-white text-gray-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button onclick="submitFirstTimeRegistration()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-sm transition-colors shadow-xs cursor-pointer">
+                    Register Admin & Initialize System
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 grid grid-cols-1 md:grid-cols-3 items-center gap-4 shadow-sm">
         <div class="text-center md:text-left">
             <h1 class="text-lg sm:text-xl font-bold text-gray-900 tracking-tight whitespace-nowrap">⏱️ Attendance Monitoring System</h1>
         </div>
@@ -26,18 +53,12 @@
                     <div id="station-clock" class="font-mono font-bold tracking-tight text-gray-900">00:00:00 AM</div>
                     <div id="station-date" class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mt-0.5">Monday, Jan 01</div>
                 </div>
-                <div class="h-6 w-[1px] bg-gray-200 mx-1"></div>
-                <button onclick="toggleResizerPanel()" class="text-gray-400 hover:text-gray-600 p-1 rounded-md transition-colors cursor-pointer" title="Adjust Clock Dimensions">⚙️</button>
-                <div id="clock-resizer-panel" class="hidden absolute top-full mt-2 bg-white border border-gray-200 p-2.5 rounded-lg shadow-md z-30 flex items-center gap-2">
-                    <label for="clock-size-slider" class="text-[9px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Size Scale</label>
-                    <input type="range" id="clock-size-slider" min="50" max="180" value="100" oninput="resizeClock(this.value)" class="w-20 sm:w-24 accent-blue-600 cursor-pointer">
-                </div>
             </div>
         </div>
 
         <div class="flex items-center justify-center md:justify-end gap-3 w-full">
             <div class="flex gap-1 bg-gray-100 p-1 rounded-lg flex-1 md:flex-initial">
-                <button id="tab-employee" onclick="switchTab('employee')" class="flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all bg-white text-gray-900 shadow-xs cursor-pointer">Employee Kiosk</button>
+                <button id="tab-employee" onclick="switchTab('employee')" class="flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all bg-white text-gray-900 shadow-sm cursor-pointer">Employee Kiosk</button>
                 <button id="tab-admin" onclick="switchTab('admin')" class="flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all text-gray-600 hover:text-gray-900 cursor-pointer">Admin Settings</button>
             </div>
         </div>
@@ -56,7 +77,7 @@
                 <div id="auto-shift-status" class="text-[10px] bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold animate-pulse self-stretch sm:self-auto text-center">🔄 Auto-Switch Timeline Sync Active</div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-xs border border-gray-200 p-4 sm:p-6">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
                 <h2 class="text-base sm:text-lg font-semibold mb-3">Employee Punch Station</h2>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -64,15 +85,15 @@
                     <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 flex flex-col">
                         <div id="kiosk-dropdown-container">
                             <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">1. Working Profile Profile Queue</label>
-                            <select id="emp-shift-select" onchange="handleManualShiftChange()" class="w-full mb-4 px-3 py-2.5 border border-gray-300 bg-white rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-medium text-sm text-gray-800"></select>
+                            <select id="emp-shift-select" onchange="handleManualShiftChange()" class="w-full mb-4 px-3 py-2.5 border border-gray-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-sm text-gray-800"></select>
                         </div>
                         
                         <div class="grid grid-cols-2 gap-3 flex-1">
-                            <button id="btn-time-in" onclick="openPunchModal('timeIn')" class="aspect-square w-full bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex flex-col items-center justify-center gap-2 p-4 shadow-xs transition-all active:scale-98 cursor-pointer disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed">
+                            <button id="btn-time-in" onclick="openPunchModal('timeIn')" class="aspect-square w-full bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex flex-col items-center justify-center gap-2 p-4 shadow-sm transition-all active:scale-95 cursor-pointer disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed">
                                 <span class="text-2xl sm:text-3xl">📥</span>
                                 <span class="text-sm sm:text-base tracking-wide uppercase">Time In</span>
                             </button>
-                            <button id="btn-time-out" onclick="openPunchModal('timeOut')" class="aspect-square w-full bg-slate-700 hover:bg-slate-800 text-white font-bold rounded-xl flex flex-col items-center justify-center gap-2 p-4 shadow-xs transition-all active:scale-98 cursor-pointer disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed">
+                            <button id="btn-time-out" onclick="openPunchModal('timeOut')" class="aspect-square w-full bg-slate-700 hover:bg-slate-800 text-white font-bold rounded-xl flex flex-col items-center justify-center gap-2 p-4 shadow-sm transition-all active:scale-95 cursor-pointer disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed">
                                 <span class="text-2xl sm:text-3xl">📤</span>
                                 <span class="text-sm sm:text-base tracking-wide uppercase">Time Out</span>
                             </button>
@@ -83,16 +104,16 @@
                         <div id="kiosk-break-header">
                             <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">2. Manage Breaks</label>
                             <div class="text-xs text-gray-400 bg-white border border-gray-200 rounded-lg p-2.5 mb-4 font-medium flex-1 overflow-y-auto max-h-[50px] flex items-center justify-center text-center">
-                                Breaks trigger automatically based on active profile setup map assignments.
+                                Breaks trigger based on active profile schedule assignments.
                             </div>
                         </div>
                         
                         <div class="grid grid-cols-2 gap-3 flex-1">
-                            <button id="btn-break-out" onclick="openPunchModal('breakOut')" class="aspect-square w-full bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl flex flex-col items-center justify-center gap-2 p-4 shadow-xs transition-all active:scale-98 cursor-pointer disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed">
+                            <button id="btn-break-out" onclick="openPunchModal('breakOut')" class="aspect-square w-full bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl flex flex-col items-center justify-center gap-2 p-4 shadow-sm transition-all active:scale-95 cursor-pointer disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed">
                                 <span class="text-2xl sm:text-3xl">☕</span>
                                 <span class="text-sm sm:text-base tracking-wide uppercase">Start Break</span>
                             </button>
-                            <button id="btn-break-in" onclick="openPunchModal('breakIn')" class="aspect-square w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl flex flex-col items-center justify-center gap-2 p-4 shadow-xs transition-all active:scale-98 cursor-pointer disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed">
+                            <button id="btn-break-in" onclick="openPunchModal('breakIn')" class="aspect-square w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl flex flex-col items-center justify-center gap-2 p-4 shadow-sm transition-all active:scale-95 cursor-pointer disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed">
                                 <span class="text-2xl sm:text-3xl">🏁</span>
                                 <span class="text-sm sm:text-base tracking-wide uppercase">End Break</span>
                             </button>
@@ -104,7 +125,7 @@
                 <p id="kiosk-feedback" class="mt-4 text-xs sm:text-sm hidden font-medium"></p>
             </div>
 
-            <div class="bg-white rounded-xl shadow-xs border border-gray-200 overflow-hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div class="px-4 sm:px-6 py-4 border-b border-gray-200 flex flex-row justify-between items-center gap-2">
                     <h3 class="font-semibold text-gray-900 text-sm sm:text-base">Live Workspace Attendance Streams</h3>
                     <div class="flex items-center gap-1 bg-gray-50 p-1 rounded-lg border border-gray-200">
@@ -132,8 +153,8 @@
 
         <section id="view-admin" class="hidden space-y-6">
             
-            <div id="admin-auth-card" class="max-w-md mx-auto bg-white rounded-xl shadow-xs border border-gray-200 p-5 sm:p-6">
-                <h2 id="auth-title" class="text-base sm:text-lg font-semibold mb-1">Admin Identity Gate</h2>
+            <div id="admin-auth-card" class="max-w-md mx-auto bg-white rounded-xl shadow-sm border border-gray-200 p-5 sm:p-6">
+                <h2 id="auth-title" class="text-base sm:text-lg font-semibold mb-1">Admin Settings Login</h2>
                 <p id="auth-desc" class="text-xs text-gray-500 mb-4">Initialize or input credentials to modify scheduling rosters.</p>
                 
                 <div class="space-y-4">
@@ -151,17 +172,14 @@
             </div>
 
             <div id="admin-settings-panel" class="hidden space-y-6">
-                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-xs">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm">
                     <div>
                         <h2 class="text-base sm:text-lg font-bold text-gray-900">Control & Configuration Panel</h2>
                         <p class="text-xs text-gray-500">Configure operational modes, rosters, reports, and administrative credentials.</p>
                         
                         <div class="mt-3 flex items-center gap-3 bg-gray-50 border border-gray-200 p-2 rounded-lg w-fit">
                             <span class="text-xs font-bold text-gray-600 uppercase tracking-wider">System Mode:</span>
-                            <select id="sys-mode-select" onchange="handleModeChange(this.value)" class="bg-white border border-gray-300 rounded px-2 py-1 text-xs font-semibold text-gray-800 focus:outline-hidden">
-                                <option value="schedule">Schedule Based Mode</option>
-                                <option value="ongoing">Ongoing Mode</option>
-                            </select>
+                            <select id="sys-mode-select" onchange="confirmModeChange(this.value)" class="bg-white border border-gray-300 rounded px-2 py-1 text-xs font-semibold text-gray-800 focus:outline-none"></select>
                         </div>
                     </div>
                     
@@ -191,7 +209,7 @@
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <button onclick="openAdminSectionModal('admin-modal-section-1')" class="bg-white border border-gray-200 rounded-xl p-5 shadow-xs hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group min-h-[140px] cursor-pointer">
+                    <button onclick="openAdminSectionModal('admin-modal-section-1')" class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group min-h-[140px] cursor-pointer">
                         <div class="space-y-1">
                             <span class="text-2xl">🛡️</span>
                             <h3 class="font-bold text-gray-900 text-base group-hover:text-blue-600 transition-colors">Attendance Management</h3>
@@ -200,7 +218,7 @@
                         <span class="text-xs font-semibold text-blue-600 uppercase tracking-wider mt-2 inline-flex items-center gap-1">Open Panel &rarr;</span>
                     </button>
 
-                    <button onclick="openAdminSectionModal('admin-modal-section-2')" class="bg-white border border-gray-200 rounded-xl p-5 shadow-xs hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group min-h-[140px] cursor-pointer">
+                    <button onclick="openAdminSectionModal('admin-modal-section-2')" class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group min-h-[140px] cursor-pointer">
                         <div class="space-y-1">
                             <span class="text-2xl">👥</span>
                             <h3 class="font-bold text-gray-900 text-base group-hover:text-blue-600 transition-colors">Employee Accounts</h3>
@@ -209,7 +227,7 @@
                         <span class="text-xs font-semibold text-blue-600 uppercase tracking-wider mt-2 inline-flex items-center gap-1">Open Panel &rarr;</span>
                     </button>
 
-                    <button onclick="openAdminSectionModal('admin-modal-section-3')" class="bg-white border border-gray-200 rounded-xl p-5 shadow-xs hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group min-h-[140px] cursor-pointer">
+                    <button onclick="openAdminSectionModal('admin-modal-section-3')" class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group min-h-[140px] cursor-pointer">
                         <div class="space-y-1">
                             <span class="text-2xl">📋</span>
                             <h3 class="font-bold text-gray-900 text-base group-hover:text-blue-600 transition-colors">Shift Profiles Config</h3>
@@ -218,7 +236,7 @@
                         <span class="text-xs font-semibold text-blue-600 uppercase tracking-wider mt-2 inline-flex items-center gap-1">Open Panel &rarr;</span>
                     </button>
 
-                    <button onclick="openAdminSectionModal('admin-modal-section-4')" class="bg-white border border-gray-200 rounded-xl p-5 shadow-xs hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group min-h-[140px] cursor-pointer">
+                    <button onclick="openAdminSectionModal('admin-modal-section-4')" class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group min-h-[140px] cursor-pointer">
                         <div class="space-y-1">
                             <span class="text-2xl">🔑</span>
                             <h3 class="font-bold text-gray-900 text-base group-hover:text-blue-600 transition-colors">Admin Access</h3>
@@ -232,7 +250,6 @@
         </section>
     </main>
 
-    <!-- LOGOUT CONFIRMATION MODAL -->
     <div id="logout-confirm-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 animate-fade-in">
         <div class="bg-white rounded-xl border border-gray-200 shadow-2xl p-5 w-full max-w-sm text-center">
             <span class="text-3xl block mb-2">🔒</span>
@@ -245,7 +262,6 @@
         </div>
     </div>
 
-    <!-- ADMIN MODAL SECTION 1 -->
     <div id="admin-modal-section-1" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-40 animate-fade-in">
         <div class="bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-6xl max-h-[90vh] flex flex-col">
             <div class="px-6 py-4 border-b border-gray-200 bg-slate-50 flex justify-between items-center">
@@ -282,7 +298,6 @@
         </div>
     </div>
 
-    <!-- ADMIN MODAL SECTION 2 -->
     <div id="admin-modal-section-2" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-40 animate-fade-in">
         <div class="bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-4xl max-h-[85vh] flex flex-col">
             <div class="px-6 py-4 border-b border-gray-200 bg-slate-50 flex justify-between items-center">
@@ -295,7 +310,7 @@
             <div class="p-6 overflow-auto flex-1 space-y-4">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                     <div class="space-y-4">
-                        <div class="bg-gray-50 p-4 rounded-lg space-y-3 border border-gray-200 shadow-2xs">
+                        <div class="bg-gray-50 p-4 rounded-lg space-y-3 border border-gray-200 shadow-sm">
                             <span class="text-xs font-bold text-gray-600 block border-b border-gray-200 pb-1">Register Account Manually</span>
                             <div>
                                 <label class="text-[10px] text-gray-500 font-medium block">Employee ID Number</label>
@@ -308,7 +323,7 @@
                             <button onclick="addNewEmployeeProfile()" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-2 rounded font-medium cursor-pointer">+ Save Profile Account</button>
                         </div>
                         
-                        <div class="bg-gray-50 p-4 rounded-lg space-y-3 border border-gray-200 shadow-2xs">
+                        <div class="bg-gray-50 p-4 rounded-lg space-y-3 border border-gray-200 shadow-sm">
                             <span class="text-xs font-bold text-gray-600 block border-b border-gray-200 pb-1">Bulk CSV Roster Actions</span>
                             <div class="flex flex-col gap-2">
                                 <button onclick="downloadEmployeeTemplateCSV()" class="w-full bg-slate-700 hover:bg-slate-800 text-white text-xs py-1.5 rounded font-medium cursor-pointer flex justify-center items-center gap-1">📋 Export Roster CSV</button>
@@ -332,7 +347,6 @@
         </div>
     </div>
 
-    <!-- ADMIN MODAL SECTION 3 -->
     <div id="admin-modal-section-3" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-40 animate-fade-in">
         <div class="bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-5xl max-h-[90vh] flex flex-col">
             <div class="px-6 py-4 border-b border-gray-200 bg-slate-50 flex justify-between items-center">
@@ -382,7 +396,7 @@
                             <div id="new-break-subrows-wrapper" class="space-y-2"></div>
                         </div>
 
-                        <button onclick="addNewShiftConfig()" class="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white text-xs py-2.5 rounded-lg font-bold shadow-xs transition-all cursor-pointer">📦 Save Unified Operational Profile</button>
+                        <button onclick="addNewShiftConfig()" class="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white text-xs py-2.5 rounded-lg font-bold shadow-sm transition-all cursor-pointer">📦 Save Unified Operational Profile</button>
                     </div>
                 </div>
             </div>
@@ -392,7 +406,6 @@
         </div>
     </div>
 
-    <!-- ADMIN MODAL SECTION 4 -->
     <div id="admin-modal-section-4" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-40 animate-fade-in">
         <div class="bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-md max-h-[85vh] flex flex-col">
             <div class="px-6 py-4 border-b border-gray-200 bg-slate-50 flex justify-between items-center">
@@ -403,6 +416,17 @@
                 <button onclick="closeAdminSectionModal('admin-modal-section-4')" class="text-gray-400 hover:text-gray-600 font-bold text-lg p-1.5 cursor-pointer">✕</button>
             </div>
             <div class="p-6 overflow-auto flex-1 space-y-5">
+                
+                <div class="p-3 bg-gray-50 border border-gray-200 rounded-lg space-y-2">
+                    <span class="block text-[11px] font-bold text-gray-600 uppercase tracking-wider">Clock Settings</span>
+                    <p class="text-[11px] text-gray-400 leading-tight">Adjust the display scale for the header clock.</p>
+                    <div class="flex items-center gap-3 pt-1">
+                        <label for="clock-size-slider" class="text-[10px] font-bold text-gray-500 uppercase whitespace-nowrap">Size Scale</label>
+                        <input type="range" id="clock-size-slider" min="50" max="180" value="100" oninput="resizeClock(this.value)" class="w-full accent-blue-600 cursor-pointer">
+                        <span id="slider-percentage-badge" class="text-xs font-mono font-bold bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">100%</span>
+                    </div>
+                </div>
+
                 <div class="space-y-3">
                     <div>
                         <label class="block text-[11px] font-medium text-gray-600">Change Admin Username</label>
@@ -415,11 +439,10 @@
                     <button onclick="changeAdminCredentials()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-medium py-2 rounded-md text-xs transition-colors cursor-pointer">Apply Password Changes</button>
                 </div>
 
-                <!-- NEW: INACTIVITY AUTO-LOGOUT SETUP -->
                 <div class="pt-4 border-t border-gray-200 space-y-3">
                     <div>
                         <label class="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Inactivity Security Lockout</label>
-                        <p class="text-[11px] text-gray-400 mb-2">Automatically logout admin access if the system is left idling or hidden on the Employee Kiosk.</p>
+                        <p class="text-[11px] text-gray-400 mb-2">Automatically logout admin access if left idle.</p>
                         <select id="admin-lockout-time" onchange="updateLockoutTimerSetting(this.value)" class="w-full px-3 py-1.5 border border-gray-300 bg-white text-gray-800 rounded-md text-xs font-medium">
                             <option value="0">Never (Keep Session Open)</option>
                             <option value="1">1 Minute of Inactivity</option>
@@ -431,12 +454,6 @@
                     </div>
                 </div>
 
-                <div class="pt-4 border-t border-gray-200">
-                    <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Session Control</label>
-                    <button onclick="closeAdminSectionModal('admin-modal-section-4'); openLogoutModal();" class="w-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-semibold py-2 rounded-md text-xs transition-colors cursor-pointer text-center">
-                        🔒 Logout Administrative Panel
-                    </button>
-                </div>
             </div>
             <div class="px-6 py-3 border-t border-gray-100 bg-gray-50 flex justify-end">
                 <button onclick="closeAdminSectionModal('admin-modal-section-4')" class="px-4 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer">Close Window</button>
@@ -444,7 +461,6 @@
         </div>
     </div>
 
-    <!-- PUNCH STATION IDENTITY MODAL -->
     <div id="punch-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fade-in">
         <div class="bg-white rounded-xl shadow-xl border border-gray-200 w-full max-w-md p-5 sm:p-6 relative">
             <h3 id="modal-title" class="text-base sm:text-lg font-bold text-gray-900 mb-1">Verify Identity</h3>
@@ -454,7 +470,7 @@
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 uppercase mb-2">Employee ID Number</label>
                     <div class="relative flex items-center">
-                        <input type="text" id="modal-emp-identity" placeholder="Enter ID number strictly" class="w-full pl-3 pr-10 py-2 border border-gray-300 bg-white text-gray-800 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm">
+                        <input type="text" id="modal-emp-identity" placeholder="Enter ID number strictly" class="w-full pl-3 pr-10 py-2 border border-gray-300 bg-white text-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm">
                         <button onclick="toggleQRScanner()" class="absolute right-2 text-gray-500 hover:text-blue-600 p-1.5 rounded-md transition-colors cursor-pointer text-sm" title="Scan QR Code">📷</button>
                     </div>
                     <div id="qr-reader-container" class="hidden mt-3 p-2 bg-gray-50 border border-gray-200 rounded-lg">
@@ -472,35 +488,75 @@
 
     <script>
         const DAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
+        
         let state = {
-            adminAccount: { user: "admin", pass: "admin123" }, 
+            adminAccount: null, // Cleared out hardcoded defaults to support initialization flow
             isAdminAuthenticated: false,
             editingShiftId: null,
-            shifts: [], 
-            employees: [],
+            shifts: [],
+            employees: [], // Cleared sample accounts entirely
             logs: [],
             kioskHiddenLogIds: [],
-            systemMode: "schedule", // "schedule" or "ongoing"
-            autoLogoutMinutes: 0   // 0 means disabled
+            systemMode: "schedule",
+            autoLogoutMinutes: 0
         };
 
         let manualOverrideTimeout = null;
         let isManualOverrideActive = false;
-        let activePunchAction = null; 
-        
+        let activePunchAction = null;
         let html5QrcodeInstance = null;
         let isCameraStreamRunning = false;
-
-        // Inactivity tracking properties
         let inactivityTimerReference = null;
         let activeInterfaceTab = "employee";
 
-        function toggleResizerPanel() {
-            const panel = document.getElementById('clock-resizer-panel');
-            panel.classList.toggle('hidden');
+        // Seed default parameters if storage empty
+        function loadStateFromStorage() {
+            const raw = localStorage.getItem("attendance_system_state");
+            if (raw) {
+                try {
+                    const parsed = JSON.parse(raw);
+                    if (parsed && parsed.shifts) state = parsed;
+                } catch (e) {
+                    console.error("Failed parsing LocalStorage state parameters, reverting to system defaults.");
+                }
+            }
+            if (state.shifts.length === 0) {
+                state.shifts = [
+                    { id: "s1", name: "Standard Day Shift", days: ["Mon", "Tue", "Wed", "Thu", "Fri"], startIn: "09:00", endOut: "18:00", subBreaks: [{ name: "Lunch Break", out: "12:00", in: "13:00" }] },
+                    { id: "s2", name: "Evening Operations", days: ["Mon", "Tue", "Wed", "Thu", "Fri"], startIn: "18:00", endOut: "02:00", subBreaks: [{ name: "Night Meal", out: "21:00", in: "22:00" }] }
+                ];
+            }
+            
+            // Check for First-Time Launcher Admin Registration Trigger
+            if (!state.adminAccount) {
+                document.getElementById('first-time-reg-overlay').classList.remove('hidden');
+            }
+
+            saveStateToStorage();
         }
 
+        function submitFirstTimeRegistration() {
+            const user = document.getElementById('reg-admin-user').value.trim();
+            const pass = document.getElementById('reg-admin-pass').value.trim();
+
+            if (!user || !pass) {
+                Swal.fire({ icon: 'warning', text: 'Admin configuration parameters cannot be saved empty.' });
+                return;
+            }
+
+            state.adminAccount = { user: user, pass: pass };
+            saveStateToStorage();
+            
+            document.getElementById('first-time-reg-overlay').classList.add('hidden');
+            Swal.fire({ icon: 'success', title: 'System Initialized', text: 'Root admin profile generated successfully.', timer: 2000, showConfirmButton: false });
+            applyModeLayoutRules();
+        }
+
+        function saveStateToStorage() {
+            localStorage.setItem("attendance_system_state", JSON.stringify(state));
+        }
+
+        // Toggles display tracking description helpers
         function toggleKioskButtonLabel() {
             const label = document.getElementById('kiosk-btn-label');
             label.classList.toggle('hidden');
@@ -526,700 +582,139 @@
             
             const clockString = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')} ${period}`;
             document.getElementById('station-clock').innerText = clockString;
-
+            
             const options = { weekday: 'short', month: 'short', day: '2-digit', year: 'numeric' };
             document.getElementById('station-date').innerText = now.toLocaleDateString('en-US', options);
-
-            if (state.systemMode === "schedule") {
+            
+            if (state.systemMode === "schedule" && !isManualOverrideActive) {
                 autoDetectShiftByMachineTime();
             }
         }
 
         function resizeClock(scalePercent) {
-            const calculatedRem = (scalePercent / 100) * 1.25;
-            document.getElementById('clock-container').style.fontSize = `${calculatedRem}rem`;
-            document.getElementById('clock-size-slider').value = scalePercent;
-            localStorage.setItem('clock_scale_size', scalePercent);
+            const container = document.getElementById('clock-container');
+            const badge = document.getElementById('slider-percentage-badge');
+            container.style.fontSize = `${(scalePercent / 100) * 1.25}rem`;
+            badge.innerText = `${scalePercent}%`;
         }
 
         function initClockSize() {
-            const savedSize = localStorage.getItem('clock_scale_size') || "100";
-            resizeClock(savedSize);
+            const slider = document.getElementById('clock-size-slider');
+            if (slider) resizeClock(slider.value);
         }
 
-        function loadStateFromStorage() {
-            if(localStorage.getItem('sys_attendance_db_v6')) {
-                const savedState = JSON.parse(localStorage.getItem('sys_attendance_db_v6'));
-                if (savedState.adminAccount) state.adminAccount = savedState.adminAccount;
-                state.shifts = savedState.shifts || [];
-                state.employees = savedState.employees || [];
-                state.logs = savedState.logs || [];
-                state.kioskHiddenLogIds = savedState.kioskHiddenLogIds || [];
-                state.systemMode = savedState.systemMode || "schedule";
-                state.autoLogoutMinutes = savedState.autoLogoutMinutes || 0;
+        function switchTab(targetTab) {
+            activeInterfaceTab = targetTab;
+            const empBtn = document.getElementById('tab-employee');
+            const admBtn = document.getElementById('tab-admin');
+            const empSec = document.getElementById('view-employee');
+            const admSec = document.getElementById('view-admin');
 
-                state.shifts.forEach(s => {
-                    if(!s.subBreaks) {
-                        s.subBreaks = s.breaks || (s.start && s.end ? [{title: "Break Slot", start: s.start, end: s.end}] : []);
-                    }
-                });
+            if (targetTab === 'employee') {
+                empBtn.className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all bg-white text-gray-900 shadow-sm cursor-pointer";
+                admBtn.className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all text-gray-600 hover:text-gray-900 cursor-pointer";
+                empSec.classList.remove('hidden');
+                admSec.classList.add('hidden');
+            } else {
+                admBtn.className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all bg-white text-gray-900 shadow-sm cursor-pointer";
+                empBtn.className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all text-gray-600 hover:text-gray-900 cursor-pointer";
+                admSec.classList.remove('hidden');
+                empSec.classList.add('hidden');
+                applyModeLayoutRules();
             }
-        }
-        loadStateFromStorage();
-
-        function saveStateToStorage() {
-            localStorage.setItem('sys_attendance_db_v6', JSON.stringify(state));
-        }
-
-        function handleModeChange(newMode) {
-            const currentModeText = state.systemMode === "schedule" ? "Schedule Based Mode" : "Ongoing Mode";
-            const targetModeText = newMode === "schedule" ? "Schedule Based Mode" : "Ongoing Mode";
-            
-            if (!confirm(`Are you sure you want to change the tracking layout from "${currentModeText}" to "${targetModeText}"?`)) {
-                document.getElementById('sys-mode-select').value = state.systemMode;
-                return;
-            }
-
-            state.systemMode = newMode;
-            saveStateToStorage();
-            applyModeLayoutRules();
+            resetInactivityTimer();
         }
 
         function applyModeLayoutRules() {
-            const modeSelect = document.getElementById('sys-mode-select');
-            if(modeSelect) modeSelect.value = state.systemMode;
-
-            const dropdownWrapper = document.getElementById('kiosk-dropdown-container');
-            const infoBanner = document.getElementById('shift-info-banner');
-            const breakHeader = document.getElementById('kiosk-break-header');
+            const authCard = document.getElementById('admin-auth-card');
+            const settingsPanel = document.getElementById('admin-settings-panel');
             
-            if (state.systemMode === "ongoing") {
-                if(dropdownWrapper) dropdownWrapper.classList.add('hidden');
-                if(infoBanner) infoBanner.classList.add('hidden');
-                if(breakHeader) breakHeader.classList.add('hidden');
-            } else {
-                if(dropdownWrapper) dropdownWrapper.classList.remove('hidden');
-                if(infoBanner) infoBanner.classList.remove('hidden');
-                if(breakHeader) breakHeader.classList.remove('hidden');
-                autoDetectShiftByMachineTime();
-            }
-            updateProfileBadges();
-
-            // Populate the dropdown selection value for the timer option element
-            const elementTimer = document.getElementById('admin-lockout-time');
-            if(elementTimer) elementTimer.value = state.autoLogoutMinutes;
-        }
-
-        function updateLockoutTimerSetting(selectedValue) {
-            state.autoLogoutMinutes = parseInt(selectedValue);
-            saveStateToStorage();
-            resetInactivityTrackingSchedule();
-        }
-
-        // Monitors user workflow activity updates
-        function resetInactivityTrackingSchedule() {
-            clearTimeout(inactivityTimerReference);
-            
-            // Core safety checks: If timer is off, user isn't logged in, or they're currently looking at the admin panel dashboard
-            if (state.autoLogoutMinutes <= 0 || !state.isAdminAuthenticated || activeInterfaceTab === "admin") {
-                return;
-            }
-
-            // Run structural auto logout loop
-            inactivityTimerReference = setTimeout(() => {
-                confirmLogOutAdmin();
-                alert("Security Broadcast: Administrative access credentials logged out due to inactivity timeouts.");
-            }, state.autoLogoutMinutes * 60000);
-        }
-
-        // Wire window interaction event channels to reset timers dynamically
-        ['click', 'mousemove', 'keypress', 'touchstart'].forEach(eventName => {
-            window.addEventListener(eventName, resetInactivityTrackingSchedule);
-        });
-
-        function build12HourSelectsHTML(prefix) {
-            let hoursOptions = '';
-            for(let i = 1; i <= 12; i++) hoursOptions += `<option value="${String(i).padStart(2, '0')}">${String(i).padStart(2, '0')}</option>`;
-            let minsOptions = '';
-            for(let i = 0; i < 60; i += 5) minsOptions += `<option value="${String(i).padStart(2, '0')}">${String(i).padStart(2, '0')}</option>`;
-            
-            return `
-                <select id="${prefix}-h" class="bg-white border border-gray-300 rounded p-1 text-[11px] flex-1 text-gray-800">${hoursOptions}</select>
-                <select id="${prefix}-m" class="bg-white border border-gray-300 rounded p-1 text-[11px] flex-1 text-gray-800">${minsOptions}</select>
-                <select id="${prefix}-p" class="bg-white border border-gray-300 rounded p-1 text-[11px] w-14 text-gray-800"><option value="AM">AM</option><option value="PM">PM</option></select>
-            `;
-        }
-
-        function buildDaySelectorHTML(prefix, checkedDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']) {
-            return DAYS_SHORT.map(day => `
-                <label class="flex-1 text-center cursor-pointer">
-                    <input type="checkbox" name="${prefix}-days" value="${day}" class="hidden peer" ${checkedDays.includes(day) ? 'checked' : ''}>
-                    <span class="block py-1 text-[10px] font-bold rounded border bg-white border-gray-200 text-gray-400 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 transition-colors">${day[0]}</span>
-                </label>
-            `).join('');
-        }
-
-        function getSelectedDaysFromCheckbox(name) {
-            return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(box => box.value);
-        }
-
-        function initCreationPickers() {
-            document.getElementById('time-in-start-picker').innerHTML = build12HourSelectsHTML('ns-in-start');
-            document.getElementById('time-out-start-picker').innerHTML = build12HourSelectsHTML('ns-out-start');
-            document.getElementById('new-shift-days').innerHTML = buildDaySelectorHTML('ns');
-            
-            document.getElementById('new-break-subrows-wrapper').innerHTML = '';
-            addNewBreakSubRow();
-        }
-
-        function addNewBreakSubRow(startTimeString = "", endTimeString = "") {
-            const container = document.getElementById('new-break-subrows-wrapper');
-            const rowId = 'subbreak-row-' + Date.now() + Math.random().toString(36).substr(2,4);
-            const prefixOut = `nsb-out-${rowId}`;
-            const prefixIn = `nsb-in-${rowId}`;
-            
-            const div = document.createElement('div');
-            div.className = "p-2 bg-gray-50 rounded-lg border border-gray-200 space-y-1.5 relative subbreak-config-node";
-            div.id = rowId;
-            div.innerHTML = `
-                <div class="flex justify-between items-center">
-                    <input type="text" placeholder="Break label (e.g. Lunch break)" class="subbreak-title text-[11px] font-bold border border-gray-300 roundedpx px-2 py-1 bg-white text-gray-800 w-1/2" required>
-                    <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-red-500 font-bold text-[11px] px-1 hover:text-red-700 cursor-pointer">✕ Remove</button>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="text-[9px] text-gray-400 block font-bold uppercase">Out Time</label>
-                        <div class="flex gap-1" id="${prefixOut}-container"></div>
-                    </div>
-                    <div>
-                        <label class="text-[9px] text-gray-400 block font-bold uppercase">In Time</label>
-                        <div class="flex gap-1" id="${prefixIn}-container"></div>
-                    </div>
-                </div>
-            `;
-            container.appendChild(div);
-            
-            document.getElementById(`${prefixOut}-container`).innerHTML = build12HourSelectsHTML(prefixOut);
-            document.getElementById(`${prefixIn}-container`).innerHTML = build12HourSelectsHTML(prefixIn);
-            
-            if(startTimeString) set12HourPickerValue(prefixOut, startTimeString);
-            if(endTimeString) set12HourPickerValue(prefixIn, endTimeString);
-        }
-
-        function get12HourPickerValue(prefix) {
-            return `${document.getElementById(`${prefix}-h`).value}:${document.getElementById(`${prefix}-m`).value} ${document.getElementById(`${prefix}-p`).value}`;
-        }
-
-        function set12HourPickerValue(prefix, timeString) {
-            if(!timeString) return;
-            const [time, period] = timeString.split(' ');
-            const [h, m] = time.split(':');
-            
-            const targetH = document.getElementById(`${prefix}-h`);
-            const targetM = document.getElementById(`${prefix}-m`);
-            const targetP = document.getElementById(`${prefix}-p`);
-            
-            if(targetH) targetH.value = h;
-            if(targetP) targetP.value = period;
-            
-            if(targetM) {
-                let closestMin = "00";
-                let minVal = parseInt(m);
-                let checkOptions = Array.from(targetM.options).map(o => parseInt(o.value));
-                let bestDiff = Infinity;
-                checkOptions.forEach(opt => {
-                    let d = Math.abs(opt - minVal);
-                    if(d < bestDiff) {
-                        bestDiff = d;
-                        closestMin = String(opt).padStart(2, '0');
-                    }
-                });
-                targetM.value = closestMin;
-            }
-        }
-
-        function switchTab(viewTarget) {
-            activeInterfaceTab = viewTarget;
-            
-            if(viewTarget === 'employee') {
-                document.getElementById('view-employee').classList.remove('hidden');
-                document.getElementById('view-admin').classList.add('hidden');
-                document.getElementById('tab-employee').className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all bg-white text-gray-900 shadow-xs cursor-pointer";
-                document.getElementById('tab-admin').className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all text-gray-600 hover:text-gray-900 cursor-pointer";
-                populateKioskDropdowns();
-                applyModeLayoutRules();
-                renderLogsTable();
-                resetInactivityTrackingSchedule(); // Activate tracking since user is on Employee tab
-            } else {
-                document.getElementById('view-employee').classList.add('hidden');
-                document.getElementById('view-admin').classList.remove('hidden');
-                document.getElementById('tab-employee').className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all text-gray-600 hover:text-gray-900 cursor-pointer";
-                document.getElementById('tab-admin').className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all bg-white text-gray-900 shadow-xs cursor-pointer";
-                renderAdminAuthInterface();
-                clearTimeout(inactivityTimerReference); // Disable countdown since admin is working on the configurations tab
-            }
-        }
-
-        setInterval(updateLiveStationClock, 1000);
-        updateLiveStationClock();
-
-        function updateProfileBadges() {
-            if(state.systemMode === "ongoing") {
-                const elIn = document.getElementById('btn-time-in');
-                const elOut = document.getElementById('btn-time-out');
-                const elBOut = document.getElementById('btn-break-out');
-                const elBIn = document.getElementById('btn-break-in');
-                if(elIn) elIn.disabled = false;
-                if(elOut) elOut.disabled = false;
-                if(elBOut) elBOut.disabled = false;
-                if(elBIn) elBIn.disabled = false;
-                return;
-            }
-
-            const shiftId = document.getElementById('emp-shift-select').value;
-            const currentShift = state.shifts.find(s => s.id === shiftId);
-            
-            document.getElementById('current-shift-badge').innerText = currentShift ? `${currentShift.name} (${currentShift.inStart} - ${currentShift.outStart})` : "None Configured";
-            
-            if(currentShift && currentShift.subBreaks && currentShift.subBreaks.length > 0) {
-                document.getElementById('current-break-badge').innerText = currentShift.subBreaks.map(sb => `${sb.title}: [${sb.start} - ${sb.end}]`).join(' | ');
-            } else {
-                document.getElementById('current-break-badge').innerText = "No Breaks Assigned";
-            }
-            
-            const elIn = document.getElementById('btn-time-in');
-            const elOut = document.getElementById('btn-time-out');
-            const elBOut = document.getElementById('btn-break-out');
-            const elBIn = document.getElementById('btn-break-in');
-            
-            const absoluteProfilesEmpty = (state.shifts.length === 0);
-            [elIn, elOut].forEach(el => { if(el) el.disabled = absoluteProfilesEmpty; });
-            
-            const profileHasBreaks = currentShift && currentShift.subBreaks && currentShift.subBreaks.length > 0;
-            [elBOut, elBIn].forEach(el => { if(el) el.disabled = !profileHasBreaks; });
-        }
-
-        function getDayStringNow() {
-            return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()];
-        }
-
-        function autoDetectShiftByMachineTime() {
-            if (isManualOverrideActive || state.shifts.length === 0 || state.systemMode === "ongoing") return;
-            const currentMinutes = timeToMinutes(getTimeStringNow());
-            const currentDay = getDayStringNow();
-            
-            const targetedPool = state.shifts.filter(s => s.days && s.days.includes(currentDay)).length > 0 
-                ? state.shifts.filter(s => s.days && s.days.includes(currentDay)) 
-                : state.shifts;
-                
-            let matchedProfileId = null;
-            
-            for (const shift of targetedPool) {
-                const startMins = timeToMinutes(shift.inStart);
-                let relativeDelta = currentMinutes - startMins;
-                if (relativeDelta < 0) relativeDelta += 1440; 
-                
-                if (relativeDelta >= 0 && (matchedProfileId === null || relativeDelta < (currentMinutes - timeToMinutes(state.shifts.find(s=>s.id===matchedProfileId).inStart) + 1440) % 1440)) {
-                    matchedProfileId = shift.id;
-                }
-            }
-            
-            if (matchedProfileId && document.getElementById('emp-shift-select').value !== matchedProfileId) {
-                document.getElementById('emp-shift-select').value = matchedProfileId;
-                updateProfileBadges();
-            }
-        }
-
-        function handleManualShiftChange() {
-            isManualOverrideActive = true;
-            updateProfileBadges();
-            const statusLabel = document.getElementById('auto-shift-status');
-            if (statusLabel) {
-                statusLabel.innerText = "⏳ User Override Active";
-                statusLabel.className = "text-[10px] bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full font-bold self-stretch sm:self-auto text-center";
-            }
-            clearTimeout(manualOverrideTimeout);
-            manualOverrideTimeout = setTimeout(() => {
-                isManualOverrideActive = false;
-                if (statusLabel) {
-                    statusLabel.innerText = "🔄 Auto-Switch Timeline Sync Active";
-                    statusLabel.className = "text-[10px] bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold animate-pulse self-stretch sm:self-auto text-center";
-                }
-                autoDetectShiftByMachineTime();
-            }, 20000); 
-        }
-
-        function populateKioskDropdowns() {
-            document.getElementById('emp-shift-select').innerHTML = state.shifts.map(s => `<option value="${s.id}">${s.name} (In: ${s.inStart} / Out: ${s.outStart})</option>`).join('');
-        }
-
-        function openPunchModal(actionType) {
-            activePunchAction = actionType;
-            const titleNode = document.getElementById('modal-title');
-            const subtitleNode = document.getElementById('modal-subtitle');
-            
-            const actionsDict = {
-                timeIn: { title: "Register Verification Check-In", sub: "Scan or enter credentials to record shift startup time." },
-                timeOut: { title: "Register Verification Check-Out", sub: "Scan or enter credentials to finalize active operational roster records." },
-                breakOut: { title: "Activate Break Session", sub: "Submit verification coordinates to initialize custom pause allocation." },
-                breakIn: { title: "Terminate Break Session", sub: "Submit verification coordinates to register station workflow resumption." }
-            };
-            
-            titleNode.innerText = actionsDict[actionType].title;
-            subtitleNode.innerText = actionsDict[actionType].sub;
-            
-            document.getElementById('modal-emp-identity').value = "";
-            document.getElementById('punch-modal').classList.remove('hidden');
-            document.getElementById('modal-emp-identity').focus();
-
-            setTimeout(() => { startPersistentCameraStream(); }, 60);
-        }
-
-        function closePunchModal() {
-            stopQRScanner();
-            document.getElementById('punch-modal').classList.add('hidden');
-            activePunchAction = null;
-        }
-
-        function toggleQRScanner() {
-            if(isCameraStreamRunning) {
-                stopQRScanner();
-            } else {
-                startPersistentCameraStream();
-            }
-        }
-
-        function startPersistentCameraStream() {
-            document.getElementById('qr-reader-container').classList.remove('hidden');
-            if(!html5QrcodeInstance) html5QrcodeInstance = new Html5Qrcode("qr-reader");
-            if(isCameraStreamRunning) return;
-
-            html5QrcodeInstance.start(
-                { facingMode: "environment" }, 
-                { fps: 15, qrbox: { width: 260, height: 260 }, rememberLastUsedCamera: true, aspectRatio: 1.0 },
-                (qrText) => {
-                    document.getElementById('modal-emp-identity').value = qrText.trim();
-                    submitPunchModal();
-                },
-                (errorMessage) => {}
-            ).then(() => {
-                isCameraStreamRunning = true;
-            }).catch(err => {
-                html5QrcodeInstance.start(
-                    { facingMode: "user" }, { fps: 10, qrbox: 200 },
-                    (text) => {
-                        document.getElementById('modal-emp-identity').value = text.trim();
-                        submitPunchModal();
-                    },
-                    (e) => {}
-                ).then(() => { isCameraStreamRunning = true; })
-                 .catch(fallbackErr => { alert("Camera Access Error: Verify execution permission allowances inside hardware settings."); });
-            });
-        }
-
-        function stopQRScanner() {
-            if (html5QrcodeInstance && isCameraStreamRunning) {
-                html5QrcodeInstance.stop().then(() => {
-                    isCameraStreamRunning = false;
-                    document.getElementById('qr-reader-container').classList.add('hidden');
-                }).catch(err => {
-                    isCameraStreamRunning = false;
-                    document.getElementById('qr-reader-container').classList.add('hidden');
-                });
-            } else {
-                document.getElementById('qr-reader-container').classList.add('hidden');
-            }
-        }
-
-        function submitPunchModal() {
-            const identity = document.getElementById('modal-emp-identity').value.trim();
-            if(!identity) { alert("Action denied. Identity credentials must be matched."); return; }
-            const matchedProfile = state.employees.find(e => e.idNumber.toLowerCase() === identity.toLowerCase());
-            if (!matchedProfile) {
-                alert("Security Error: Provided Employee ID was not detected within active systems.");
-                closePunchModal();
-                return;
-            }
-            if(activePunchAction === 'timeIn' || activePunchAction === 'timeOut') {
-                handleShiftPunch(activePunchAction, matchedProfile);
-            } else if(activePunchAction === 'breakOut' || activePunchAction === 'breakIn') {
-                handleBreakPunch(activePunchAction, matchedProfile);
-            }
-            closePunchModal();
-        }
-
-        function getOrCreateRow(matchedProfile) {
-            const uniqueKey = matchedProfile.idNumber;
-            const displayName = matchedProfile.employeeName;
-            const dateStampStr = new Date().toLocaleDateString('en-CA'); 
-            
-            let log = state.logs.find(l => l.uniqueKey?.toLowerCase() === uniqueKey.toLowerCase() && l.dateStamp === dateStampStr);
-            if(!log) {
-                log = {
-                    id: 'log_' + Date.now(),
-                    dateStamp: dateStampStr,
-                    uniqueKey,
-                    name: displayName,
-                    assignedShift: "Ongoing Session",
-                    timeIn: "",
-                    timeInLateMinutes: 0,
-                    timeOut: "",
-                    timeOutEarlyMinutes: 0,
-                    breakActivities: []
-                };
-                state.logs.unshift(log);
-            }
-            return log;
-        }
-
-        function handleShiftPunch(action, matchedProfile) {
-            const feedback = document.getElementById('kiosk-feedback');
-            const timeNow = getTimeStringNow();
-            const currentDay = getDayStringNow();
-            const minutesNow = timeToMinutes(timeNow);
-            
-            let logRow = getOrCreateRow(matchedProfile);
-            state.kioskHiddenLogIds = state.kioskHiddenLogIds.filter(id => id !== logRow.id);
-            
-            let flagged = false;
-
-            if (state.systemMode === "ongoing") {
-                logRow.assignedShift = "Ongoing Log Mode";
-                if(action === 'timeIn') {
-                    logRow.timeIn = `${timeNow} (${currentDay})`;
-                } else {
-                    logRow.timeOut = `${timeNow} (${currentDay})`;
-                }
-            } else {
-                const shiftId = document.getElementById('emp-shift-select').value;
-                const activeShift = state.shifts.find(s => s.id === shiftId);
-                if(!activeShift) return;
-
-                logRow.assignedShift = `${activeShift.name} [${activeShift.days ? activeShift.days.join(',') : 'All'}]`;
-                
-                if(action === 'timeIn') {
-                    logRow.timeIn = `${timeNow} (${currentDay})`;
-                    const targetInMin = timeToMinutes(activeShift.inStart);
-                    if(minutesNow > targetInMin) {
-                        logRow.timeInLateMinutes = minutesNow - targetInMin;
-                        flagged = true;
-                    } else {
-                        logRow.timeInLateMinutes = 0;
-                    }
-                } else {
-                    logRow.timeOut = `${timeNow} (${currentDay})`;
-                    const targetOutMin = timeToMinutes(activeShift.outStart);
-                    if(minutesNow < targetOutMin) {
-                        logRow.timeOutEarlyMinutes = targetOutMin - minutesNow;
-                        flagged = true;
-                    } else {
-                        logRow.timeOutEarlyMinutes = 0;
-                    }
-                }
-            }
-            
-            saveStateToStorage();
-            renderLogsTable();
-            showFeedback(feedback, `Attendance matrix saved successfully at ${timeNow}.`, flagged);
-        }
-
-        function handleBreakPunch(action, matchedProfile) {
-            const feedback = document.getElementById('kiosk-feedback');
-            const timeNow = getTimeStringNow();
-            const currentDay = getDayStringNow();
-            const minutesNow = timeToMinutes(timeNow);
-            
-            let logRow = getOrCreateRow(matchedProfile);
-            state.kioskHiddenLogIds = state.kioskHiddenLogIds.filter(id => id !== logRow.id);
-            
-            let displayTitle = "General Break";
-            let flagged = false;
-
-            if (state.systemMode === "ongoing") {
-                if(action === 'breakOut') {
-                    logRow.breakActivities.push({
-                        breakId: 'b_' + Date.now(),
-                        breakName: displayTitle,
-                        breakOut: `${timeNow} (${currentDay})`,
-                        breakOutEarlyMinutes: 0,
-                        breakOutLateMinutes: 0,
-                        breakIn: "",
-                        overdueMinutes: 0
-                    });
-                } else {
-                    let openBreak = logRow.breakActivities.find(b => !b.breakIn);
-                    if(openBreak) {
-                        openBreak.breakIn = `${timeNow} (${currentDay})`;
-                    } else {
-                        logRow.breakActivities.push({
-                            breakId: 'b_' + Date.now(),
-                            breakName: displayTitle,
-                            breakOut: "--:--",
-                            breakOutEarlyMinutes: 0,
-                            breakOutLateMinutes: 0,
-                            breakIn: `${timeNow} (${currentDay})`,
-                            overdueMinutes: 0
-                        });
-                    }
-                }
-            } else {
-                const shiftId = document.getElementById('emp-shift-select').value;
-                const activeShift = state.shifts.find(s => s.id === shiftId);
-                if(!activeShift || !activeShift.subBreaks || activeShift.subBreaks.length === 0) return;
-
-                let activeSubBreak = null;
-                if(action === 'breakOut') {
-                    let bestSub = activeShift.subBreaks[0];
-                    let bestDiff = Infinity;
-                    activeShift.subBreaks.forEach(sb => {
-                        let diff = Math.abs(minutesNow - timeToMinutes(sb.start));
-                        if(diff < bestDiff) {
-                            bestDiff = diff;
-                            bestSub = sb;
-                        }
-                    });
-                    activeSubBreak = bestSub;
-                } else {
-                    activeSubBreak = activeShift.subBreaks.find(sb => {
-                        const matchTitle = `${activeShift.name} - ${sb.title}`;
-                        return logRow.breakActivities.some(act => act.breakName === matchTitle && !act.breakIn);
-                    }) || activeShift.subBreaks[activeShift.subBreaks.length - 1];
-                }
-
-                displayTitle = `${activeShift.name} - ${activeSubBreak.title}`;
-                let targetStartMin = timeToMinutes(activeSubBreak.start);
-                let targetEndMin = timeToMinutes(activeSubBreak.end);
-                let subBreakNode = logRow.breakActivities.find(b => b.breakName === displayTitle && !b.breakIn);
-
-                if(action === 'breakOut') {
-                    let earlyMins = targetStartMin > minutesNow ? targetStartMin - minutesNow : 0;
-                    let lateMins = minutesNow > targetStartMin ? minutesNow - targetStartMin : 0;
-                    logRow.breakActivities.push({
-                        breakId: activeShift.id + '_' + activeSubBreak.title,
-                        breakName: displayTitle,
-                        breakOut: `${timeNow} (${currentDay})`,
-                        breakOutEarlyMinutes: earlyMins,
-                        breakOutLateMinutes: lateMins,
-                        breakIn: "",
-                        overdueMinutes: 0
-                    });
-                } else {
-                    if(!subBreakNode) {
-                        let overdue = minutesNow > targetEndMin ? minutesNow - targetEndMin : 0;
-                        logRow.breakActivities.push({
-                            breakId: activeShift.id + '_' + activeSubBreak.title,
-                            breakName: displayTitle,
-                            breakOut: "--:--",
-                            breakOutEarlyMinutes: 0,
-                            breakOutLateMinutes: 0,
-                            breakIn: `${timeNow} (${currentDay})`,
-                            overdueMinutes: overdue
-                        });
-                        if(overdue > 0) flagged = true;
-                    } else {
-                        subBreakNode.breakIn = `${timeNow} (${currentDay})`;
-                        if (minutesNow > targetEndMin) {
-                            subBreakNode.overdueMinutes = minutesNow - targetEndMin;
-                            flagged = true;
-                        }
-                    }
-                }
-            }
-            
-            saveStateToStorage();
-            renderLogsTable();
-            showFeedback(feedback, `Break data segment updated at ${timeNow}.`, flagged);
-        }
-
-        function secureClearKioskDisplay() {
-            if(state.logs.length === 0) return;
-            const inputPass = prompt("Admin verification required. Input password to clear public kiosk screen rows:");
-            if (inputPass === null) return;
-            if (inputPass === state.adminAccount.pass || (state.adminAccount.user === "admin" && inputPass === "admin123")) {
-                state.logs.forEach(log => {
-                    if(!state.kioskHiddenLogIds.includes(log.id)) state.kioskHiddenLogIds.push(log.id);
-                });
-                saveStateToStorage();
-                renderLogsTable();
-                alert("Kiosk display cleared successfully.");
-            } else {
-                alert("Security Error: Admin verification password invalid.");
-            }
-        }
-
-        function toggleSelectAllLogs(masterCheckbox) {
-            const boxes = document.querySelectorAll('.log-row-checkbox');
-            boxes.forEach(box => box.checked = masterCheckbox.checked);
-        }
-
-        function deleteSingleLog(logId) {
-            if(!confirm("Are you sure you want to remove this specific attendance entry row?")) return;
-            state.logs = state.logs.filter(l => l.id !== logId);
-            state.kioskHiddenLogIds = state.kioskHiddenLogIds.filter(id => id !== logId);
-            saveStateToStorage();
-            renderLogsTable();
-        }
-
-        function deleteSelectedLogs() {
-            const checkedBoxes = document.querySelectorAll('.log-row-checkbox:checked');
-            if(checkedBoxes.length === 0) { alert("Please select one or multiple entry rows first."); return; }
-            if(!confirm(`Are you sure you want to delete the ${checkedBoxes.length} selected row records?`)) return;
-            const idsToDelete = Array.from(checkedBoxes).map(cb => cb.value);
-            state.logs = state.logs.filter(l => !idsToDelete.includes(l.id));
-            state.kioskHiddenLogIds = state.kioskHiddenLogIds.filter(id => !idsToDelete.includes(id));
-            document.getElementById('select-all-logs').checked = false;
-            saveStateToStorage();
-            renderLogsTable();
-        }
-
-        function clearAllLogs() {
-            if(!confirm("⚠️ DANGER: This will permanently clear all logs from storage. Proceed?")) return;
-            state.logs = [];
-            state.kioskHiddenLogIds = [];
-            document.getElementById('select-all-logs').checked = false;
-            saveStateToStorage();
-            renderLogsTable();
-        }
-
-        function permanentPurgeEmployeeData(idNumber) {
-            const strictVerification = prompt(`⚠️ CORE DELETION ZONE: This process unlinks and drops all logs associated with ID: "${idNumber}". Type "${idNumber}" to confirm deletion:`);
-            if (strictVerification !== idNumber) { alert("Verification mismatched. Sequence terminated."); return; }
-            state.employees = state.employees.filter(e => e.idNumber !== idNumber);
-            state.logs = state.logs.filter(l => l.uniqueKey?.toLowerCase() !== idNumber.toLowerCase());
-            saveStateToStorage();
-            renderAdminConfigLists();
-            renderLogsTable();
-            populateKioskDropdowns();
-            alert("Data profiles completely unlinked.");
-        }
-
-        function renderAdminAuthInterface() {
             if (state.isAdminAuthenticated) {
-                document.getElementById('admin-auth-card').classList.add('hidden');
-                document.getElementById('admin-settings-panel').classList.remove('hidden');
-                applyModeLayoutRules();
-                renderAdminConfigLists();
-                renderLogsTable();
+                authCard.classList.add('hidden');
+                settingsPanel.classList.remove('hidden');
+                if (state.adminAccount) document.getElementById('new-admin-user').value = state.adminAccount.user;
+                document.getElementById('admin-lockout-time').value = state.autoLogoutMinutes;
+                
+                // Repopulate system mode options view setup dynamically
+                const modeSelect = document.getElementById('sys-mode-select');
+                modeSelect.innerHTML = `
+                    <option value="schedule" ${state.systemMode === 'schedule' ? 'selected' : ''}>Schedule Based Mode</option>
+                    <option value="ongoing" ${state.systemMode === 'ongoing' ? 'selected' : ''}>Ongoing Mode</option>
+                `;
             } else {
-                document.getElementById('admin-auth-card').classList.remove('hidden');
-                document.getElementById('admin-settings-panel').classList.add('hidden');
-                document.getElementById('auth-title').innerText = "Admin Identity Gate";
+                authCard.classList.remove('hidden');
+                settingsPanel.classList.add('hidden');
+                document.getElementById('admin-user').value = "";
+                document.getElementById('admin-pass').value = "";
+            }
+
+            // Hide the queue select row components completely when active operational ongoing mode triggers
+            const dropdownContainer = document.getElementById('kiosk-dropdown-container');
+            if (state.systemMode === "ongoing") {
+                dropdownContainer.classList.add('hidden');
+            } else {
+                dropdownContainer.classList.remove('hidden');
             }
         }
 
         function handleAuthSubmit() {
-            const user = document.getElementById('admin-user').value.trim();
-            const pass = document.getElementById('admin-pass').value.trim();
-            if(!user || !pass) return;
-            
-            if((user === state.adminAccount.user && pass === state.adminAccount.pass) || (user === "admin" && pass === "admin123")) {
+            const u = document.getElementById('admin-user').value;
+            const p = document.getElementById('admin-pass').value;
+            const feedback = document.getElementById('auth-feedback');
+
+            if (state.adminAccount && u === state.adminAccount.user && p === state.adminAccount.pass) {
                 state.isAdminAuthenticated = true;
-                renderAdminAuthInterface();
+                feedback.classList.add('hidden');
+                applyModeLayoutRules();
+                resetInactivityTimer();
+                Swal.fire({ icon: 'success', title: 'Authenticated', text: 'Admin settings dashboard unlocked.', timer: 1500, showConfirmButton: false });
             } else {
-                showFeedback(document.getElementById('auth-feedback'), "Master credentials mismatch error.", true);
+                feedback.innerText = "Invalid credentials combination.";
+                feedback.className = "mt-3 text-xs sm:text-sm font-semibold text-red-600";
+                feedback.classList.remove('hidden');
             }
-            document.getElementById('admin-user').value = "";
-            document.getElementById('admin-pass').value = "";
+        }
+
+        // Custom Confirmation dialog wrapper when modifying system states
+        function confirmModeChange(requestedValue) {
+            if (requestedValue === state.systemMode) return;
+
+            Swal.fire({
+                title: 'Change System Mode?',
+                text: `Are you sure you want to transition system operations into ${requestedValue === 'ongoing' ? 'Ongoing Mode' : 'Schedule Based Mode'}?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#2563eb',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Yes, change mode',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    handleModeChange(requestedValue);
+                } else {
+                    // Revert UI selector value matching current application scope parameters back
+                    document.getElementById('sys-mode-select').value = state.systemMode;
+                }
+            });
+        }
+
+        function handleModeChange(val) {
+            state.systemMode = val;
+            saveStateToStorage();
+            
+            // Re-eval layout conditional matrices
+            applyModeLayoutRules();
+
+            const bannerStatus = document.getElementById('auto-shift-status');
+            if (val === "ongoing") {
+                bannerStatus.innerText = "⏸️ Manual Shift Select Queue Mode Active";
+                bannerStatus.className = "text-[10px] bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full font-bold self-stretch sm:self-auto text-center animate-none";
+            } else {
+                bannerStatus.innerText = "🔄 Auto-Switch Timeline Sync Active";
+                bannerStatus.className = "text-[10px] bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold animate-pulse self-stretch sm:self-auto text-center";
+                isManualOverrideActive = false;
+                autoDetectShiftByMachineTime();
+            }
         }
 
         function openLogoutModal() {
@@ -1232,35 +727,596 @@
 
         function confirmLogOutAdmin() {
             state.isAdminAuthenticated = false;
-            clearTimeout(inactivityTimerReference);
             closeLogoutModal();
-            renderAdminAuthInterface();
+            applyModeLayoutRules();
+            switchTab('employee');
+        }
+
+        function resetInactivityTimer() {
+            if (inactivityTimerReference) clearTimeout(inactivityTimerReference);
+            if (state.autoLogoutMinutes > 0 && state.isAdminAuthenticated) {
+                inactivityTimerReference = setTimeout(() => {
+                    state.isAdminAuthenticated = false;
+                    applyModeLayoutRules();
+                    if (activeInterfaceTab === "admin") switchTab('employee');
+                    Swal.fire({ icon: 'info', title: 'Session Timeout', text: 'Security lockout automated idle sign-out triggered.', timer: 2000, showConfirmButton: false });
+                }, state.autoLogoutMinutes * 60000);
+            }
+        }
+
+        function updateLockoutTimerSetting(val) {
+            state.autoLogoutMinutes = parseInt(val) || 0;
+            saveStateToStorage();
+            resetInactivityTimer();
+        }
+
+        // Global monitor activity tracking hooks
+        ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(evt => {
+            window.addEventListener(evt, () => { if (state.isAdminAuthenticated) resetInactivityTimer(); });
+        });
+
+        function populateKioskDropdowns() {
+            const select = document.getElementById('emp-shift-select');
+            if (!select) return;
+            select.innerHTML = "";
+            state.shifts.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                opt.innerText = `${s.name} (${s.startIn} - ${s.endOut})`;
+                select.appendChild(opt);
+            });
+            updateKioskInfoBanner();
+        }
+
+        function handleManualShiftChange() {
+            if (state.systemMode === "schedule") {
+                isManualOverrideActive = true;
+                if (manualOverrideTimeout) clearTimeout(manualOverrideTimeout);
+                manualOverrideTimeout = setTimeout(() => {
+                    isManualOverrideActive = false;
+                }, 300000);
+            }
+            updateKioskInfoBanner();
+        }
+
+        function autoDetectShiftByMachineTime() {
+            if (state.shifts.length === 0 || isManualOverrideActive) return;
+            const now = new Date();
+            const currentDayShort = DAYS_SHORT[now.getDay() === 0 ? 6 : now.getDay() - 1];
+            const timeString = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+            let matchedShift = state.shifts.find(s => s.days.includes(currentDayShort) && timeString >= s.startIn && timeString <= s.endOut);
+            if (!matchedShift) {
+                matchedShift = state.shifts.find(s => s.days.includes(currentDayShort)) || state.shifts[0];
+            }
+
+            if (matchedShift) {
+                const select = document.getElementById('emp-shift-select');
+                if (select && select.value !== matchedShift.id) {
+                    select.value = matchedShift.id;
+                    updateKioskInfoBanner();
+                }
+            }
+        }
+
+        function updateKioskInfoBanner() {
+            const select = document.getElementById('emp-shift-select');
+            const shiftBadge = document.getElementById('current-shift-badge');
+            const breakBadge = document.getElementById('current-break-badge');
+            
+            if (!select || !select.value) {
+                if (shiftBadge) shiftBadge.innerText = "None Configured";
+                if (breakBadge) breakBadge.innerText = "None Allocations";
+                return;
+            }
+
+            const activeShift = state.shifts.find(s => s.id === select.value);
+            if (activeShift) {
+                shiftBadge.innerText = `${activeShift.name} [${activeShift.startIn} - ${activeShift.endOut}] (${activeShift.days.join(', ')})`;
+                if (activeShift.subBreaks && activeShift.subBreaks.length > 0) {
+                    breakBadge.innerText = activeShift.subBreaks.map(b => `${b.name} (${b.out}-${b.in})`).join(' | ');
+                } else {
+                    breakBadge.innerText = "No break windows mapped.";
+                }
+            }
+        }
+
+        function openPunchModal(actionType) {
+            activePunchAction = actionType;
+            const modal = document.getElementById('punch-modal');
+            const title = document.getElementById('modal-title');
+            const subtitle = document.getElementById('modal-subtitle');
+            
+            const labels = {
+                timeIn: { t: "Verify Identity: TIME IN", s: "Submit your account ID code to verify shift entry registration." },
+                timeOut: { t: "Verify Identity: TIME OUT", s: "Submit your account ID code to record workspace checkout profiles." },
+                breakOut: { t: "Verify Identity: START BREAK", s: "Register checkout boundary validation for break timeline syncs." },
+                breakIn: { t: "Verify Identity: END BREAK", s: "Re-entry clearance confirmation for workstation reporting logs." }
+            };
+
+            title.innerText = labels[actionType].t;
+            subtitle.innerText = labels[actionType].s;
+            document.getElementById('modal-emp-identity').value = "";
+            modal.classList.remove('hidden');
+        }
+
+        function removeEmployeeProfile(empId) {
+            const employee = state.employees.find(e => e.id === empId);
+            if (!employee) return;
+
+            Swal.fire({
+                title: 'Delete Employee Account?',
+                html: `
+                    <div class="text-left text-xs text-gray-600 space-y-2">
+                        <p>This action is irreversible. All tracking logs maps matching this index identifier key code will detach profiles mappings context.</p>
+                        <div class="bg-red-50 border border-red-100 p-2.5 rounded font-mono text-[11px] text-red-800">
+                            <b>Account Name:</b> ${escapeHTML(employee.name)}<br/>
+                            <b>ID Parameter:</b> ${escapeHTML(employee.id)}
+                        </div>
+                        <p class="mt-2 font-medium text-gray-700">Type <span class="font-bold text-gray-900 select-all">DELETE</span> to execute extraction validation profile:</p>
+                    </div>
+                `,
+                input: 'text',
+                inputAttributes: {
+                    autocapitalize: 'off',
+                    autocomplete: 'off',
+                    placeholder: 'Type DELETE to verify'
+                },
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                confirmButtonText: 'Permanently Delete',
+                cancelButtonText: 'Cancel',
+                preConfirm: (inputValue) => {
+                    if (inputValue !== 'DELETE') {
+                        Swal.showValidationMessage('String token code validation error.');
+                        return false;
+                    }
+                    return true;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    state.employees = state.employees.filter(e => e.id !== empId);
+                    saveStateToStorage();
+                    renderAdminConfigLists();
+                    Swal.fire({ icon: 'success', title: 'Profile Cleared', text: `Roster metadata index purged.`, timer: 2000, showConfirmButton: false });
+                }
+            });
+        }
+
+        function closePunchModal() {
+            stopQRScanner();
+            document.getElementById('punch-modal').classList.add('hidden');
+        }
+
+        function toggleQRScanner() {
+            const container = document.getElementById('qr-reader-container');
+            if (isCameraStreamRunning) {
+                stopQRScanner();
+            } else {
+                container.classList.remove('hidden');
+                isCameraStreamRunning = true;
+                html5QrcodeInstance = new Html5Qrcode("qr-reader");
+                html5QrcodeInstance.start(
+                    { facingMode: "environment" },
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    (decodedText) => {
+                        document.getElementById('modal-emp-identity').value = decodedText;
+                        stopQRScanner();
+                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'QR Code Scanned', showConfirmButton: false, timer: 1000 });
+                    },
+                    () => {}
+                ).catch(err => {
+                    console.error("Camera node deployment error: ", err);
+                    container.classList.add('hidden');
+                    isCameraStreamRunning = false;
+                    Swal.fire({ icon: 'error', title: 'Camera Error', text: 'Unable to capture active video channel stream node device details.' });
+                });
+            }
+        }
+
+        function stopQRScanner() {
+            const container = document.getElementById('qr-reader-container');
+            container.classList.add('hidden');
+            isCameraStreamRunning = false;
+            if (html5QrcodeInstance) {
+                html5QrcodeInstance.stop().then(() => {
+                    html5QrcodeInstance = null;
+                }).catch(err => console.error("Error destroying streaming video component traces:", err));
+            }
+        }
+
+        function submitPunchModal() {
+            const rawId = document.getElementById('modal-emp-identity').value.trim();
+            if (!rawId) {
+                Swal.fire({ icon: 'warning', title: 'Missing parameters', text: 'Identification entries cannot remain empty.' });
+                return;
+            }
+
+            const matchedEmp = state.employees.find(e => e.id.toLowerCase() === rawId.toLowerCase());
+            if (!matchedEmp) {
+                Swal.fire({ icon: 'error', title: 'Access Denied', text: 'No active master profile record matches submitted ID parameters.' });
+                return;
+            }
+
+            const currentShiftSelect = document.getElementById('emp-shift-select').value;
+            const activeShiftObj = state.shifts.find(s => s.id === currentShiftSelect);
+
+            const now = new Date();
+            const stamp = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const todayStr = now.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+
+            let userLog = state.logs.find(l => l.empId === matchedEmp.id && l.date === todayStr && l.shiftId === activeShiftObj.id);
+            
+            if (!userLog) {
+                userLog = {
+                    id: "LOG-" + Math.random().toString(36).substr(2, 9).toUpperCase(),
+                    empId: matchedEmp.id,
+                    empName: matchedEmp.name,
+                    date: todayStr,
+                    shiftId: activeShiftObj.id,
+                    shiftName: activeShiftObj.name,
+                    shiftWindow: `${activeShiftObj.startIn} - ${activeShiftObj.endOut}`,
+                    timeIn: "---",
+                    timeOut: "---",
+                    breaks: []
+                };
+                state.logs.unshift(userLog);
+            }
+
+            if (activePunchAction === 'timeIn') {
+                userLog.timeIn = stamp;
+            } else if (activePunchAction === 'timeOut') {
+                userLog.timeOut = stamp;
+            } else if (activePunchAction === 'breakOut') {
+                userLog.breaks.push({ name: `Break ${userLog.breaks.length + 1}`, out: stamp, in: "---" });
+            } else if (activePunchAction === 'breakIn') {
+                const openBreak = userLog.breaks.find(b => b.in === "---");
+                if (openBreak) openBreak.in = stamp;
+                else userLog.breaks.push({ name: `Break ${userLog.breaks.length + 1}`, out: "---", in: stamp });
+            }
+
+            saveStateToStorage();
+            closePunchModal();
+            renderLogsTable();
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Punch Registered Successfully',
+                html: `<div class='text-left text-xs bg-gray-50 p-3 rounded space-y-1 font-mono border border-gray-100'>
+                        <div><b>Name:</b> ${escapeHTML(matchedEmp.name)}</div>
+                        <div><b>Action:</b> ${activePunchAction.toUpperCase()}</div>
+                        <div><b>Timestamp:</b> ${stamp}</div>
+                       </div>`,
+                timer: 3000
+            });
+        }
+
+        function secureClearKioskDisplay() {
+            state.logs.forEach(l => {
+                if (!state.kioskHiddenLogIds.includes(l.id)) state.kioskHiddenLogIds.push(l.id);
+            });
+            saveStateToStorage();
+            renderLogsTable();
+            Swal.fire({ toast: true, position: 'bottom-end', icon: 'info', title: 'Public monitoring stream hidden.', timer: 1500, showConfirmButton: false });
+        }
+
+        function renderLogsTable() {
+            const publicBody = document.getElementById('logs-tbody');
+            const adminBody = document.getElementById('admin-logs-tbody');
+            
+            if (publicBody) publicBody.innerHTML = "";
+            if (adminBody) adminBody.innerHTML = "";
+
+            state.logs.forEach(l => {
+                const breaksHtml = l.breaks.map(b => `<span class="inline-block bg-gray-100 text-gray-700 font-mono text-[10px] px-1.5 py-0.5 rounded border border-gray-200 mb-1 mr-1">${b.name}: ${b.out} ➔ ${b.in}</span>`).join('') || '<span class="text-gray-300 font-normal">None</span>';
+                
+                if (publicBody && !state.kioskHiddenLogIds.includes(l.id)) {
+                    const row = document.createElement('tr');
+                    row.className = "hover:bg-gray-50/50 transition-colors";
+                    row.innerHTML = `
+                        <td class="px-4 sm:px-6 py-3.5">
+                            <div class="font-bold text-gray-900">${escapeHTML(l.empName)}</div>
+                            <div class="text-[10px] text-gray-400 font-mono tracking-wider">${l.empId}</div>
+                        </td>
+                        <td class="px-4 sm:px-6 py-3.5">
+                            <span class="bg-blue-50 text-blue-800 text-[11px] font-bold px-2 py-0.5 rounded-full border border-blue-100">${escapeHTML(l.shiftName)}</span>
+                        </td>
+                        <td class="px-4 sm:px-6 py-3.5 font-mono text-xs space-y-1">
+                            <div class="text-gray-400 font-sans font-semibold text-[10px] uppercase tracking-wide">Date: ${l.date}</div>
+                            <div><span class="text-emerald-600 font-bold">IN:</span> ${l.timeIn}</div>
+                            <div><span class="text-slate-600 font-bold">OUT:</span> ${l.timeOut}</div>
+                        </td>
+                        <td class="px-4 sm:px-6 py-3.5 text-xs">${breaksHtml}</td>
+                    `;
+                    publicBody.appendChild(row);
+                }
+
+                if (adminBody) {
+                    const row = document.createElement('tr');
+                    row.className = "hover:bg-gray-50 transition-colors";
+                    row.innerHTML = `
+                        <td class="px-4 py-3 text-center">
+                            <input type="checkbox" value="${l.id}" class="log-row-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer scale-110">
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="font-bold text-gray-900">${escapeHTML(l.empName)}</div>
+                            <div class="text-[10px] text-gray-400 font-mono tracking-wider">${l.empId}</div>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="bg-slate-100 text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-200">${escapeHTML(l.shiftName)}</span>
+                        </td>
+                        <td class="px-4 py-3 font-mono text-xs space-y-0.5">
+                            <div class="text-[10px] text-gray-400 font-sans font-semibold">Date: ${l.date}</div>
+                            <div><span class="text-emerald-600 font-bold">IN:</span> ${l.timeIn}</div>
+                            <div><span class="text-slate-600 font-bold">OUT:</span> ${l.timeOut}</div>
+                        </td>
+                        <td class="px-4 py-3 text-xs">${breaksHtml}</td>
+                        <td class="px-4 py-3 text-center">
+                            <button onclick="deleteSingleSystemLog('${l.id}')" class="text-red-500 hover:text-red-700 font-bold text-xs p-1">✕</button>
+                        </td>
+                    `;
+                    adminBody.appendChild(row);
+                }
+            });
+        }
+
+        function toggleSelectAllLogs(masterNode) {
+            document.querySelectorAll('.log-row-checkbox').forEach(box => box.checked = masterNode.checked);
+        }
+
+        function deleteSingleSystemLog(logId) {
+            state.logs = state.logs.filter(l => l.id !== logId);
+            state.kioskHiddenLogIds = state.kioskHiddenLogIds.filter(id => id !== logId);
+            saveStateToStorage();
+            renderLogsTable();
+        }
+
+        function deleteSelectedLogs() {
+            const checkedBoxes = document.querySelectorAll('.log-row-checkbox:checked');
+            if (checkedBoxes.length === 0) {
+                Swal.fire({ icon: 'warning', text: 'No record items marked for deletion mapping criteria parameters.' });
+                return;
+            }
+            const targets = Array.from(checkedBoxes).map(b => b.value);
+            state.logs = state.logs.filter(l => !targets.includes(l.id));
+            state.kioskHiddenLogIds = state.kioskHiddenLogIds.filter(id => !targets.includes(id));
+            saveStateToStorage();
+            renderLogsTable();
+            document.getElementById('select-all-logs').checked = false;
+            Swal.fire({ icon: 'success', text: 'Selected operations record traces cleared.' });
+        }
+
+        function clearAllLogs() {
+            Swal.fire({
+                title: 'Reset Matrix Log Archives?',
+                text: "Warning: Master administrative operational data arrays will completely wipe permanently.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Purge Archive Data'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    state.logs = [];
+                    state.kioskHiddenLogIds = [];
+                    saveStateToStorage();
+                    renderLogsTable();
+                    Swal.fire('Database Blanked', 'Roster matrices data traces wiped completely.', 'success');
+                }
+            });
+        }
+
+        function renderAdminConfigLists() {
+            const empContainer = document.getElementById('employee-list-container');
+            if (empContainer) {
+                empContainer.innerHTML = "";
+                if (state.employees.length === 0) {
+                    empContainer.innerHTML = `<div class="col-span-2 text-center py-6 text-xs text-gray-400 font-medium bg-gray-50 rounded-xl border border-dashed border-gray-200">No profile profiles registered currently inside standard databases roster.</div>`;
+                }
+                state.employees.forEach(e => {
+                    const d = document.createElement('div');
+                    d.className = "bg-white p-3 rounded-lg border border-gray-200 flex items-center justify-between shadow-2xs hover:border-gray-300 transition-all";
+                    d.innerHTML = `
+                        <div>
+                            <div class="font-bold text-gray-900 text-xs sm:text-sm">${escapeHTML(e.name)}</div>
+                            <div class="text-[10px] font-mono tracking-wider text-gray-400 uppercase font-bold mt-0.5">${e.id}</div>
+                        </div>
+                        <button onclick="removeEmployeeProfile('${e.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 text-[10px] py-1 px-2 rounded transition-colors font-semibold">Clear Profile</button>
+                    `;
+                    empContainer.appendChild(d);
+                });
+            }
+
+            const shiftContainer = document.getElementById('shift-list-container');
+            if (shiftContainer) {
+                shiftContainer.innerHTML = "";
+                state.shifts.forEach(s => {
+                    const d = document.createElement('div');
+                    d.className = `p-3 rounded-lg border text-left transition-all relative ${state.editingShiftId === s.id ? 'bg-blue-50/70 border-blue-400 ring-2 ring-blue-100' : 'bg-white border-gray-200 hover:border-gray-300'}`;
+                    
+                    const daysTags = s.days.map(day => `<span class="bg-gray-100 border border-gray-200 rounded text-[9px] font-bold px-1 py-0.5 text-gray-500">${day}</span>`).join(' ');
+                    const breakLabels = s.subBreaks && s.subBreaks.length > 0 ? `${s.subBreaks.length} break segments mapped` : 'No mapped breaks';
+
+                    d.innerHTML = `
+                        <div class="pr-12">
+                            <div class="font-bold text-gray-900 text-xs sm:text-sm">${escapeHTML(s.name)}</div>
+                            <div class="font-mono text-[11px] text-blue-600 font-bold mt-0.5">${s.startIn} ➔ ${s.endOut}</div>
+                            <div class="flex flex-wrap gap-1 mt-2">${daysTags}</div>
+                            <div class="text-[10px] text-gray-400 mt-1.5 font-medium flex items-center gap-1">☕ ${breakLabels}</div>
+                        </div>
+                        <div class="absolute right-2 top-2 flex flex-col gap-1">
+                            <button onclick="loadShiftToEditor('${s.id}')" class="text-blue-600 hover:text-blue-800 text-[10px] font-bold bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded">Edit</button>
+                            <button onclick="removeShiftConfig('${s.id}')" class="text-red-600 hover:text-red-800 text-[10px] font-bold bg-red-50 border border-red-100 px-1.5 py-0.5 rounded">Delete</button>
+                        </div>
+                    `;
+                    shiftContainer.appendChild(d);
+                });
+            }
         }
 
         function addNewEmployeeProfile() {
-            const idNumber = document.getElementById('new-emp-id').value.trim();
-            const employeeName = document.getElementById('new-emp-name').value.trim();
-            if (!idNumber || !employeeName) return;
-            if (state.employees.find(e => e.idNumber.toLowerCase() === idNumber.toLowerCase())) {
-                alert("Security Alert: Employee ID already exists.");
+            const idNode = document.getElementById('new-emp-id');
+            const nameNode = document.getElementById('new-emp-name');
+            const id = idNode.value.trim();
+            const name = nameNode.value.trim();
+
+            if (!id || !name) {
+                Swal.fire({ icon: 'warning', text: 'All data profile key index metrics strings are strictly mandatory.' });
                 return;
             }
-            state.employees.push({ idNumber, employeeName });
+            if (state.employees.some(e => e.id.toLowerCase() === id.toLowerCase())) {
+                Swal.fire({ icon: 'error', text: 'This target unique record allocation ID code already maps inside active systems directories rosters.' });
+                return;
+            }
+
+            state.employees.push({ id, name });
+            saveStateToStorage();
+            idNode.value = "";
+            nameNode.value = "";
+            renderAdminConfigLists();
+            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Roster Profile Registered', timer: 1500, showConfirmButton: false });
+        }
+
+        function initCreationPickers() {
+            const daysContainer = document.getElementById('new-shift-days');
+            if (daysContainer) {
+                daysContainer.innerHTML = "";
+                DAYS_SHORT.forEach(day => {
+                    daysContainer.innerHTML += `
+                        <label class="flex-1 text-center border border-gray-200 bg-white rounded py-1 text-[10px] font-bold cursor-pointer select-none transition-all has-[:checked]:bg-blue-600 has-[:checked]:text-white has-[:checked]:border-blue-600">
+                            <input type="checkbox" value="${day}" class="hidden shift-days-checkbox"> ${day}
+                        </label>
+                    `;
+                });
+            }
+
+            const inContainer = document.getElementById('time-in-start-picker');
+            const outContainer = document.getElementById('time-out-start-picker');
+            
+            if (inContainer) inContainer.innerHTML = `<input type="time" id="picker-start-in" value="09:00" class="w-full bg-white border border-gray-300 rounded-md px-2 py-1 text-xs font-mono font-bold">`;
+            if (outContainer) outContainer.innerHTML = `<input type="time" id="picker-end-out" value="18:00" class="w-full bg-white border border-gray-300 rounded-md px-2 py-1 text-xs font-mono font-bold">`;
+            
+            const wrapper = document.getElementById('new-break-subrows-wrapper');
+            if (wrapper) wrapper.innerHTML = "";
+        }
+
+        function addNewBreakSubRow(name = "", outTime = "", inTime = "") {
+            const wrapper = document.getElementById('new-break-subrows-wrapper');
+            const rowId = "row-" + Math.random().toString(36).substr(2, 9);
+            const d = document.createElement('div');
+            d.id = rowId;
+            d.className = "grid grid-cols-1 sm:grid-cols-3 gap-2 items-center bg-gray-50 border border-gray-200 rounded-md p-2 relative pr-8 animate-fade-in";
+            d.innerHTML = `
+                <input type="text" placeholder="Break Label Name" value="${name}" class="break-name border border-gray-300 rounded bg-white px-2 py-1 text-xs font-medium">
+                <div class="flex items-center gap-1"><span class="text-[9px] font-bold text-gray-400 uppercase">OUT:</span><input type="time" value="${outTime}" class="break-out border border-gray-300 rounded bg-white px-1.5 py-0.5 text-xs font-mono flex-1"></div>
+                <div class="flex items-center gap-1"><span class="text-[9px] font-bold text-gray-400 uppercase">IN:</span><input type="time" value="${inTime}" class="break-in border border-gray-300 rounded bg-white px-1.5 py-0.5 text-xs font-mono flex-1"></div>
+                <button type="button" onclick="document.getElementById('${rowId}').remove()" class="absolute right-2 text-red-500 hover:text-red-700 font-bold text-sm">✕</button>
+            `;
+            wrapper.appendChild(d);
+        }
+
+        function addNewShiftConfig() {
+            const name = document.getElementById('new-shift-name').value.trim();
+            const checkedDays = Array.from(document.querySelectorAll('.shift-days-checkbox:checked')).map(box => box.value);
+            const startIn = document.getElementById('picker-start-in').value;
+            const endOut = document.getElementById('picker-end-out').value;
+
+            if (!name || checkedDays.length === 0 || !startIn || !endOut) {
+                Swal.fire({ icon: 'warning', text: 'Operational profile configurations require all tracking timeline parameters specified.' });
+                return;
+            }
+
+            const breakSubrows = document.getElementById('new-break-subrows-wrapper').children;
+            const subBreaks = [];
+            for (let i = 0; i < breakSubrows.length; i++) {
+                const row = breakSubrows[i];
+                const bName = row.querySelector('.break-name').value.trim() || `Break ${i + 1}`;
+                const bOut = row.querySelector('.break-out').value;
+                const bIn = row.querySelector('.break-in').value;
+                if (bOut || bIn) {
+                    subBreaks.push({ name: bName, out: bOut || "00:00", in: bIn || "00:00" });
+                }
+            }
+
+            if (state.editingShiftId) {
+                const existing = state.shifts.find(s => s.id === state.editingShiftId);
+                if (existing) {
+                    existing.name = name;
+                    existing.days = checkedDays;
+                    existing.startIn = startIn;
+                    existing.endOut = endOut;
+                    existing.subBreaks = subBreaks;
+                }
+                state.editingShiftId = null;
+            } else {
+                state.shifts.push({
+                    id: "s-" + Math.random().toString(36).substr(2, 9),
+                    name, days: checkedDays, startIn, endOut, subBreaks
+                });
+            }
+
+            saveStateToStorage();
+            document.getElementById('new-shift-name').value = "";
+            initCreationPickers();
+            renderAdminConfigLists();
+            populateKioskDropdowns();
+            Swal.fire({ icon: 'success', title: 'Operational roster timeline unified config maps updated.' });
+        }
+
+        function loadShiftToEditor(shiftId) {
+            const s = state.shifts.find(item => item.id === shiftId);
+            if (!s) return;
+
+            state.editingShiftId = s.id;
+            document.getElementById('new-shift-name').value = s.name;
+
+            document.querySelectorAll('.shift-days-checkbox').forEach(box => {
+                box.checked = s.days.includes(box.value);
+                const parent = box.parentElement;
+                if (box.checked) {
+                    parent.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+                } else {
+                    parent.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+                }
+            });
+
+            document.getElementById('picker-start-in').value = s.startIn;
+            document.getElementById('picker-end-out').value = s.endOut;
+
+            const wrapper = document.getElementById('new-break-subrows-wrapper');
+            wrapper.innerHTML = "";
+            if (s.subBreaks) {
+                s.subBreaks.forEach(b => addNewBreakSubRow(b.name, b.out, b.in));
+            }
+            renderAdminConfigLists();
+        }
+
+        function removeShiftConfig(shiftId) {
+            state.shifts = state.shifts.filter(s => s.id !== shiftId);
+            if (state.editingShiftId === shiftId) state.editingShiftId = null;
             saveStateToStorage();
             renderAdminConfigLists();
-            document.getElementById('new-emp-id').value = "";
-            document.getElementById('new-emp-name').value = "";
+            populateKioskDropdowns();
+        }
+
+        function changeAdminCredentials() {
+            const u = document.getElementById('new-admin-user').value.trim();
+            const p = document.getElementById('new-admin-pass').value.trim();
+
+            if (!u || !p) {
+                Swal.fire({ icon: 'warning', text: 'Administrative credential token tracking vectors cannot remain blank.' });
+                return;
+            }
+
+            state.adminAccount.user = u;
+            state.adminAccount.pass = p;
+            saveStateToStorage();
+            Swal.fire({ icon: 'success', title: 'Credentials Parameter Access Token Updated Successfully.' });
         }
 
         function downloadEmployeeTemplateCSV() {
-            let rows = [["Employee ID", "Employee Full Name"]];
-            state.employees.forEach(e => { rows.push([`"${e.idNumber}"`, `"${e.employeeName}"`]); });
-            const link = document.createElement("a");
-            link.setAttribute("href", encodeURI("data:text/csv;charset=utf-8," + rows.map(r => r.join(",")).join("\n")));
-            link.setAttribute("download", "System_Employee_Roster.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            let csv = "Employee ID,Full Name\n";
+            state.employees.forEach(e => { csv += `"${e.id.replace(/"/g, '""')}","${e.name.replace(/"/g, '""')}"\n`; });
+            triggerFileDownload(csv, "attendance_employee_roster.csv", "text/csv");
         }
 
         function importEmployeesFromCSV(event) {
@@ -1268,331 +1324,51 @@
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
-                const contents = e.target.result;
-                const rows = contents.split(/\r?\n/);
+                const lines = e.target.result.split(/\r?\n/);
                 let addedCount = 0;
-                let errorCount = 0;
-
-                for(let i = 1; i < rows.length; i++) {
-                    if(!rows[i].trim()) continue;
-                    let cells = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
-                    if(cells.length >= 2) {
-                        let empId = cells[0];
-                        let empName = cells[1];
-                        if(empId && empName) {
-                            if(!state.employees.some(e => e.idNumber.toLowerCase() === empId.toLowerCase())) {
-                                state.employees.push({ idNumber: empId, employeeName: empName });
-                                addedCount++;
-                            } else {
-                                errorCount++;
-                            }
+                lines.forEach((line, idx) => {
+                    if (idx === 0 || !line.trim()) return; 
+                    const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                    if (parts.length >= 2) {
+                        const id = parts[0].replace(/^"|"$/g, '').trim();
+                        const name = parts[1].replace(/^"|"$/g, '').trim();
+                        if (id && name && !state.employees.some(emp => emp.id.toLowerCase() === id.toLowerCase())) {
+                            state.employees.push({ id, name });
+                            addedCount++;
                         }
                     }
+                });
+                if (addedCount > 0) {
+                    saveStateToStorage();
+                    renderAdminConfigLists();
+                    Swal.fire({ icon: 'success', text: `Imported ${addedCount} roster profile details successfully mapping configuration tables.` });
+                } else {
+                    Swal.fire({ icon: 'info', text: 'No unique new identities matched database templates.' });
                 }
-                saveStateToStorage();
-                renderAdminConfigLists();
-                populateKioskDropdowns();
-                alert(`CSV import finalized: ${addedCount} added successfully. ${errorCount} duplicates skipped.`);
-                event.target.value = ""; 
+                event.target.value = "";
             };
             reader.readAsText(file);
         }
 
-        function renderAdminConfigLists() {
-            const empContainer = document.getElementById('employee-list-container');
-            if(empContainer) {
-                empContainer.innerHTML = state.employees.map(e => `
-                    <div class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-gray-200 text-xs shadow-2xs">
-                        <div>
-                            <p class="font-bold text-gray-900">${escapeHTML(e.employeeName)}</p>
-                            <p class="text-[10px] text-gray-400 font-mono">ID: ${escapeHTML(e.idNumber)}</p>
-                        </div>
-                        <button onclick="permanentPurgeEmployeeData('${e.idNumber}')" class="bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 font-medium px-2 py-1 rounded text-[10px] transition-colors cursor-pointer" title="Permanently Delete Records">Delete</button>
-                    </div>
-                `).join('') || `<p class="text-xs text-gray-400 italic py-2 col-span-2">No employee profiles inside database roster mappings.</p>`;
-            }
-
-            const shiftContainer = document.getElementById('shift-list-container');
-            if(shiftContainer) {
-                shiftContainer.innerHTML = state.shifts.map(s => state.editingShiftId === s.id ? `
-                    <div class="p-3 bg-blue-50/50 rounded-lg border border-blue-300 text-xs space-y-2">
-                        <input type="text" id="edit-shift-name-${s.id}" value="${escapeHTML(s.name)}" class="w-full px-2 py-1 bg-white border border-gray-300 rounded text-xs font-bold text-gray-800">
-                        <div id="es-days-p-${s.id}" class="flex justify-between gap-1"></div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div><div class="flex gap-1" id="es-in-p-${s.id}"></div></div>
-                            <div><div class="flex gap-1" id="es-out-p-${s.id}"></div></div>
-                        </div>
-                        <div class="pt-2 border-t border-blue-200">
-                            <div class="flex items-center justify-between mb-1.5">
-                                <span class="text-[10px] font-bold text-blue-800">Edit Multiple Breaks</span>
-                                <button type="button" onclick="addEditBreakSubRowNode('${s.id}')" class="bg-blue-700 text-white text-[9px] px-1.5 py-0.5 rounded">+ Add Row</button>
-                            </div>
-                            <div id="edit-break-subrows-container-${s.id}" class="space-y-1.5"></div>
-                        </div>
-                        <div class="flex gap-2 justify-end pt-1"><button onclick="saveShiftEdit('${s.id}')" class="bg-emerald-600 text-white px-2 py-1 rounded text-[11px] cursor-pointer font-bold">Save</button><button onclick="cancelShiftEdit()" class="bg-gray-400 text-white px-2 py-1 rounded text-[11px] cursor-pointer">Cancel</button></div>
-                    </div>` : `
-                    <div class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-gray-200 text-xs shadow-2xs">
-                        <div class="max-w-[80%]">
-                            <p class="font-bold text-gray-900 truncate">${escapeHTML(s.name)} <span class="text-[10px] text-gray-400">(${s.days ? s.days.join(',') : 'All'})</span></p>
-                            <p class="text-gray-500 text-[11px] font-medium">Shift: ${s.inStart} to ${s.outStart}</p>
-                            <p class="text-amber-600 text-[10px] font-bold mt-0.5 truncate">${s.subBreaks && s.subBreaks.length > 0 ? `☕ Breaks: ` + s.subBreaks.map(b=>b.title).join(', ') : 'No Breaks Declared'}</p>
-                        </div>
-                        <div class="flex gap-2"><button onclick="startShiftEdit('${s.id}')" class="text-blue-600 text-[11px] font-bold cursor-pointer">Edit</button><button onclick="deleteShiftConfig('${s.id}')" class="text-red-500 font-bold px-1 cursor-pointer">✕</button></div>
-                    </div>
-                `).join('') || `<p class="text-xs text-gray-400 italic py-2">No profiles populated inside configuration maps.</p>`;
-
-                state.shifts.forEach(s => {
-                    if (state.editingShiftId === s.id) {
-                        document.getElementById(`es-days-p-${s.id}`).innerHTML = buildDaySelectorHTML(`es-${s.id}`, s.days);
-                        document.getElementById(`es-in-p-${s.id}`).innerHTML = build12HourSelectsHTML(`es-in-${s.id}`);
-                        document.getElementById(`es-out-p-${s.id}`).innerHTML = build12HourSelectsHTML(`es-out-${s.id}`);
-                        set12HourPickerValue(`es-in-${s.id}`, s.inStart);
-                        set12HourPickerValue(`es-out-${s.id}`, s.outStart);
-
-                        const subContainer = document.getElementById(`edit-break-subrows-container-${s.id}`);
-                        subContainer.innerHTML = '';
-                        if(s.subBreaks && s.subBreaks.length > 0) {
-                            s.subBreaks.forEach(sb => { addEditBreakSubRowNode(s.id, sb.title, sb.start, sb.end); });
-                        }
-                    }
-                });
-            }
-        }
-
-        function addEditBreakSubRowNode(shiftId, subTitle = "", startVal = "", endVal = "") {
-            const container = document.getElementById(`edit-break-subrows-container-${shiftId}`);
-            const nodeRowId = 'edit-subrow-' + Date.now() + Math.random().toString(36).substr(2,3);
-            const prefixOut = `eb-out-${nodeRowId}`;
-            const prefixIn = `eb-in-${nodeRowId}`;
-            
-            const div = document.createElement('div');
-            div.className = "p-2 bg-white border border-gray-200 rounded-lg space-y-1 edit-subbreak-node";
-            div.id = nodeRowId;
-            div.innerHTML = `
-                <div class="flex justify-between items-center">
-                    <input type="text" value="${escapeHTML(subTitle)}" placeholder="Break label" class="edit-subbreak-title text-[10px] font-bold border border-gray-200 rounded px-1.5 py-0.5 bg-gray-50 text-gray-800 w-1/2" required>
-                    <button type="button" onclick="document.getElementById('${nodeRowId}').remove()" class="text-red-500 font-bold text-[10px] cursor-pointer">✕ Remove</button>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div id="${prefixOut}-container"></div>
-                    <div id="${prefixIn}-container"></div>
-                </div>
-            `;
-            container.appendChild(div);
-            
-            document.getElementById(`${prefixOut}-container`).innerHTML = build12HourSelectsHTML(prefixOut);
-            document.getElementById(`${prefixIn}-container`).innerHTML = build12HourSelectsHTML(prefixIn);
-            
-            if(startVal) set12HourPickerValue(prefixOut, startVal);
-            if(endVal) set12HourPickerValue(prefixIn, endVal);
-        }
-
-        function addNewShiftConfig() {
-            const name = document.getElementById('new-shift-name').value.trim();
-            if(!name) { alert("Please input profile configuration name."); return; }
-            
-            const days = getSelectedDaysFromCheckbox('ns-days');
-            const inStart = get12HourPickerValue('ns-in-start');
-            const outStart = get12HourPickerValue('ns-out-start');
-            const subNodes = document.querySelectorAll('#new-break-subrows-wrapper .subbreak-config-node');
-            const subBreaksArray = [];
-            
-            subNodes.forEach(node => {
-                const subTitle = node.querySelector('.subbreak-title').value.trim() || "Operational Break";
-                const rowId = node.id;
-                const start = get12HourPickerValue(`nsb-out-${rowId}`);
-                const end = get12HourPickerValue(`nsb-in-${rowId}`);
-                subBreaksArray.push({ title: subTitle, start, end });
-            });
-            
-            state.shifts.push({ id: 's_' + Date.now(), name, days, inStart, outStart, subBreaks: subBreaksArray });
-            saveStateToStorage();
-            renderAdminConfigLists();
-            populateKioskDropdowns();
-            autoDetectShiftByMachineTime();
-            
-            document.getElementById('new-shift-name').value = "";
-            document.getElementById('new-break-subrows-wrapper').innerHTML = '';
-            addNewBreakSubRow();
-        }
-
-        function startShiftEdit(id) { state.editingShiftId = id; renderAdminConfigLists(); }
-        function cancelShiftEdit() { state.editingShiftId = null; renderAdminConfigLists(); }
-        function saveShiftEdit(id) {
-            const node = state.shifts.find(s => s.id === id);
-            if(node) {
-                node.name = document.getElementById(`edit-shift-name-${id}`).value.trim();
-                node.days = getSelectedDaysFromCheckbox(`es-${id}-days`);
-                node.inStart = get12HourPickerValue(`es-in-${id}`);
-                node.outStart = get12HourPickerValue(`es-out-${id}`);
-                
-                const subNodes = document.querySelectorAll(`#edit-break-subrows-container-${id} .edit-subbreak-node`);
-                const subBreaksArray = [];
-                subNodes.forEach(n => {
-                    const nodeRowId = n.id;
-                    const subTitle = n.querySelector('.edit-subbreak-title').value.trim() || "Operational Break";
-                    const start = get12HourPickerValue(`eb-out-${nodeRowId}`);
-                    const end = get12HourPickerValue(`eb-in-${nodeRowId}`);
-                    subBreaksArray.push({ title: subTitle, start, end });
-                });
-                node.subBreaks = subBreaksArray;
-                
-                saveStateToStorage();
-                state.editingShiftId = null;
-                renderAdminConfigLists();
-                populateKioskDropdowns();
-                autoDetectShiftByMachineTime();
-            }
-        }
-        function deleteShiftConfig(id) {
-            state.shifts = state.shifts.filter(s => s.id !== id);
-            saveStateToStorage();
-            renderAdminConfigLists();
-            populateKioskDropdowns();
-            autoDetectShiftByMachineTime();
-        }
-
-        function changeAdminCredentials() {
-            const user = document.getElementById('new-admin-user').value.trim();
-            const pass = document.getElementById('new-admin-pass').value.trim();
-            if(!user || !pass) return;
-            state.adminAccount = { user, pass };
-            saveStateToStorage();
-            document.getElementById('new-admin-user').value = "";
-            document.getElementById('new-admin-pass').value = "";
-            alert("Security credentials modified successfully.");
-        }
-
-        function getTimeStringNow() {
-            const now = new Date();
-            let hours = now.getHours();
-            const minutes = now.getMinutes();
-            const period = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12 || 12;
-            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${period}`;
-        }
-
-        function timeToMinutes(tStr) {
-            if(!tStr || tStr === "--:--") return 0;
-            const [time, period] = tStr.split(' ');
-            let [h, m] = time.split(':').map(Number);
-            if (period === 'PM' && h !== 12) h += 12;
-            if (period === 'AM' && h === 12) h = 0;
-            return (h * 60) + m;
-        }
-
-        function generateRowHTML(log, isAdminRow = false) {
-            let shiftCell = `<div class="space-y-1">`;
-            if(log.timeIn) {
-                const lateTag = log.timeInLateMinutes > 0 ? `<span class="inline-block ml-0 sm:ml-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700">🔴 Overdue +${log.timeInLateMinutes}m</span>` : '';
-                shiftCell += `<p class="flex flex-col sm:flex-row sm:items-center gap-0.5"><span class="text-gray-400 text-[11px] sm:text-xs">In:</span> <span class="text-gray-700 font-medium">${log.timeIn}</span>${lateTag}</p>`;
-            }
-            if(log.timeOut) {
-                const earlyTag = log.timeOutEarlyMinutes > 0 ? `<span class="inline-block ml-0 sm:ml-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700">🔴 Early Out -${log.timeOutEarlyMinutes}m</span>` : '';
-                shiftCell += `<p class="flex flex-col sm:flex-row sm:items-center gap-0.5"><span class="text-gray-400 text-[11px] sm:text-xs">Out:</span> <span class="text-gray-700 font-medium">${log.timeOut}</span>${earlyTag}</p>`;
-            }
-            if(!log.timeIn && !log.timeOut) shiftCell += `<p class="text-gray-400 italic text-xs">No records active</p>`;
-            shiftCell += `</div>`;
-
-            let breakCell = `<div class="space-y-1.5 max-h-32 overflow-y-auto pr-1">`;
-            if(log.breakActivities && log.breakActivities.length > 0) {
-                log.breakActivities.forEach(b => {
-                    const earlyOutTag = b.breakOutEarlyMinutes > 0 ? `<span class="text-[9px] font-bold text-amber-600">(Early -${b.breakOutEarlyMinutes}m)</span>` : '';
-                    const lateOutTag = b.breakOutLateMinutes > 0 ? `<span class="text-[9px] font-bold text-red-600">(Late +${b.breakOutLateMinutes}m)</span>` : '';
-                    const overTag = b.overdueMinutes > 0 ? `<span class="inline-block px-1 rounded text-[9px] font-bold bg-red-100 text-red-700">⚠️ Overdue +${b.overdueMinutes}m</span>` : '';
-                    
-                    breakCell += `
-                        <div class="p-1.5 bg-gray-50 border border-gray-100 rounded text-[11px] leading-tight text-gray-700">
-                            <p class="font-bold text-gray-800 text-[11px] mb-0.5">☕ ${escapeHTML(b.breakName)}</p>
-                            <p><span class="text-gray-400">Out:</span> <span class="font-medium">${b.breakOut}</span> ${earlyOutTag}${lateOutTag}</p>
-                            <p><span class="text-gray-400">In:</span> <span class="font-medium">${b.breakIn || '<span class="text-amber-600 font-bold animate-pulse">On Break</span>'}</span> ${overTag}</p>
-                        </div>
-                    `;
-                });
-            } else {
-                breakCell += `<p class="text-gray-400 italic text-xs">No entries recorded</p>`;
-            }
-            breakCell += `</div>`;
-
-            const cleanName = log.name.split('(')[0].trim();
-
-            if (isAdminRow) {
-                return `
-                    <td class="px-4 py-4 text-center">
-                        <input type="checkbox" value="${log.id}" class="log-row-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500 scale-110 cursor-pointer">
-                    </td>
-                    <td class="px-4 py-4 break-words">
-                        <p class="font-bold text-gray-900">${escapeHTML(cleanName)}</p>
-                        <p class="text-[11px] font-mono font-semibold text-blue-600 mt-0.5">ID: ${escapeHTML(log.uniqueKey)}</p>
-                        <p class="text-[10px] text-gray-400 font-medium">Date: ${log.dateStamp || 'N/A'}</p>
-                    </td>
-                    <td class="px-4 py-4 text-gray-500 font-medium break-words">${escapeHTML(log.assignedShift)}</td>
-                    <td class="px-4 py-4">${shiftCell}</td>
-                    <td class="px-4 py-4">${breakCell}</td>
-                    <td class="px-4 py-4 text-center">
-                        <button onclick="deleteSingleLog('${log.id}')" class="text-red-600 hover:text-red-800 font-bold text-xs bg-red-50 hover:bg-red-100 px-2 py-1 rounded border border-red-200 transition-colors cursor-pointer">✕ Delete</button>
-                    </td>
-                `;
-            }
-
-            return `
-                <td class="px-4 sm:px-6 py-4 font-bold text-gray-900 break-words">${escapeHTML(cleanName)}<p class="text-[10px] text-gray-400 font-normal">ID: ${escapeHTML(log.uniqueKey)}</p></td>
-                <td class="px-4 sm:px-6 py-4 text-gray-500 font-medium break-words">${escapeHTML(log.assignedShift)}</td>
-                <td class="px-4 sm:px-6 py-4">${shiftCell}</td>
-                <td class="px-4 sm:px-6 py-4">${breakCell}</td>
-            `;
-        }
-
-        function renderLogsTable() {
-            const kioskTbody = document.getElementById('logs-tbody');
-            const adminTbody = document.getElementById('admin-logs-tbody');
-            if(!kioskTbody) return;
-            
-            const visibleKioskLogs = state.logs.filter(log => !state.kioskHiddenLogIds.includes(log.id));
-            
-            kioskTbody.innerHTML = visibleKioskLogs.map(log => `
-                <tr class="hover:bg-gray-50/50 transition-colors border-b border-gray-100">${generateRowHTML(log, false)}</tr>
-            `).join('') || `<tr><td colspan="4" class="px-6 py-8 text-center text-gray-400 italic text-xs sm:text-sm">No live workspace employee sessions stream profiles connected.</td></tr>`;
-
-            if(adminTbody) {
-                adminTbody.innerHTML = state.logs.map(log => `
-                    <tr class="hover:bg-gray-50/50 transition-colors border-b border-gray-100">${generateRowHTML(log, true)}</tr>
-                `).join('') || `<tr><td colspan="6" class="px-6 py-8 text-center text-gray-400 italic text-xs sm:text-sm">No recorded index history logs inside master partitions.</td></tr>`;
-            }
-        }
-
         function exportToCSV() {
-            if(state.logs.length === 0) { alert("No logs recorded to generate raw summaries."); return; }
-            const startVal = document.getElementById('csv-start-date').value; 
-            const endVal = document.getElementById('csv-end-date').value;
+            const startStr = document.getElementById('csv-start-date').value;
+            const endStr = document.getElementById('csv-end-date').value;
 
             let filteredLogs = state.logs;
-            if(startVal) filteredLogs = filteredLogs.filter(l => !l.dateStamp || l.dateStamp >= startVal);
-            if(endVal) filteredLogs = filteredLogs.filter(l => !l.dateStamp || l.dateStamp <= endVal);
+            if (startStr) filteredLogs = filteredLogs.filter(l => new Date(l.date) >= new Date(startStr));
+            if (endStr) filteredLogs = filteredLogs.filter(l => new Date(l.date) <= new Date(endStr));
 
-            if(filteredLogs.length === 0) { alert("No records matches specified filtering parameters criteria."); return; }
-
-            let csvRows = [["Date", "Employee ID", "Employee Name", "Assigned Shift Matrix", "Time In Stamp", "Time Out Stamp", "Allocated Break Summary"]];
-            filteredLogs.forEach(log => {
-                const cleanName = log.name.split('(')[0].trim();
-                let dynamicBreakSummary = log.breakActivities.map(b => `[${b.breakName} Out: ${b.breakOut} In: ${b.breakIn || 'Pending'}]`).join('; ');
-                csvRows.push([log.dateStamp||"N/A", `"${log.uniqueKey}"`, `"${cleanName}"`, `"${log.assignedShift}"`, log.timeIn||"", log.timeOut||"", `"${dynamicBreakSummary}"`]);
+            let csv = "Log ID,Employee ID,Employee Name,Date,Shift,Shift Hours,Time In,Time Out,Breaks Mapping\n";
+            filteredLogs.forEach(l => {
+                const brkStr = l.breaks.map(b => `${b.name}[${b.out}->${b.in}]`).join(' | ');
+                csv += `"${l.id}","${l.empId}","${l.empName}","${l.date}","${l.shiftName}","${l.shiftWindow}","${l.timeIn}","${l.timeOut}","${brkStr}"\n`;
             });
-            
-            const link = document.createElement("a");
-            link.setAttribute("href", encodeURI("data:text/csv;charset=utf-8," + csvRows.map(e => e.join(",")).join("\n")));
-            link.setAttribute("download", `Attendance_Report_${startVal||'Start'}_to_${endVal||'End'}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            triggerFileDownload(csv, `attendance_logs_report.csv`, "text/csv");
         }
 
         function exportDatabaseJSON() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
-            const dlAnchorElem = document.createElement('a');
-            dlAnchorElem.setAttribute("href", dataStr);
-            dlAnchorElem.setAttribute("download", `attendance_system_db_${Date.now()}.json`);
-            dlAnchorElem.click();
+            const rawString = JSON.stringify(state, null, 4);
+            triggerFileDownload(rawString, "attendance_system_master_db.json", "application/json");
         }
 
         function importDatabaseJSON(event) {
@@ -1602,49 +1378,54 @@
             reader.onload = function(e) {
                 try {
                     const parsed = JSON.parse(e.target.result);
-                    if (parsed.shifts || parsed.employees || parsed.logs) {
-                        state.shifts = parsed.shifts || [];
-                        state.employees = parsed.employees || [];
-                        state.logs = parsed.logs || [];
-                        state.kioskHiddenLogIds = parsed.kioskHiddenLogIds || [];
-                        state.systemMode = parsed.systemMode || "schedule";
-                        state.autoLogoutMinutes = parsed.autoLogoutMinutes || 0;
-                        if (parsed.adminAccount) state.adminAccount = parsed.adminAccount;
-                        
-                        state.shifts.forEach(s => { if(!s.subBreaks) s.subBreaks = s.breaks || []; });
-
+                    if (parsed && parsed.shifts && parsed.employees && parsed.logs) {
+                        state = parsed;
+                        state.isAdminAuthenticated = true;
+                        state.shifts.forEach(s => { if (!s.subBreaks) s.subBreaks = []; });
                         saveStateToStorage();
                         renderAdminConfigLists();
                         renderLogsTable();
                         populateKioskDropdowns();
                         applyModeLayoutRules();
-                        alert("Database configuration maps imported successfully.");
+                        Swal.fire('Database Restored', 'Maps configurations imported successfully.', 'success');
                     } else {
-                        alert("Import failed: Structure templates mismatch errors.");
+                        Swal.fire('Structure Mismatch', 'Templates mapping profile format tracking discrepancies found.', 'error');
                     }
                 } catch (err) {
-                    alert("Fatal Parse Error: Ensure imported file is valid JSON data.");
+                    Swal.fire('Parse Failure', 'Fatal structure decoding map evaluation tracking fault.', 'error');
                 }
+                event.target.value = "";
             };
             reader.readAsText(file);
         }
 
-        function showFeedback(element, text, isCritical) {
-            if(!element) return;
-            element.innerText = text;
-            element.classList.remove("hidden");
-            element.className = `mt-4 text-xs sm:text-sm font-semibold ${isCritical ? 'text-red-600' : 'text-emerald-600'}`;
+        function triggerFileDownload(content, fileName, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
 
         function escapeHTML(str) {
-            return str.replace(/[&<>'\"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+            if (!str) return '';
+            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
         }
 
-        initClockSize();
-        initCreationPickers();
-        populateKioskDropdowns();
-        applyModeLayoutRules();
-        renderLogsTable();
+        // System Initialization Trigger Routines
+        window.addEventListener('DOMContentLoaded', () => {
+            loadStateFromStorage();
+            initClockSize();
+            initCreationPickers();
+            populateKioskDropdowns();
+            applyModeLayoutRules();
+            renderLogsTable();
+            
+            setInterval(updateLiveStationClock, 1000);
+            updateLiveStationClock();
+        });
     </script>
 </body>
 </html>

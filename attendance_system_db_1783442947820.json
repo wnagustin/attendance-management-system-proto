@@ -1,0 +1,14 @@
+{
+  "adminAccount": {
+    "user": "admin-jun",
+    "pass": "1234"
+  },
+  "isAdminAuthenticated": true,
+  "editingShiftId": null,
+  "shifts": [],
+  "employees": [],
+  "logs": [],
+  "kioskHiddenLogIds": [],
+  "systemMode": "schedule",
+  "autoLogoutMinutes": 15
+}

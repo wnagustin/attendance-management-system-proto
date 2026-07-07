@@ -191,7 +191,7 @@
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <button onclick="openAdminSectionModal('admin-modal-section-1')" class="bg-white border border-gray-200 rounded-xl p-5 shadow-xs hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group min-h-[140px] cursor-pointer">
+                    <button onclick="openAdminSectionModal('admin-modal-section-1')" class="bg-white border border-gray-200 rounded-xl p-5 shadow-xs hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group min-h-[140px] group cursor-pointer">
                         <div class="space-y-1">
                             <span class="text-2xl">🛡️</span>
                             <h3 class="font-bold text-gray-900 text-base group-hover:text-blue-600 transition-colors">Attendance Management</h3>
@@ -200,7 +200,7 @@
                         <span class="text-xs font-semibold text-blue-600 uppercase tracking-wider mt-2 inline-flex items-center gap-1">Open Panel &rarr;</span>
                     </button>
 
-                    <button onclick="openAdminSectionModal('admin-modal-section-2')" class="bg-white border border-gray-200 rounded-xl p-5 shadow-xs hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group min-h-[140px] cursor-pointer">
+                    <button onclick="openAdminSectionModal('admin-modal-section-2')" class="bg-white border border-gray-200 rounded-xl p-5 shadow-xs hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group min-h-[140px] group cursor-pointer">
                         <div class="space-y-1">
                             <span class="text-2xl">👥</span>
                             <h3 class="font-bold text-gray-900 text-base group-hover:text-blue-600 transition-colors">Employee Accounts</h3>
@@ -209,7 +209,7 @@
                         <span class="text-xs font-semibold text-blue-600 uppercase tracking-wider mt-2 inline-flex items-center gap-1">Open Panel &rarr;</span>
                     </button>
 
-                    <button onclick="openAdminSectionModal('admin-modal-section-3')" class="bg-white border border-gray-200 rounded-xl p-5 shadow-xs hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group min-h-[140px] cursor-pointer">
+                    <button onclick="openAdminSectionModal('admin-modal-section-3')" class="bg-white border border-gray-200 rounded-xl p-5 shadow-xs hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group min-h-[140px] group cursor-pointer">
                         <div class="space-y-1">
                             <span class="text-2xl">📋</span>
                             <h3 class="font-bold text-gray-900 text-base group-hover:text-blue-600 transition-colors">Shift Profiles Config</h3>
@@ -218,7 +218,7 @@
                         <span class="text-xs font-semibold text-blue-600 uppercase tracking-wider mt-2 inline-flex items-center gap-1">Open Panel &rarr;</span>
                     </button>
 
-                    <button onclick="openAdminSectionModal('admin-modal-section-4')" class="bg-white border border-gray-200 rounded-xl p-5 shadow-xs hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group min-h-[140px] cursor-pointer">
+                    <button onclick="openAdminSectionModal('admin-modal-section-4')" class="bg-white border border-gray-200 rounded-xl p-5 shadow-xs hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group min-h-[140px] group cursor-pointer">
                         <div class="space-y-1">
                             <span class="text-2xl">🔑</span>
                             <h3 class="font-bold text-gray-900 text-base group-hover:text-blue-600 transition-colors">Admin Access</h3>
@@ -497,7 +497,7 @@
             localStorage.setItem('proto_ams_storage_v4', JSON.stringify(state));
         }
 
-        // NEW: AUTOMATIC REPOSITORY DATABASE INTEGRATION CONTEXT
+        // SMART DATA MAPPING REPOSITORY INITIALIZER FOR YOUR CUSTOM DATABASE SCHEMAS
         async function autoLoadRepositoryDatabase() {
             try {
                 const response = await fetch('./database.json');
@@ -506,22 +506,75 @@
                     return;
                 }
                 const parsed = await response.json();
-                if (parsed && Array.isArray(parsed.employees) && Array.isArray(parsed.shifts)) {
-                    // Update engine core matrices
-                    state.employees = parsed.employees;
-                    state.shifts = parsed.shifts;
+                if (parsed) {
+                    // 1. Map Employee Structure Keys (.idNumber / .employeeName -> .id / .name)
+                    if (Array.isArray(parsed.employees)) {
+                        state.employees = parsed.employees.map(emp => {
+                            return {
+                                id: emp.id || emp.idNumber || '',
+                                name: emp.name || emp.employeeName || 'Unknown Employee Matrix'
+                            };
+                        });
+                    }
+
+                    // 2. Map Shift Structure Keys (.inStart / .outStart and Day strings -> Native Format)
+                    if (Array.isArray(parsed.shifts)) {
+                        const dayStringMap = { "Mon": 0, "Tue": 1, "Wed": 2, "Thu": 3, "Fri": 4, "Sat": 5, "Sun": 6 };
+                        
+                        state.shifts = parsed.shifts.map(s => {
+                            let standardizedDays = [];
+                            if (Array.isArray(s.days)) {
+                                standardizedDays = s.days.map(d => typeof d === 'string' ? (dayStringMap[d] ?? d) : d);
+                            }
+
+                            const checkInStr = s.timeInStr || s.inStart || '08:00 AM';
+                            const checkOutStr = s.timeOutStr || s.outStart || '05:00 PM';
+
+                            const parseMinutes = (timeStr) => {
+                                const match = timeStr.match(/^(\d+):(\d+)\s+(AM|PM)$/i);
+                                if (!match) return 480;
+                                let hr = Number(match[1]);
+                                const min = Number(match[2]);
+                                const ampm = match[3].toUpperCase();
+                                if (ampm === 'PM' && hr < 12) hr += 12;
+                                if (ampm === 'AM' && hr === 12) hr = 0;
+                                return hr * 60 + min;
+                            };
+
+                            const rawBreaks = s.subBreaks || s.breaks || [];
+                            const normalizedBreaks = rawBreaks.map(b => {
+                                const bStart = b.startStr || b.start || '12:00 PM';
+                                const bEnd = b.endStr || b.end || '01:00 PM';
+                                return {
+                                    title: b.title || 'Rest Intermission Break',
+                                    startStr: bStart,
+                                    endStr: bEnd,
+                                    startMinutes: parseMinutes(bStart),
+                                    endMinutes: parseMinutes(bEnd)
+                                };
+                            });
+
+                            return {
+                                name: s.name || 'Standard Operational Roster',
+                                days: standardizedDays,
+                                timeInStr: checkInStr,
+                                timeOutStr: checkOutStr,
+                                startMinutes: parseMinutes(checkInStr),
+                                endMinutes: parseMinutes(checkOutStr),
+                                subBreaks: normalizedBreaks,
+                                breaks: normalizedBreaks
+                            };
+                        });
+                    }
+
+                    // 3. Extract General Meta Configuration Parameters
                     state.logs = parsed.logs || state.logs;
                     if (parsed.adminAccount) state.adminAccount = parsed.adminAccount;
                     if (parsed.systemMode) state.systemMode = parsed.systemMode;
                     if (parsed.lockoutMinutes !== undefined) state.lockoutMinutes = parsed.lockoutMinutes;
 
-                    // Ensure multi-break backward compatibility matrices arrays match
-                    state.shifts.forEach(s => {
-                        if(!s.subBreaks) s.subBreaks = s.breaks || [];
-                    });
-
                     saveStateToStorage();
-                    console.log("Successfully auto-loaded system matrices definitions from repository database.json structure map!");
+                    console.log("Successfully auto-loaded and transformed database schema layers from repository!");
                 }
             } catch (err) {
                 console.error("Repository auto-fetch parsing error encounter parameters:", err);
@@ -689,7 +742,7 @@
 
         function evaluateAutomatedShiftSyncTimeline(now) {
             if(state.systemMode !== 'schedule' || state.shifts.length === 0) return;
-            const currentDayIndex = (now.getDay() + 6) % 7; // Convert Su=0, Mo=1 to Mo=0, Su=6
+            const currentDayIndex = (now.getDay() + 6) % 7;
             const currentMinutes = now.getHours() * 60 + now.getMinutes();
             
             let matchedIndex = 0;
@@ -821,7 +874,7 @@
                     evaluateAdminPanelVisibilityState();
                 }, 800);
             } else {
-                showFeedback(fb, "Identity validation error: Credentials parameters mismatch mismatch rejects.", true);
+                showFeedback(fb, "Identity validation error: Credentials parameters mismatch rejects.", true);
             }
         }
 
@@ -1169,291 +1222,4 @@
 
             if(filtered.length === 0) { alert("Timeline boundary filtration bounds output parameters context returns empty row matrix arrays."); return; }
 
-            let csv = "Log ID,Employee ID,Employee Name,Operational Profile,Clock In Time,Clock Out Time,Break Log Streams Matrix Maps\n";
-            filtered.forEach(l => {
-                const emp = state.employees.find(e => e.id === l.idNumber) || { name: 'Unresolved Data Reference Matrix' };
-                const bText = (l.breaks || []).map(b => `${b.name}[${b.outTime || ''}-${b.inTime || ''}]`).join(' | ');
-                csv += `"${l.logId}","${l.idNumber}","${emp.name.replace(/"/g,'""')}","${l.shiftName.replace(/"/g,'""')}","${l.timeIn || ''}","${l.timeOut || ''}","${bText.replace(/"/g,'""')}"\n`;
-            });
-
-            triggerBlobDownloadLink(csv, `ams_attendance_stream_export_${Date.now()}.csv`, "text/csv");
-        }
-
-        function exportDatabaseJSON() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
-            const dlAnchorElem = document.createElement('a');
-            dlAnchorElem.setAttribute("href", dataStr);
-            dlAnchorElem.setAttribute("download", `ams_unified_database_backup_${Date.now()}.json`);
-            dlAnchorElem.click();
-        }
-
-        function importDatabaseJSON(evt) {
-            const file = evt.target.files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const parsed = JSON.parse(e.target.result);
-                    if(parsed && Array.isArray(parsed.employees) && Array.isArray(parsed.shifts)) {
-                        state = { ...state, ...parsed };
-                        state.shifts.forEach(s => {
-                            if(!s.subBreaks) s.subBreaks = s.breaks || [];
-                        });
-
-                        saveStateToStorage();
-                        renderAdminConfigLists();
-                        renderLogsTable();
-                        populateKioskDropdowns();
-                        applyModeLayoutRules();
-                        alert("Database configuration maps imported successfully.");
-                    } else {
-                        alert("Import failed: Structure templates mismatch errors.");
-                    }
-                } catch (err) {
-                    alert("Fatal Parse Error: Ensure imported file is valid JSON data.");
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        function renderAdminConfigLists() {
-            if(document.getElementById('admin-modal-section-1').classList.contains('hidden') === false) renderAdminLogsTableRows();
-            if(document.getElementById('admin-modal-section-2').classList.contains('hidden') === false) renderEmployeeRosterAdminControls();
-            if(document.getElementById('admin-modal-section-3').classList.contains('hidden') === false) renderShiftConfigProfilesList();
-        }
-
-        function triggerBlobDownloadLink(content, filename, contentType) {
-            const blob = new Blob([content], { type: contentType });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function openPunchModal(action) {
-            currentActiveAction = action;
-            const select = document.getElementById('emp-shift-select');
-            if(state.shifts.length === 0 || !select.value) {
-                alert("Missing parameter dependencies context profiles checks failed: Operational layout environment timeline parameters missing.");
-                return;
-            }
-
-            const title = document.getElementById('modal-title');
-            const subtitle = document.getElementById('modal-subtitle');
-            
-            const actionsLabelsMap = {
-                timeIn: { t: "PUNCH STATION OVERWATCH: CLOCK IN SEQUENCE", s: "Verify employee identification criteria parameters rules rows context to process main timeline start boundary." },
-                timeOut: { t: "PUNCH STATION OVERWATCH: CLOCK OUT SEQUENCE", s: "Verify employee identification criteria parameters rules rows context to process main timeline exit boundary parameters." },
-                breakOut: { t: "PUNCH STATION OVERWATCH: START ALLOCATED BREAK", s: "Verify employee identification criteria parameters rules rows context to isolate active profile break parameters routing." },
-                breakIn: { t: "PUNCH STATION OVERWATCH: RESUME ACTIVE OPERATION", s: "Verify employee identification criteria parameters rules rows context to clear active profile break parameters routing entries." }
-            };
-
-            const setting = actionsLabelsMap[action] || { t: "Identity Verification Gate", s: "Submit authorization payload boundaries context records parameters rows." };
-            if(title) title.innerText = setting.t;
-            if(subtitle) subtitle.innerText = setting.s;
-
-            document.getElementById('modal-emp-identity').value = '';
-            document.getElementById('punch-modal').classList.remove('hidden');
-        }
-
-        function closePunchModal() {
-            document.getElementById('punch-modal').classList.add('hidden');
-            stopQRScanner();
-        }
-
-        function toggleQRScanner() {
-            const container = document.getElementById('qr-reader-container');
-            if(!container) return;
-            
-            if(container.classList.contains('hidden')) {
-                container.classList.remove('hidden');
-                Html5Qrcode.getCameras().then(devices => {
-                    if(devices && devices.length > 0) {
-                        let targetCamId = devices[0].id;
-                        // Prefer back camera if available for barcode style scanner configurations
-                        const backCam = devices.find(d => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('environment'));
-                        if(backCam) targetCamId = backCam.id;
-
-                        html5QrcodeScanner = new Html5Qrcode("qr-reader");
-                        html5QrcodeScanner.start(
-                            targetCamId,
-                            { fps: 10, qrbox: { width: 220, height: 220 } },
-                            (decodedText) => {
-                                document.getElementById('modal-emp-identity').value = decodedText;
-                                stopQRScanner();
-                                submitPunch();
-                            },
-                            () => {} // Silent catch framework bounds
-                        ).catch(err => { console.error("Camera thread access error:", err); container.classList.add('hidden'); });
-                    } else { alert("Hardware layer identification check error: Video acquisition tracking sensors completely unattached missing device layout."); container.classList.add('hidden'); }
-                }).catch(e => { console.error("Identity query threads rejection errors boundaries:", e); container.classList.add('hidden'); });
-            } else {
-                stopQRScanner();
-            }
-        }
-
-        function stopQRScanner() {
-            const container = document.getElementById('qr-reader-container');
-            if(container) container.classList.add('hidden');
-            if(html5QrcodeScanner) {
-                try {
-                    html5QrcodeScanner.stop().then(() => { html5QrcodeScanner = null; }).catch(e => console.log("Stream cleanup error context handler:", e));
-                } catch(e) { html5QrcodeScanner = null; }
-            }
-        }
-
-        function submitPunch() {
-            const id = document.getElementById('modal-emp-identity').value.trim();
-            const kioskFb = document.getElementById('kiosk-feedback');
-            if(!id) { alert("Identity constraints mismatch fields input values context pointers parameters missing row."); return; }
-            
-            const emp = state.employees.find(e => e.id === id);
-            if(!emp) { alert(`Infrastructure constraint check parameter lookup error: Account row index value [${id}] does not match any current collection mappings lines items rows registers configuration matrices.`); return; }
-
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            const dateStr = now.toLocaleDateString([], { year: 'numeric', month: '2-digit', day: '2-digit' });
-            
-            const select = document.getElementById('emp-shift-select');
-            const activeShift = state.shifts[Number(select.value)];
-            
-            let todayLog = state.logs.find(l => l.idNumber === id && l.dateKey === dateStr);
-            let feedbackText = "";
-            let feedbackIsCritical = false;
-
-            if(currentActiveAction === 'timeIn') {
-                if(todayLog && todayLog.timeIn) {
-                    feedbackText = `Operational error: Employee entry validation logs indicator registers double clocking conflict constraints parameters row duplicate for [${emp.name}].`;
-                    feedbackIsCritical = true;
-                } else {
-                    if(!todayLog) {
-                        todayLog = {
-                            logId: 'log-' + Date.now() + '-' + Math.random().toString(36).substr(2,4),
-                            idNumber: id,
-                            dateKey: dateStr,
-                            timestamp: now.getTime(),
-                            shiftName: activeShift.name,
-                            timeIn: timeStr,
-                            timeOut: null,
-                            breaks: []
-                        };
-                        state.logs.push(todayLog);
-                    } else {
-                        todayLog.timeIn = timeStr;
-                        todayLog.shiftName = activeShift.name;
-                    }
-                    feedbackText = `Clock-in record parameters registered: Successfully logged entry boundary coordinate tracking data parameters for [${emp.name}] at ${timeStr}.`;
-                }
-            } else if(currentActiveAction === 'timeOut') {
-                if(!todayLog || !todayLog.timeIn) {
-                    // Force logging clock out logic tracking parameters even if clock-in missing records
-                    if(!todayLog) {
-                        todayLog = {
-                            logId: 'log-' + Date.now() + '-' + Math.random().toString(36).substr(2,4),
-                            idNumber: id,
-                            dateKey: dateStr,
-                            timestamp: now.getTime(),
-                            shiftName: activeShift.name,
-                            timeIn: null,
-                            timeOut: timeStr,
-                            breaks: []
-                        };
-                        state.logs.push(todayLog);
-                    } else {
-                        todayLog.timeOut = timeStr;
-                    }
-                    feedbackText = `Clock-out exceptions warning map parameters logging updated: Successfully checked-out timeline tracking constraints properties rules without core starting reference parameters bounds criteria logs for [${emp.name}] at ${timeStr}.`;
-                } else if(todayLog.timeOut) {
-                    feedbackText = `Operational duplicate constraint error rule flags: Clock-out exit line coordinate rows map contains multiple indicators entry tracking conflicts rows arrays profiles updates on user record for [${emp.name}].`;
-                    feedbackIsCritical = true;
-                } else {
-                    todayLog.timeOut = timeStr;
-                    feedbackText = `Clock-out parameters array updated rows sequence logs success metrics tracked mapped: Successfully recorded exit boundary metrics rows profiles logs array data tracking matrices properties parameters values records for [${emp.name}] at ${timeStr}.`;
-                }
-            } else if(currentActiveAction === 'breakOut') {
-                if(!todayLog) {
-                    feedbackText = `Break context violation sequence tracker routing fails validation: Cannot launch allocated custom interval matrices entries profiles records rules mapping constraints for a user lacking standard day shift clock-in metrics keys rows properties fields on user record line for [${emp.name}].`;
-                    feedbackIsCritical = true;
-                } else {
-                    const activeBreak = (todayLog.breaks || []).find(b => !b.inTime);
-                    if(activeBreak) {
-                        feedbackText = `Roster processing sequence warning parameter update rejected: Active break profile row parameters array block [${activeBreak.name}] remains fully active un-cleared tracking parameters block. Close ongoing matrices first for [${emp.name}].`;
-                        feedbackIsCritical = true;
-                    } else {
-                        const currentMinutes = now.getHours() * 60 + now.getMinutes();
-                        let breakName = "Custom Intermission Break Interval";
-                        
-                        if(activeShift && Array.isArray(activeShift.subBreaks)) {
-                            const matchedBreakTemplate = activeShift.subBreaks.find(b => currentMinutes >= (b.startMinutes - 45) && currentMinutes <= (b.endMinutes + 45));
-                            if(matchedBreakTemplate) breakName = matchedBreakTemplate.title;
-                        }
-
-                        todayLog.breaks.push({
-                            name: breakName,
-                            outTime: timeStr,
-                            inTime: null
-                        });
-                        feedbackText = `Break logging row array updated successfully constraints mapped indicators processing: Initiated interval pause tracking structures maps [${breakName}] matrix values metrics arrays logs fields rows parameters maps for [${emp.name}] at ${timeStr}.`;
-                    }
-                }
-            } else if(currentActiveAction === 'breakIn') {
-                if(!todayLog || !todayLog.breaks || todayLog.breaks.length === 0) {
-                    feedbackText = `Data constraints operations exception constraint: No initialized structural open lines break profiles interval arrays tracking keys maps logs discovered on user parameters records collection for [${emp.name}].`;
-                    feedbackIsCritical = true;
-                } else {
-                    const targetActiveBreak = todayLog.breaks.find(b => !b.inTime);
-                    if(!targetActiveBreak) {
-                        feedbackText = `Data integrity check routing parameters warnings: Discovery validation queries across structural records arrays returned no active hanging interval parameters lines records blocks for [${emp.name}].`;
-                        feedbackIsCritical = true;
-                    } else {
-                        targetActiveBreak.inTime = timeStr;
-                        feedbackText = `Break profile metrics interval bounds closed parameter validation logs success metrics fields: Successfully restored regular production operational timelines sync arrays parameter values data fields mapping constraints tracking properties parameters on user data row for [${emp.name}] at ${timeStr}.`;
-                    }
-                }
-            }
-
-            saveStateToStorage();
-            closePunchModal();
-            renderLogsTable();
-            renderAdminConfigLists();
-
-            if(kioskFb) {
-                kioskFb.innerText = feedbackText;
-                kioskFb.className = `mt-4 p-3 rounded-lg text-xs sm:text-sm font-bold tracking-tight shadow-2xs border ${feedbackIsCritical ? 'bg-red-50 text-red-700 border-red-200' : 'bg-emerald-50 text-emerald-800 border-emerald-200'}`;
-                kioskFb.classList.remove('hidden');
-                
-                // Keep errors on screen slightly longer for audit visibility
-                setTimeout(() => { kioskFb.classList.add('hidden'); }, feedbackIsCritical ? 6500 : 4500);
-            }
-        }
-
-        function showFeedback(element, text, isCritical) {
-            if(!element) return;
-            element.innerText = text;
-            element.classList.remove("hidden");
-            element.className = `mt-4 text-xs sm:text-sm font-semibold ${isCritical ? 'text-red-600' : 'text-emerald-600'}`;
-        }
-
-        function escapeHTML(str) {
-            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
-        }
-
-        // BOOTSTRAP INITIALIZATION PIPELINES LAYER
-        (async function runApplicationLifecycleBootstrap() {
-            loadStateFromStorage();
-            
-            // Execute automated asynchronous database JSON mapping checks from the repository
-            await autoLoadRepositoryDatabase();
-            
-            initClockSize();
-            initCreationPickers();
-            populateKioskDropdowns();
-            applyModeLayoutRules();
-            renderLogsTable();
-            runLiveClockCounter();
-        })();
-    </script>
-</body>
-</html>
+            let csv = "Log ID,Employee ID,Employee Name,Operational Profile,Clock In

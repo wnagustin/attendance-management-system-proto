@@ -314,7 +314,7 @@
                             <span class="text-xs font-bold text-gray-600 block border-b border-gray-200 pb-1">Register Account Manually</span>
                             <div>
                                 <label class="text-[10px] text-gray-500 font-medium block">Employee ID Number</label>
-                                <input type="text" id="new-emp-id" placeholder="e.g., EMP-2026-01" class="w-full px-2 py-1.5 bg-white border border-gray-300 text-gray-800 rounded text-xs">
+                                <input type="text" id="new-emp-id" placeholder="e.g. 1234567890abcdef" class="w-full px-2 py-1.5 bg-white border border-gray-300 text-gray-800 rounded text-xs">
                             </div>
                             <div>
                                 <label class="text-[10px] text-gray-500 font-medium block">Employee Full Name</label>
@@ -324,11 +324,11 @@
                         </div>
                         
                         <div class="bg-gray-50 p-4 rounded-lg space-y-3 border border-gray-200 shadow-sm">
-                            <span class="text-xs font-bold text-gray-600 block border-b border-gray-200 pb-1">Bulk CSV Roster Actions</span>
+                            <span class="text-xs font-bold text-gray-600 block border-b border-gray-200 pb-1">Bulk CSV Actions</span>
                             <div class="flex flex-col gap-2">
-                                <button onclick="downloadEmployeeTemplateCSV()" class="w-full bg-slate-700 hover:bg-slate-800 text-white text-xs py-1.5 rounded font-medium cursor-pointer flex justify-center items-center gap-1">📋 Export Roster CSV</button>
+                                <button onclick="downloadEmployeeTemplateCSV()" class="w-full bg-slate-700 hover:bg-slate-800 text-white text-xs py-1.5 rounded font-medium cursor-pointer flex justify-center items-center gap-1">📋 Export CSV</button>
                                 <label class="w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white text-xs py-1.5 rounded font-medium cursor-pointer block">
-                                    📥 Import Roster CSV
+                                    📥 Import CSV
                                     <input type="file" id="emp-csv-import" accept=".csv" onchange="importEmployeesFromCSV(event)" class="hidden">
                                 </label>
                             </div>
@@ -604,12 +604,6 @@
             }, parseInt(state.autoLogoutMinutes) * 60 * 1000);
         }
 
-        function updateLockoutTimerSetting(val) {
-            state.autoLogoutMinutes = parseInt(val);
-            saveStateToStorage();
-            resetInactivityLockoutCounter();
-        }
-
         window.addEventListener('mousemove', resetInactivityLockoutCounter);
         window.addEventListener('keydown', resetInactivityLockoutCounter);
 
@@ -825,7 +819,6 @@
             document.getElementById('modal-emp-identity').value = "";
             document.getElementById('punch-modal').classList.remove('hidden');
             
-            // Instantly start camera streams upon tapping any operational punch buttons
             toggleQRScanner(); 
         }
 
@@ -1102,7 +1095,6 @@
 
             const brRows = document.querySelectorAll('#new-break-subrows-wrapper > div');
             const breaks = [];
-            let timelineBreaksFaulty = false;
 
             brRows.forEach(r => {
                 const inputs = r.querySelectorAll('input, select');
@@ -1112,8 +1104,6 @@
 
                 breaks.push({ id: "br-" + Math.random().toString(36).substr(2, 5), label: label, start: { h: bHStart, m: bMStart, r: bRStart }, end: { h: bHEnd, m: bMEnd, r: bREnd } });
             });
-
-            if (timelineBreaksFaulty) return;
 
             if (state.editingShiftId) {
                 const idx = state.shifts.findIndex(x => x.id === state.editingShiftId);
@@ -1529,7 +1519,6 @@
             return str.replace(/[&<>'\"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
         }
 
-        // System Initialization Trigger Routines
         window.addEventListener('DOMContentLoaded', () => {
             loadStateFromStorage();
             initClockSize();

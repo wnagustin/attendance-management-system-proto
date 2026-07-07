@@ -208,121 +208,1391 @@
                         </div>
                         <span class="text-xs font-semibold text-blue-600 uppercase tracking-wider mt-2 inline-flex items-center gap-1">Open Panel &rarr;</span>
                     </button>
+
+                    <button onclick="openAdminSectionModal('admin-modal-section-3')" class="bg-white border border-gray-200 rounded-xl p-5 shadow-xs hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group min-h-[140px] cursor-pointer">
+                        <div class="space-y-1">
+                            <span class="text-2xl">📋</span>
+                            <h3 class="font-bold text-gray-900 text-base group-hover:text-blue-600 transition-colors">Shift Profiles Config</h3>
+                            <p class="text-xs text-gray-500 font-normal">Define shift timeline parameters and multi-break matrices.</p>
+                        </div>
+                        <span class="text-xs font-semibold text-blue-600 uppercase tracking-wider mt-2 inline-flex items-center gap-1">Open Panel &rarr;</span>
+                    </button>
+
+                    <button onclick="openAdminSectionModal('admin-modal-section-4')" class="bg-white border border-gray-200 rounded-xl p-5 shadow-xs hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group min-h-[140px] cursor-pointer">
+                        <div class="space-y-1">
+                            <span class="text-2xl">🔑</span>
+                            <h3 class="font-bold text-gray-900 text-base group-hover:text-blue-600 transition-colors">Admin Access</h3>
+                            <p class="text-xs text-gray-500 font-normal">Modify primary authorization values and login criteria passwords.</p>
+                        </div>
+                        <span class="text-xs font-semibold text-blue-600 uppercase tracking-wider mt-2 inline-flex items-center gap-1">Open Panel &rarr;</span>
+                    </button>
                 </div>
+
             </div>
         </section>
     </main>
 
-    <script>
-        // State variables
-        let state = {
-            shifts: [],
-            logs: []
-        };
-        let adminAccount = null;
+    <!-- LOGOUT CONFIRMATION MODAL -->
+    <div id="logout-confirm-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 animate-fade-in">
+        <div class="bg-white rounded-xl border border-gray-200 shadow-2xl p-5 w-full max-w-sm text-center">
+            <span class="text-3xl block mb-2">🔒</span>
+            <h3 class="font-bold text-gray-900 text-base mb-1">Confirm Administration Logout</h3>
+            <p class="text-xs text-gray-500 mb-5">Are you sure you want to exit the control panel? Access changes will be locked.</p>
+            <div class="flex gap-2 justify-center">
+                <button onclick="closeLogoutModal()" class="px-4 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-md transition-colors cursor-pointer">Cancel</button>
+                <button onclick="confirmLogOutAdmin()" class="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-md transition-colors cursor-pointer">Logout Panel</button>
+            </div>
+        </div>
+    </div>
 
-        function saveStateToStorage() {
-            localStorage.setItem("attendance_state", JSON.stringify(state));
-            if(adminAccount) {
-                localStorage.setItem("admin_account", JSON.stringify(adminAccount));
+    <!-- ADMIN MODAL SECTION 1 -->
+    <div id="admin-modal-section-1" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-40 animate-fade-in">
+        <div class="bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-6xl max-h-[90vh] flex flex-col">
+            <div class="px-6 py-4 border-b border-gray-200 bg-slate-50 flex justify-between items-center">
+                <div>
+                    <h3 class="font-bold text-gray-900 text-base sm:text-lg flex items-center gap-2">🛡️ Attendance Management</h3>
+                    <p class="text-xs text-gray-500 font-normal">Master live log matrix data view.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="deleteSelectedLogs()" class="bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 text-xs font-semibold py-1 px-2.5 rounded transition-colors cursor-pointer">Delete Selected</button>
+                    <button onclick="clearAllLogs()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold py-1 px-2.5 rounded transition-colors cursor-pointer">Clear All Data</button>
+                    <button onclick="closeAdminSectionModal('admin-modal-section-1')" class="text-gray-400 hover:text-gray-600 font-bold text-lg p-1.5 ml-2 cursor-pointer">✕</button>
+                </div>
+            </div>
+            <div class="p-0 overflow-auto flex-1">
+                <table class="w-full text-left text-xs sm:text-sm border-collapse min-w-[800px]">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-500 uppercase text-[10px] sm:text-[11px] font-bold tracking-wider border-b border-gray-200 sticky top-0 z-10">
+                            <th class="px-4 py-3 w-[5%] text-center bg-gray-100">
+                                <input type="checkbox" id="select-all-logs" onclick="toggleSelectAllLogs(this)" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 scale-110 cursor-pointer">
+                            </th>
+                            <th class="px-4 py-3 w-[22%] bg-gray-100">Employee Info</th>
+                            <th class="px-4 py-3 w-[22%] bg-gray-100">Target Shift Assigned</th>
+                            <th class="px-4 py-3 w-[22%] bg-gray-100">Shift Main Window (In / Out)</th>
+                            <th class="px-4 py-3 w-[22%] bg-gray-100">Break History Profiles</th>
+                            <th class="px-4 py-3 w-[7%] text-center bg-gray-100">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-logs-tbody" class="divide-y divide-gray-100 bg-white"></tbody>
+                </table>
+            </div>
+            <div class="px-6 py-3 border-t border-gray-100 bg-gray-50 flex justify-end">
+                <button onclick="closeAdminSectionModal('admin-modal-section-1')" class="px-4 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer">Close Window</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN MODAL SECTION 2 -->
+    <div id="admin-modal-section-2" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-40 animate-fade-in">
+        <div class="bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-4xl max-h-[85vh] flex flex-col">
+            <div class="px-6 py-4 border-b border-gray-200 bg-slate-50 flex justify-between items-center">
+                <div>
+                    <h3 class="font-bold text-gray-900 text-base sm:text-lg flex items-center gap-2">👥 Employee Account Configuration</h3>
+                    <p class="text-xs text-gray-500 font-normal">Manage database accounts manually or trigger bulk CSV data transfers.</p>
+                </div>
+                <button onclick="closeAdminSectionModal('admin-modal-section-2')" class="text-gray-400 hover:text-gray-600 font-bold text-lg p-1.5 cursor-pointer">✕</button>
+            </div>
+            <div class="p-6 overflow-auto flex-1 space-y-4">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                    <div class="space-y-4">
+                        <div class="bg-gray-50 p-4 rounded-lg space-y-3 border border-gray-200 shadow-2xs">
+                            <span class="text-xs font-bold text-gray-600 block border-b border-gray-200 pb-1">Register Account Manually</span>
+                            <div>
+                                <label class="text-[10px] text-gray-500 font-medium block">Employee ID Number</label>
+                                <input type="text" id="new-emp-id" placeholder="e.g., EMP-2026-01" class="w-full px-2 py-1.5 bg-white border border-gray-300 text-gray-800 rounded text-xs">
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-gray-500 font-medium block">Employee Full Name</label>
+                                <input type="text" id="new-emp-name" placeholder="e.g., John Doe" class="w-full px-2 py-1.5 bg-white border border-gray-300 text-gray-800 rounded text-xs">
+                            </div>
+                            <button onclick="addNewEmployeeProfile()" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-2 rounded font-medium cursor-pointer">+ Save Profile Account</button>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-4 rounded-lg space-y-3 border border-gray-200 shadow-2xs">
+                            <span class="text-xs font-bold text-gray-600 block border-b border-gray-200 pb-1">Bulk CSV Roster Actions</span>
+                            <div class="flex flex-col gap-2">
+                                <button onclick="downloadEmployeeTemplateCSV()" class="w-full bg-slate-700 hover:bg-slate-800 text-white text-xs py-1.5 rounded font-medium cursor-pointer flex justify-center items-center gap-1">📋 Export Roster CSV</button>
+                                <label class="w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white text-xs py-1.5 rounded font-medium cursor-pointer block">
+                                    📥 Import Roster CSV
+                                    <input type="file" id="emp-csv-import" accept=".csv" onchange="importEmployeesFromCSV(event)" class="hidden">
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="lg:col-span-2">
+                        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">Registered Employee Database Roster & Clearers</label>
+                        <div id="employee-list-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-72 overflow-y-auto pr-1"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-3 border-t border-gray-100 bg-gray-50 flex justify-end">
+                <button onclick="closeAdminSectionModal('admin-modal-section-2')" class="px-4 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer">Close Window</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN MODAL SECTION 3 -->
+    <div id="admin-modal-section-3" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-40 animate-fade-in">
+        <div class="bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-5xl max-h-[90vh] flex flex-col">
+            <div class="px-6 py-4 border-b border-gray-200 bg-slate-50 flex justify-between items-center">
+                <div>
+                    <h3 class="font-bold text-gray-900 text-base sm:text-lg flex items-center gap-2">📋 Shift/Break Schedule Configuration</h3>
+                    <p class="text-xs text-gray-500 font-normal">Define profiles combining dynamic shift windows and custom multiple break allocation rows.</p>
+                </div>
+                <button onclick="closeAdminSectionModal('admin-modal-section-3')" class="text-gray-400 hover:text-gray-600 font-bold text-lg p-1.5 cursor-pointer">✕</button>
+            </div>
+            <div class="p-6 overflow-auto flex-1">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-1 space-y-4">
+                        <h3 class="font-bold text-xs sm:text-sm text-gray-900 border-b border-gray-200 pb-2">📋 Configured Operational Profiles</h3>
+                        <div id="shift-list-container" class="space-y-2 max-h-[480px] overflow-y-auto pr-1"></div>
+                    </div>
+
+                    <div class="lg:col-span-2 bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-4">
+                        <span class="text-sm font-bold text-gray-700 block border-b border-gray-200 pb-2">Create / Modify Master Profile Target Allocation</span>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[11px] text-gray-500 font-bold uppercase block mb-1">Profile Name / Designation</label>
+                                <input type="text" id="new-shift-name" placeholder="e.g., Standard Day Roster" class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-800 rounded-lg text-xs">
+                            </div>
+                            <div>
+                                <label class="text-[11px] text-gray-500 font-bold uppercase block mb-1">Active Scheduled Rota Days</label>
+                                <div id="new-shift-days" class="flex justify-between gap-1"></div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                            <div class="bg-white p-3 rounded-lg border border-gray-200">
+                                <label class="text-[11px] text-gray-600 font-bold uppercase block mb-1.5">⏱️ Shift Time In Boundary</label>
+                                <div class="flex gap-1" id="time-in-start-picker"></div>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg border border-gray-200">
+                                <label class="text-[11px] text-gray-600 font-bold uppercase block mb-1.5">⏱️ Shift Time Out Boundary</label>
+                                <div class="flex gap-1" id="time-out-start-picker"></div>
+                            </div>
+                        </div>
+
+                        <div class="pt-3 border-t border-gray-200 bg-white p-3 rounded-lg border border-gray-200">
+                            <div class="flex items-center justify-between mb-3">
+                                <label class="text-[11px] font-bold text-gray-700 uppercase tracking-tight flex items-center gap-1.5">☕ Assigned Operational Breaks <span class="text-[10px] text-gray-400 font-normal uppercase">(Add Multiple)</span></label>
+                                <button type="button" onclick="addNewBreakSubRow()" class="bg-slate-700 hover:bg-slate-800 text-white text-[10px] font-bold py-1 px-2.5 rounded-md transition-colors cursor-pointer">+ Add Break Window</button>
+                            </div>
+                            <div id="new-break-subrows-wrapper" class="space-y-2"></div>
+                        </div>
+
+                        <button onclick="addNewShiftConfig()" class="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white text-xs py-2.5 rounded-lg font-bold shadow-xs transition-all cursor-pointer">📦 Save Unified Operational Profile</button>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-3 border-t border-gray-100 bg-gray-50 flex justify-end">
+                <button onclick="closeAdminSectionModal('admin-modal-section-3')" class="px-4 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer">Close Window</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN MODAL SECTION 4 -->
+    <div id="admin-modal-section-4" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-40 animate-fade-in">
+        <div class="bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-md max-h-[85vh] flex flex-col">
+            <div class="px-6 py-4 border-b border-gray-200 bg-slate-50 flex justify-between items-center">
+                <div>
+                    <h3 class="font-bold text-gray-900 text-base sm:text-lg flex items-center gap-2">🔑 Admin Account Configuration</h3>
+                    <p class="text-xs text-gray-500 font-normal">Change security access settings parameters.</p>
+                </div>
+                <button onclick="closeAdminSectionModal('admin-modal-section-4')" class="text-gray-400 hover:text-gray-600 font-bold text-lg p-1.5 cursor-pointer">✕</button>
+            </div>
+            <div class="p-6 overflow-auto flex-1 space-y-5">
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-[11px] font-medium text-gray-600">Change Admin Username</label>
+                        <input type="text" id="new-admin-user" class="w-full px-3 py-1.5 border border-gray-300 bg-white text-gray-800 rounded-md text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-gray-600">Change Admin Password</label>
+                        <input type="password" id="new-admin-pass" class="w-full px-3 py-1.5 border border-gray-300 bg-white text-gray-800 rounded-md text-xs">
+                    </div>
+                    <button onclick="changeAdminCredentials()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-medium py-2 rounded-md text-xs transition-colors cursor-pointer">Apply Password Changes</button>
+                </div>
+
+                <!-- NEW: INACTIVITY AUTO-LOGOUT SETUP -->
+                <div class="pt-4 border-t border-gray-200 space-y-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Inactivity Security Lockout</label>
+                        <p class="text-[11px] text-gray-400 mb-2">Automatically logout admin access if the system is left idling or hidden on the Employee Kiosk.</p>
+                        <select id="admin-lockout-time" onchange="updateLockoutTimerSetting(this.value)" class="w-full px-3 py-1.5 border border-gray-300 bg-white text-gray-800 rounded-md text-xs font-medium">
+                            <option value="0">Never (Keep Session Open)</option>
+                            <option value="1">1 Minute of Inactivity</option>
+                            <option value="3">3 Minutes of Inactivity</option>
+                            <option value="5">5 Minutes of Inactivity</option>
+                            <option value="10">10 Minutes of Inactivity</option>
+                            <option value="15">15 Minutes of Inactivity</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-gray-200">
+                    <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Session Control</label>
+                    <button onclick="closeAdminSectionModal('admin-modal-section-4'); openLogoutModal();" class="w-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-semibold py-2 rounded-md text-xs transition-colors cursor-pointer text-center">
+                        🔒 Logout Administrative Panel
+                    </button>
+                </div>
+            </div>
+            <div class="px-6 py-3 border-t border-gray-100 bg-gray-50 flex justify-end">
+                <button onclick="closeAdminSectionModal('admin-modal-section-4')" class="px-4 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer">Close Window</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PUNCH STATION IDENTITY MODAL -->
+    <div id="punch-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fade-in">
+        <div class="bg-white rounded-xl shadow-xl border border-gray-200 w-full max-w-md p-5 sm:p-6 relative">
+            <h3 id="modal-title" class="text-base sm:text-lg font-bold text-gray-900 mb-1">Verify Identity</h3>
+            <p id="modal-subtitle" class="text-xs text-gray-500 mb-4">Please submit your identification coordinates.</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-2">Employee ID Number</label>
+                    <div class="relative flex items-center">
+                        <input type="text" id="modal-emp-identity" placeholder="Enter ID number strictly" class="w-full pl-3 pr-10 py-2 border border-gray-300 bg-white text-gray-800 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm">
+                        <button onclick="toggleQRScanner()" class="absolute right-2 text-gray-500 hover:text-blue-600 p-1.5 rounded-md transition-colors cursor-pointer text-sm" title="Scan QR Code">📷</button>
+                    </div>
+                    <div id="qr-reader-container" class="hidden mt-3 p-2 bg-gray-50 border border-gray-200 rounded-lg">
+                        <div id="qr-reader" class="w-full overflow-hidden rounded-md bg-black"></div>
+                        <button onclick="stopQRScanner()" class="w-full mt-2 bg-red-600 hover:bg-red-700 text-white font-medium py-1.5 rounded-lg text-xs transition-colors cursor-pointer">Stop Camera</button>
+                    </div>
+                </div>
+                <div class="flex gap-2 justify-end">
+                    <button onclick="closePunchModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs sm:text-sm font-medium transition-colors cursor-pointer">Cancel</button>
+                    <button onclick="submitPunchModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-medium transition-colors cursor-pointer">Confirm Action</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+        let state = {
+            adminAccount: { user: "admin", pass: "admin123" }, 
+            isAdminAuthenticated: false,
+            editingShiftId: null,
+            shifts: [], 
+            employees: [],
+            logs: [],
+            kioskHiddenLogIds: [],
+            systemMode: "schedule", // "schedule" or "ongoing"
+            autoLogoutMinutes: 0   // 0 means disabled
+        };
+
+        let manualOverrideTimeout = null;
+        let isManualOverrideActive = false;
+        let activePunchAction = null; 
+        
+        let html5QrcodeInstance = null;
+        let isCameraStreamRunning = false;
+
+        // Inactivity tracking properties
+        let inactivityTimerReference = null;
+        let activeInterfaceTab = "employee";
+
+        function toggleResizerPanel() {
+            const panel = document.getElementById('clock-resizer-panel');
+            panel.classList.toggle('hidden');
+        }
+
+        function toggleKioskButtonLabel() {
+            const label = document.getElementById('kiosk-btn-label');
+            label.classList.toggle('hidden');
+        }
+
+        function openAdminSectionModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+            renderAdminConfigLists();
+            renderLogsTable();
+        }
+
+        function closeAdminSectionModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function updateLiveStationClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            const period = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12;
+            
+            const clockString = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')} ${period}`;
+            document.getElementById('station-clock').innerText = clockString;
+
+            const options = { weekday: 'short', month: 'short', day: '2-digit', year: 'numeric' };
+            document.getElementById('station-date').innerText = now.toLocaleDateString('en-US', options);
+
+            if (state.systemMode === "schedule") {
+                autoDetectShiftByMachineTime();
             }
+        }
+
+        function resizeClock(scalePercent) {
+            const calculatedRem = (scalePercent / 100) * 1.25;
+            document.getElementById('clock-container').style.fontSize = `${calculatedRem}rem`;
+            document.getElementById('clock-size-slider').value = scalePercent;
+            localStorage.setItem('clock_scale_size', scalePercent);
         }
 
         function initClockSize() {
-            const size = localStorage.getItem("clock_size_scale") || "100";
-            document.getElementById("clock-size-slider").value = size;
-            resizeClock(size);
+            const savedSize = localStorage.getItem('clock_scale_size') || "100";
+            resizeClock(savedSize);
         }
 
-        function resizeClock(val) {
-            localStorage.setItem("clock_size_scale", val);
-            const container = document.getElementById("clock-container");
-            if(container) {
-                container.style.fontSize = `${(val / 100) * 1.25}rem`;
+        function loadStateFromStorage() {
+            if(localStorage.getItem('sys_attendance_db_v6')) {
+                const savedState = JSON.parse(localStorage.getItem('sys_attendance_db_v6'));
+                if (savedState.adminAccount) state.adminAccount = savedState.adminAccount;
+                state.shifts = savedState.shifts || [];
+                state.employees = savedState.employees || [];
+                state.logs = savedState.logs || [];
+                state.kioskHiddenLogIds = savedState.kioskHiddenLogIds || [];
+                state.systemMode = savedState.systemMode || "schedule";
+                state.autoLogoutMinutes = savedState.autoLogoutMinutes || 0;
+
+                state.shifts.forEach(s => {
+                    if(!s.subBreaks) {
+                        s.subBreaks = s.breaks || (s.start && s.end ? [{title: "Break Slot", start: s.start, end: s.end}] : []);
+                    }
+                });
+            }
+        }
+        loadStateFromStorage();
+
+        function saveStateToStorage() {
+            localStorage.setItem('sys_attendance_db_v6', JSON.stringify(state));
+        }
+
+        function handleModeChange(newMode) {
+            const currentModeText = state.systemMode === "schedule" ? "Schedule Based Mode" : "Ongoing Mode";
+            const targetModeText = newMode === "schedule" ? "Schedule Based Mode" : "Ongoing Mode";
+            
+            if (!confirm(`Are you sure you want to change the tracking layout from "${currentModeText}" to "${targetModeText}"?`)) {
+                document.getElementById('sys-mode-select').value = state.systemMode;
+                return;
+            }
+
+            state.systemMode = newMode;
+            saveStateToStorage();
+            applyModeLayoutRules();
+        }
+
+        function applyModeLayoutRules() {
+            const modeSelect = document.getElementById('sys-mode-select');
+            if(modeSelect) modeSelect.value = state.systemMode;
+
+            const dropdownWrapper = document.getElementById('kiosk-dropdown-container');
+            const infoBanner = document.getElementById('shift-info-banner');
+            const breakHeader = document.getElementById('kiosk-break-header');
+            
+            if (state.systemMode === "ongoing") {
+                if(dropdownWrapper) dropdownWrapper.classList.add('hidden');
+                if(infoBanner) infoBanner.classList.add('hidden');
+                if(breakHeader) breakHeader.classList.add('hidden');
+            } else {
+                if(dropdownWrapper) dropdownWrapper.classList.remove('hidden');
+                if(infoBanner) infoBanner.classList.remove('hidden');
+                if(breakHeader) breakHeader.classList.remove('hidden');
+                autoDetectShiftByMachineTime();
+            }
+            updateProfileBadges();
+
+            // Populate the dropdown selection value for the timer option element
+            const elementTimer = document.getElementById('admin-lockout-time');
+            if(elementTimer) elementTimer.value = state.autoLogoutMinutes;
+        }
+
+        function updateLockoutTimerSetting(selectedValue) {
+            state.autoLogoutMinutes = parseInt(selectedValue);
+            saveStateToStorage();
+            resetInactivityTrackingSchedule();
+        }
+
+        // Monitors user workflow activity updates
+        function resetInactivityTrackingSchedule() {
+            clearTimeout(inactivityTimerReference);
+            
+            // Core safety checks: If timer is off, user isn't logged in, or they're currently looking at the admin panel dashboard
+            if (state.autoLogoutMinutes <= 0 || !state.isAdminAuthenticated || activeInterfaceTab === "admin") {
+                return;
+            }
+
+            // Run structural auto logout loop
+            inactivityTimerReference = setTimeout(() => {
+                confirmLogOutAdmin();
+                alert("Security Broadcast: Administrative access credentials logged out due to inactivity timeouts.");
+            }, state.autoLogoutMinutes * 60000);
+        }
+
+        // Wire window interaction event channels to reset timers dynamically
+        ['click', 'mousemove', 'keypress', 'touchstart'].forEach(eventName => {
+            window.addEventListener(eventName, resetInactivityTrackingSchedule);
+        });
+
+        function build12HourSelectsHTML(prefix) {
+            let hoursOptions = '';
+            for(let i = 1; i <= 12; i++) hoursOptions += `<option value="${String(i).padStart(2, '0')}">${String(i).padStart(2, '0')}</option>`;
+            let minsOptions = '';
+            for(let i = 0; i < 60; i += 5) minsOptions += `<option value="${String(i).padStart(2, '0')}">${String(i).padStart(2, '0')}</option>`;
+            
+            return `
+                <select id="${prefix}-h" class="bg-white border border-gray-300 rounded p-1 text-[11px] flex-1 text-gray-800">${hoursOptions}</select>
+                <select id="${prefix}-m" class="bg-white border border-gray-300 rounded p-1 text-[11px] flex-1 text-gray-800">${minsOptions}</select>
+                <select id="${prefix}-p" class="bg-white border border-gray-300 rounded p-1 text-[11px] w-14 text-gray-800"><option value="AM">AM</option><option value="PM">PM</option></select>
+            `;
+        }
+
+        function buildDaySelectorHTML(prefix, checkedDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']) {
+            return DAYS_SHORT.map(day => `
+                <label class="flex-1 text-center cursor-pointer">
+                    <input type="checkbox" name="${prefix}-days" value="${day}" class="hidden peer" ${checkedDays.includes(day) ? 'checked' : ''}>
+                    <span class="block py-1 text-[10px] font-bold rounded border bg-white border-gray-200 text-gray-400 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 transition-colors">${day[0]}</span>
+                </label>
+            `).join('');
+        }
+
+        function getSelectedDaysFromCheckbox(name) {
+            return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(box => box.value);
+        }
+
+        function initCreationPickers() {
+            document.getElementById('time-in-start-picker').innerHTML = build12HourSelectsHTML('ns-in-start');
+            document.getElementById('time-out-start-picker').innerHTML = build12HourSelectsHTML('ns-out-start');
+            document.getElementById('new-shift-days').innerHTML = buildDaySelectorHTML('ns');
+            
+            document.getElementById('new-break-subrows-wrapper').innerHTML = '';
+            addNewBreakSubRow();
+        }
+
+        function addNewBreakSubRow(startTimeString = "", endTimeString = "") {
+            const container = document.getElementById('new-break-subrows-wrapper');
+            const rowId = 'subbreak-row-' + Date.now() + Math.random().toString(36).substr(2,4);
+            const prefixOut = `nsb-out-${rowId}`;
+            const prefixIn = `nsb-in-${rowId}`;
+            
+            const div = document.createElement('div');
+            div.className = "p-2 bg-gray-50 rounded-lg border border-gray-200 space-y-1.5 relative subbreak-config-node";
+            div.id = rowId;
+            div.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <input type="text" placeholder="Break label (e.g. Lunch break)" class="subbreak-title text-[11px] font-bold border border-gray-300 roundedpx px-2 py-1 bg-white text-gray-800 w-1/2" required>
+                    <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-red-500 font-bold text-[11px] px-1 hover:text-red-700 cursor-pointer">✕ Remove</button>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-[9px] text-gray-400 block font-bold uppercase">Out Time</label>
+                        <div class="flex gap-1" id="${prefixOut}-container"></div>
+                    </div>
+                    <div>
+                        <label class="text-[9px] text-gray-400 block font-bold uppercase">In Time</label>
+                        <div class="flex gap-1" id="${prefixIn}-container"></div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+            
+            document.getElementById(`${prefixOut}-container`).innerHTML = build12HourSelectsHTML(prefixOut);
+            document.getElementById(`${prefixIn}-container`).innerHTML = build12HourSelectsHTML(prefixIn);
+            
+            if(startTimeString) set12HourPickerValue(prefixOut, startTimeString);
+            if(endTimeString) set12HourPickerValue(prefixIn, endTimeString);
+        }
+
+        function get12HourPickerValue(prefix) {
+            return `${document.getElementById(`${prefix}-h`).value}:${document.getElementById(`${prefix}-m`).value} ${document.getElementById(`${prefix}-p`).value}`;
+        }
+
+        function set12HourPickerValue(prefix, timeString) {
+            if(!timeString) return;
+            const [time, period] = timeString.split(' ');
+            const [h, m] = time.split(':');
+            
+            const targetH = document.getElementById(`${prefix}-h`);
+            const targetM = document.getElementById(`${prefix}-m`);
+            const targetP = document.getElementById(`${prefix}-p`);
+            
+            if(targetH) targetH.value = h;
+            if(targetP) targetP.value = period;
+            
+            if(targetM) {
+                let closestMin = "00";
+                let minVal = parseInt(m);
+                let checkOptions = Array.from(targetM.options).map(o => parseInt(o.value));
+                let bestDiff = Infinity;
+                checkOptions.forEach(opt => {
+                    let d = Math.abs(opt - minVal);
+                    if(d < bestDiff) {
+                        bestDiff = d;
+                        closestMin = String(opt).padStart(2, '0');
+                    }
+                });
+                targetM.value = closestMin;
             }
         }
 
-        function toggleResizerPanel() {
-            const p = document.getElementById("clock-resizer-panel");
-            p.classList.toggle("hidden");
+        function switchTab(viewTarget) {
+            activeInterfaceTab = viewTarget;
+            
+            if(viewTarget === 'employee') {
+                document.getElementById('view-employee').classList.remove('hidden');
+                document.getElementById('view-admin').classList.add('hidden');
+                document.getElementById('tab-employee').className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all bg-white text-gray-900 shadow-xs cursor-pointer";
+                document.getElementById('tab-admin').className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all text-gray-600 hover:text-gray-900 cursor-pointer";
+                populateKioskDropdowns();
+                applyModeLayoutRules();
+                renderLogsTable();
+                resetInactivityTrackingSchedule(); // Activate tracking since user is on Employee tab
+            } else {
+                document.getElementById('view-employee').classList.add('hidden');
+                document.getElementById('view-admin').classList.remove('hidden');
+                document.getElementById('tab-employee').className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all text-gray-600 hover:text-gray-900 cursor-pointer";
+                document.getElementById('tab-admin').className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all bg-white text-gray-900 shadow-xs cursor-pointer";
+                renderAdminAuthInterface();
+                clearTimeout(inactivityTimerReference); // Disable countdown since admin is working on the configurations tab
+            }
         }
 
-        function switchTab(tab) {
-            const employeeBtn = document.getElementById("tab-employee");
-            const adminBtn = document.getElementById("tab-admin");
-            const employeeView = document.getElementById("view-employee");
-            const adminView = document.getElementById("view-admin");
+        setInterval(updateLiveStationClock, 1000);
+        updateLiveStationClock();
 
-            if (tab === 'employee') {
-                employeeBtn.className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all bg-white text-gray-900 shadow-xs cursor-pointer";
-                adminBtn.className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all text-gray-600 hover:text-gray-900 cursor-pointer";
-                employeeView.classList.remove("hidden");
-                adminView.classList.add("hidden");
+        function updateProfileBadges() {
+            if(state.systemMode === "ongoing") {
+                const elIn = document.getElementById('btn-time-in');
+                const elOut = document.getElementById('btn-time-out');
+                const elBOut = document.getElementById('btn-break-out');
+                const elBIn = document.getElementById('btn-break-in');
+                if(elIn) elIn.disabled = false;
+                if(elOut) elOut.disabled = false;
+                if(elBOut) elBOut.disabled = false;
+                if(elBIn) elBIn.disabled = false;
+                return;
+            }
+
+            const shiftId = document.getElementById('emp-shift-select').value;
+            const currentShift = state.shifts.find(s => s.id === shiftId);
+            
+            document.getElementById('current-shift-badge').innerText = currentShift ? `${currentShift.name} (${currentShift.inStart} - ${currentShift.outStart})` : "None Configured";
+            
+            if(currentShift && currentShift.subBreaks && currentShift.subBreaks.length > 0) {
+                document.getElementById('current-break-badge').innerText = currentShift.subBreaks.map(sb => `${sb.title}: [${sb.start} - ${sb.end}]`).join(' | ');
             } else {
-                adminBtn.className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all bg-white text-gray-900 shadow-xs cursor-pointer";
-                employeeBtn.className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all text-gray-600 hover:text-gray-900 cursor-pointer";
-                adminView.classList.remove("hidden");
-                employeeView.classList.add("hidden");
+                document.getElementById('current-break-badge').innerText = "No Breaks Assigned";
+            }
+            
+            const elIn = document.getElementById('btn-time-in');
+            const elOut = document.getElementById('btn-time-out');
+            const elBOut = document.getElementById('btn-break-out');
+            const elBIn = document.getElementById('btn-break-in');
+            
+            const absoluteProfilesEmpty = (state.shifts.length === 0);
+            [elIn, elOut].forEach(el => { if(el) el.disabled = absoluteProfilesEmpty; });
+            
+            const profileHasBreaks = currentShift && currentShift.subBreaks && currentShift.subBreaks.length > 0;
+            [elBOut, elBIn].forEach(el => { if(el) el.disabled = !profileHasBreaks; });
+        }
+
+        function getDayStringNow() {
+            return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()];
+        }
+
+        function autoDetectShiftByMachineTime() {
+            if (isManualOverrideActive || state.shifts.length === 0 || state.systemMode === "ongoing") return;
+            const currentMinutes = timeToMinutes(getTimeStringNow());
+            const currentDay = getDayStringNow();
+            
+            const targetedPool = state.shifts.filter(s => s.days && s.days.includes(currentDay)).length > 0 
+                ? state.shifts.filter(s => s.days && s.days.includes(currentDay)) 
+                : state.shifts;
+                
+            let matchedProfileId = null;
+            
+            for (const shift of targetedPool) {
+                const startMins = timeToMinutes(shift.inStart);
+                let relativeDelta = currentMinutes - startMins;
+                if (relativeDelta < 0) relativeDelta += 1440; 
+                
+                if (relativeDelta >= 0 && (matchedProfileId === null || relativeDelta < (currentMinutes - timeToMinutes(state.shifts.find(s=>s.id===matchedProfileId).inStart) + 1440) % 1440)) {
+                    matchedProfileId = shift.id;
+                }
+            }
+            
+            if (matchedProfileId && document.getElementById('emp-shift-select').value !== matchedProfileId) {
+                document.getElementById('emp-shift-select').value = matchedProfileId;
+                updateProfileBadges();
             }
         }
 
         function handleManualShiftChange() {
-            // Dropdown shift override logic
-        }
-
-        function openPunchModal(type) {
-            console.log("Opening punch modal for: ", type);
-        }
-
-        function toggleKioskButtonLabel() {
-            const lbl = document.getElementById("kiosk-btn-label");
-            lbl.classList.toggle("hidden");
-        }
-
-        function secureClearKioskDisplay() {
-            if(confirm("Are you sure you want to clear the public display monitor?")) {
-                document.getElementById("logs-tbody").innerHTML = "";
+            isManualOverrideActive = true;
+            updateProfileBadges();
+            const statusLabel = document.getElementById('auto-shift-status');
+            if (statusLabel) {
+                statusLabel.innerText = "⏳ User Override Active";
+                statusLabel.className = "text-[10px] bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full font-bold self-stretch sm:self-auto text-center";
             }
-        }
-
-        function renderLogsTable() {
-            console.log("Rendering table content");
+            clearTimeout(manualOverrideTimeout);
+            manualOverrideTimeout = setTimeout(() => {
+                isManualOverrideActive = false;
+                if (statusLabel) {
+                    statusLabel.innerText = "🔄 Auto-Switch Timeline Sync Active";
+                    statusLabel.className = "text-[10px] bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold animate-pulse self-stretch sm:self-auto text-center";
+                }
+                autoDetectShiftByMachineTime();
+            }, 20000); 
         }
 
         function populateKioskDropdowns() {
-            console.log("Populating dropdown components");
+            document.getElementById('emp-shift-select').innerHTML = state.shifts.map(s => `<option value="${s.id}">${s.name} (In: ${s.inStart} / Out: ${s.outStart})</option>`).join('');
         }
 
-        function applyModeLayoutRules() {
-            console.log("Applying structural grid view layouts");
+        function openPunchModal(actionType) {
+            activePunchAction = actionType;
+            const titleNode = document.getElementById('modal-title');
+            const subtitleNode = document.getElementById('modal-subtitle');
+            
+            const actionsDict = {
+                timeIn: { title: "Register Verification Check-In", sub: "Scan or enter credentials to record shift startup time." },
+                timeOut: { title: "Register Verification Check-Out", sub: "Scan or enter credentials to finalize active operational roster records." },
+                breakOut: { title: "Activate Break Session", sub: "Submit verification coordinates to initialize custom pause allocation." },
+                breakIn: { title: "Terminate Break Session", sub: "Submit verification coordinates to register station workflow resumption." }
+            };
+            
+            titleNode.innerText = actionsDict[actionType].title;
+            subtitleNode.innerText = actionsDict[actionType].sub;
+            
+            document.getElementById('modal-emp-identity').value = "";
+            document.getElementById('punch-modal').classList.remove('hidden');
+            document.getElementById('modal-emp-identity').focus();
+
+            setTimeout(() => { startPersistentCameraStream(); }, 60);
+        }
+
+        function closePunchModal() {
+            stopQRScanner();
+            document.getElementById('punch-modal').classList.add('hidden');
+            activePunchAction = null;
+        }
+
+        function toggleQRScanner() {
+            if(isCameraStreamRunning) {
+                stopQRScanner();
+            } else {
+                startPersistentCameraStream();
+            }
+        }
+
+        function startPersistentCameraStream() {
+            document.getElementById('qr-reader-container').classList.remove('hidden');
+            if(!html5QrcodeInstance) html5QrcodeInstance = new Html5Qrcode("qr-reader");
+            if(isCameraStreamRunning) return;
+
+            html5QrcodeInstance.start(
+                { facingMode: "environment" }, 
+                { fps: 15, qrbox: { width: 260, height: 260 }, rememberLastUsedCamera: true, aspectRatio: 1.0 },
+                (qrText) => {
+                    document.getElementById('modal-emp-identity').value = qrText.trim();
+                    submitPunchModal();
+                },
+                (errorMessage) => {}
+            ).then(() => {
+                isCameraStreamRunning = true;
+            }).catch(err => {
+                html5QrcodeInstance.start(
+                    { facingMode: "user" }, { fps: 10, qrbox: 200 },
+                    (text) => {
+                        document.getElementById('modal-emp-identity').value = text.trim();
+                        submitPunchModal();
+                    },
+                    (e) => {}
+                ).then(() => { isCameraStreamRunning = true; })
+                 .catch(fallbackErr => { alert("Camera Access Error: Verify execution permission allowances inside hardware settings."); });
+            });
+        }
+
+        function stopQRScanner() {
+            if (html5QrcodeInstance && isCameraStreamRunning) {
+                html5QrcodeInstance.stop().then(() => {
+                    isCameraStreamRunning = false;
+                    document.getElementById('qr-reader-container').classList.add('hidden');
+                }).catch(err => {
+                    isCameraStreamRunning = false;
+                    document.getElementById('qr-reader-container').classList.add('hidden');
+                });
+            } else {
+                document.getElementById('qr-reader-container').classList.add('hidden');
+            }
+        }
+
+        function submitPunchModal() {
+            const identity = document.getElementById('modal-emp-identity').value.trim();
+            if(!identity) { alert("Action denied. Identity credentials must be matched."); return; }
+            const matchedProfile = state.employees.find(e => e.idNumber.toLowerCase() === identity.toLowerCase());
+            if (!matchedProfile) {
+                alert("Security Error: Provided Employee ID was not detected within active systems.");
+                closePunchModal();
+                return;
+            }
+            if(activePunchAction === 'timeIn' || activePunchAction === 'timeOut') {
+                handleShiftPunch(activePunchAction, matchedProfile);
+            } else if(activePunchAction === 'breakOut' || activePunchAction === 'breakIn') {
+                handleBreakPunch(activePunchAction, matchedProfile);
+            }
+            closePunchModal();
+        }
+
+        function getOrCreateRow(matchedProfile) {
+            const uniqueKey = matchedProfile.idNumber;
+            const displayName = matchedProfile.employeeName;
+            const dateStampStr = new Date().toLocaleDateString('en-CA'); 
+            
+            let log = state.logs.find(l => l.uniqueKey?.toLowerCase() === uniqueKey.toLowerCase() && l.dateStamp === dateStampStr);
+            if(!log) {
+                log = {
+                    id: 'log_' + Date.now(),
+                    dateStamp: dateStampStr,
+                    uniqueKey,
+                    name: displayName,
+                    assignedShift: "Ongoing Session",
+                    timeIn: "",
+                    timeInLateMinutes: 0,
+                    timeOut: "",
+                    timeOutEarlyMinutes: 0,
+                    breakActivities: []
+                };
+                state.logs.unshift(log);
+            }
+            return log;
+        }
+
+        function handleShiftPunch(action, matchedProfile) {
+            const feedback = document.getElementById('kiosk-feedback');
+            const timeNow = getTimeStringNow();
+            const currentDay = getDayStringNow();
+            const minutesNow = timeToMinutes(timeNow);
+            
+            let logRow = getOrCreateRow(matchedProfile);
+            state.kioskHiddenLogIds = state.kioskHiddenLogIds.filter(id => id !== logRow.id);
+            
+            let flagged = false;
+
+            if (state.systemMode === "ongoing") {
+                logRow.assignedShift = "Ongoing Log Mode";
+                if(action === 'timeIn') {
+                    logRow.timeIn = `${timeNow} (${currentDay})`;
+                } else {
+                    logRow.timeOut = `${timeNow} (${currentDay})`;
+                }
+            } else {
+                const shiftId = document.getElementById('emp-shift-select').value;
+                const activeShift = state.shifts.find(s => s.id === shiftId);
+                if(!activeShift) return;
+
+                logRow.assignedShift = `${activeShift.name} [${activeShift.days ? activeShift.days.join(',') : 'All'}]`;
+                
+                if(action === 'timeIn') {
+                    logRow.timeIn = `${timeNow} (${currentDay})`;
+                    const targetInMin = timeToMinutes(activeShift.inStart);
+                    if(minutesNow > targetInMin) {
+                        logRow.timeInLateMinutes = minutesNow - targetInMin;
+                        flagged = true;
+                    } else {
+                        logRow.timeInLateMinutes = 0;
+                    }
+                } else {
+                    logRow.timeOut = `${timeNow} (${currentDay})`;
+                    const targetOutMin = timeToMinutes(activeShift.outStart);
+                    if(minutesNow < targetOutMin) {
+                        logRow.timeOutEarlyMinutes = targetOutMin - minutesNow;
+                        flagged = true;
+                    } else {
+                        logRow.timeOutEarlyMinutes = 0;
+                    }
+                }
+            }
+            
+            saveStateToStorage();
+            renderLogsTable();
+            showFeedback(feedback, `Attendance matrix saved successfully at ${timeNow}.`, flagged);
+        }
+
+        function handleBreakPunch(action, matchedProfile) {
+            const feedback = document.getElementById('kiosk-feedback');
+            const timeNow = getTimeStringNow();
+            const currentDay = getDayStringNow();
+            const minutesNow = timeToMinutes(timeNow);
+            
+            let logRow = getOrCreateRow(matchedProfile);
+            state.kioskHiddenLogIds = state.kioskHiddenLogIds.filter(id => id !== logRow.id);
+            
+            let displayTitle = "General Break";
+            let flagged = false;
+
+            if (state.systemMode === "ongoing") {
+                if(action === 'breakOut') {
+                    logRow.breakActivities.push({
+                        breakId: 'b_' + Date.now(),
+                        breakName: displayTitle,
+                        breakOut: `${timeNow} (${currentDay})`,
+                        breakOutEarlyMinutes: 0,
+                        breakOutLateMinutes: 0,
+                        breakIn: "",
+                        overdueMinutes: 0
+                    });
+                } else {
+                    let openBreak = logRow.breakActivities.find(b => !b.breakIn);
+                    if(openBreak) {
+                        openBreak.breakIn = `${timeNow} (${currentDay})`;
+                    } else {
+                        logRow.breakActivities.push({
+                            breakId: 'b_' + Date.now(),
+                            breakName: displayTitle,
+                            breakOut: "--:--",
+                            breakOutEarlyMinutes: 0,
+                            breakOutLateMinutes: 0,
+                            breakIn: `${timeNow} (${currentDay})`,
+                            overdueMinutes: 0
+                        });
+                    }
+                }
+            } else {
+                const shiftId = document.getElementById('emp-shift-select').value;
+                const activeShift = state.shifts.find(s => s.id === shiftId);
+                if(!activeShift || !activeShift.subBreaks || activeShift.subBreaks.length === 0) return;
+
+                let activeSubBreak = null;
+                if(action === 'breakOut') {
+                    let bestSub = activeShift.subBreaks[0];
+                    let bestDiff = Infinity;
+                    activeShift.subBreaks.forEach(sb => {
+                        let diff = Math.abs(minutesNow - timeToMinutes(sb.start));
+                        if(diff < bestDiff) {
+                            bestDiff = diff;
+                            bestSub = sb;
+                        }
+                    });
+                    activeSubBreak = bestSub;
+                } else {
+                    activeSubBreak = activeShift.subBreaks.find(sb => {
+                        const matchTitle = `${activeShift.name} - ${sb.title}`;
+                        return logRow.breakActivities.some(act => act.breakName === matchTitle && !act.breakIn);
+                    }) || activeShift.subBreaks[activeShift.subBreaks.length - 1];
+                }
+
+                displayTitle = `${activeShift.name} - ${activeSubBreak.title}`;
+                let targetStartMin = timeToMinutes(activeSubBreak.start);
+                let targetEndMin = timeToMinutes(activeSubBreak.end);
+                let subBreakNode = logRow.breakActivities.find(b => b.breakName === displayTitle && !b.breakIn);
+
+                if(action === 'breakOut') {
+                    let earlyMins = targetStartMin > minutesNow ? targetStartMin - minutesNow : 0;
+                    let lateMins = minutesNow > targetStartMin ? minutesNow - targetStartMin : 0;
+                    logRow.breakActivities.push({
+                        breakId: activeShift.id + '_' + activeSubBreak.title,
+                        breakName: displayTitle,
+                        breakOut: `${timeNow} (${currentDay})`,
+                        breakOutEarlyMinutes: earlyMins,
+                        breakOutLateMinutes: lateMins,
+                        breakIn: "",
+                        overdueMinutes: 0
+                    });
+                } else {
+                    if(!subBreakNode) {
+                        let overdue = minutesNow > targetEndMin ? minutesNow - targetEndMin : 0;
+                        logRow.breakActivities.push({
+                            breakId: activeShift.id + '_' + activeSubBreak.title,
+                            breakName: displayTitle,
+                            breakOut: "--:--",
+                            breakOutEarlyMinutes: 0,
+                            breakOutLateMinutes: 0,
+                            breakIn: `${timeNow} (${currentDay})`,
+                            overdueMinutes: overdue
+                        });
+                        if(overdue > 0) flagged = true;
+                    } else {
+                        subBreakNode.breakIn = `${timeNow} (${currentDay})`;
+                        if (minutesNow > targetEndMin) {
+                            subBreakNode.overdueMinutes = minutesNow - targetEndMin;
+                            flagged = true;
+                        }
+                    }
+                }
+            }
+            
+            saveStateToStorage();
+            renderLogsTable();
+            showFeedback(feedback, `Break data segment updated at ${timeNow}.`, flagged);
+        }
+
+        function secureClearKioskDisplay() {
+            if(state.logs.length === 0) return;
+            const inputPass = prompt("Admin verification required. Input password to clear public kiosk screen rows:");
+            if (inputPass === null) return;
+            if (inputPass === state.adminAccount.pass || (state.adminAccount.user === "admin" && inputPass === "admin123")) {
+                state.logs.forEach(log => {
+                    if(!state.kioskHiddenLogIds.includes(log.id)) state.kioskHiddenLogIds.push(log.id);
+                });
+                saveStateToStorage();
+                renderLogsTable();
+                alert("Kiosk display cleared successfully.");
+            } else {
+                alert("Security Error: Admin verification password invalid.");
+            }
+        }
+
+        function toggleSelectAllLogs(masterCheckbox) {
+            const boxes = document.querySelectorAll('.log-row-checkbox');
+            boxes.forEach(box => box.checked = masterCheckbox.checked);
+        }
+
+        function deleteSingleLog(logId) {
+            if(!confirm("Are you sure you want to remove this specific attendance entry row?")) return;
+            state.logs = state.logs.filter(l => l.id !== logId);
+            state.kioskHiddenLogIds = state.kioskHiddenLogIds.filter(id => id !== logId);
+            saveStateToStorage();
+            renderLogsTable();
+        }
+
+        function deleteSelectedLogs() {
+            const checkedBoxes = document.querySelectorAll('.log-row-checkbox:checked');
+            if(checkedBoxes.length === 0) { alert("Please select one or multiple entry rows first."); return; }
+            if(!confirm(`Are you sure you want to delete the ${checkedBoxes.length} selected row records?`)) return;
+            const idsToDelete = Array.from(checkedBoxes).map(cb => cb.value);
+            state.logs = state.logs.filter(l => !idsToDelete.includes(l.id));
+            state.kioskHiddenLogIds = state.kioskHiddenLogIds.filter(id => !idsToDelete.includes(id));
+            document.getElementById('select-all-logs').checked = false;
+            saveStateToStorage();
+            renderLogsTable();
+        }
+
+        function clearAllLogs() {
+            if(!confirm("⚠️ DANGER: This will permanently clear all logs from storage. Proceed?")) return;
+            state.logs = [];
+            state.kioskHiddenLogIds = [];
+            document.getElementById('select-all-logs').checked = false;
+            saveStateToStorage();
+            renderLogsTable();
+        }
+
+        function permanentPurgeEmployeeData(idNumber) {
+            const strictVerification = prompt(`⚠️ CORE DELETION ZONE: This process unlinks and drops all logs associated with ID: "${idNumber}". Type "${idNumber}" to confirm deletion:`);
+            if (strictVerification !== idNumber) { alert("Verification mismatched. Sequence terminated."); return; }
+            state.employees = state.employees.filter(e => e.idNumber !== idNumber);
+            state.logs = state.logs.filter(l => l.uniqueKey?.toLowerCase() !== idNumber.toLowerCase());
+            saveStateToStorage();
+            renderAdminConfigLists();
+            renderLogsTable();
+            populateKioskDropdowns();
+            alert("Data profiles completely unlinked.");
+        }
+
+        function renderAdminAuthInterface() {
+            if (state.isAdminAuthenticated) {
+                document.getElementById('admin-auth-card').classList.add('hidden');
+                document.getElementById('admin-settings-panel').classList.remove('hidden');
+                applyModeLayoutRules();
+                renderAdminConfigLists();
+                renderLogsTable();
+            } else {
+                document.getElementById('admin-auth-card').classList.remove('hidden');
+                document.getElementById('admin-settings-panel').classList.add('hidden');
+                document.getElementById('auth-title').innerText = "Admin Identity Gate";
+            }
         }
 
         function handleAuthSubmit() {
-            document.getElementById("admin-auth-card").classList.add("hidden");
-            document.getElementById("admin-settings-panel").classList.remove("hidden");
-        }
-
-        function handleModeChange(val) {
-            console.log("Mode altered:", val);
-        }
-
-        function exportToCSV() {
-            console.log("Exporting dataset logs mapping list arrays index into a tabular file format.");
-        }
-
-        function exportDatabaseJSON() {
-            console.log("Dumping system arrays into text layout structures object configuration maps.");
-        }
-
-        function openAdminSectionModal(id) {
-            alert("Opening configuration context section view: " + id);
+            const user = document.getElementById('admin-user').value.trim();
+            const pass = document.getElementById('admin-pass').value.trim();
+            if(!user || !pass) return;
+            
+            if((user === state.adminAccount.user && pass === state.adminAccount.pass) || (user === "admin" && pass === "admin123")) {
+                state.isAdminAuthenticated = true;
+                renderAdminAuthInterface();
+            } else {
+                showFeedback(document.getElementById('auth-feedback'), "Master credentials mismatch error.", true);
+            }
+            document.getElementById('admin-user').value = "";
+            document.getElementById('admin-pass').value = "";
         }
 
         function openLogoutModal() {
-            if(confirm("Confirm action: Sign out from the administrative configuration settings workspace?")) {
-                document.getElementById("admin-settings-panel").classList.add("hidden");
-                document.getElementById("admin-auth-card").classList.remove("hidden");
+            document.getElementById('logout-confirm-modal').classList.remove('hidden');
+        }
+
+        function closeLogoutModal() {
+            document.getElementById('logout-confirm-modal').classList.add('hidden');
+        }
+
+        function confirmLogOutAdmin() {
+            state.isAdminAuthenticated = false;
+            clearTimeout(inactivityTimerReference);
+            closeLogoutModal();
+            renderAdminAuthInterface();
+        }
+
+        function addNewEmployeeProfile() {
+            const idNumber = document.getElementById('new-emp-id').value.trim();
+            const employeeName = document.getElementById('new-emp-name').value.trim();
+            if (!idNumber || !employeeName) return;
+            if (state.employees.find(e => e.idNumber.toLowerCase() === idNumber.toLowerCase())) {
+                alert("Security Alert: Employee ID already exists.");
+                return;
             }
+            state.employees.push({ idNumber, employeeName });
+            saveStateToStorage();
+            renderAdminConfigLists();
+            document.getElementById('new-emp-id').value = "";
+            document.getElementById('new-emp-name').value = "";
+        }
+
+        function downloadEmployeeTemplateCSV() {
+            let rows = [["Employee ID", "Employee Full Name"]];
+            state.employees.forEach(e => { rows.push([`"${e.idNumber}"`, `"${e.employeeName}"`]); });
+            const link = document.createElement("a");
+            link.setAttribute("href", encodeURI("data:text/csv;charset=utf-8," + rows.map(r => r.join(",")).join("\n")));
+            link.setAttribute("download", "System_Employee_Roster.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function importEmployeesFromCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const contents = e.target.result;
+                const rows = contents.split(/\r?\n/);
+                let addedCount = 0;
+                let errorCount = 0;
+
+                for(let i = 1; i < rows.length; i++) {
+                    if(!rows[i].trim()) continue;
+                    let cells = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
+                    if(cells.length >= 2) {
+                        let empId = cells[0];
+                        let empName = cells[1];
+                        if(empId && empName) {
+                            if(!state.employees.some(e => e.idNumber.toLowerCase() === empId.toLowerCase())) {
+                                state.employees.push({ idNumber: empId, employeeName: empName });
+                                addedCount++;
+                            } else {
+                                errorCount++;
+                            }
+                        }
+                    }
+                }
+                saveStateToStorage();
+                renderAdminConfigLists();
+                populateKioskDropdowns();
+                alert(`CSV import finalized: ${addedCount} added successfully. ${errorCount} duplicates skipped.`);
+                event.target.value = ""; 
+            };
+            reader.readAsText(file);
+        }
+
+        function renderAdminConfigLists() {
+            const empContainer = document.getElementById('employee-list-container');
+            if(empContainer) {
+                empContainer.innerHTML = state.employees.map(e => `
+                    <div class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-gray-200 text-xs shadow-2xs">
+                        <div>
+                            <p class="font-bold text-gray-900">${escapeHTML(e.employeeName)}</p>
+                            <p class="text-[10px] text-gray-400 font-mono">ID: ${escapeHTML(e.idNumber)}</p>
+                        </div>
+                        <button onclick="permanentPurgeEmployeeData('${e.idNumber}')" class="bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 font-medium px-2 py-1 rounded text-[10px] transition-colors cursor-pointer" title="Permanently Delete Records">Delete</button>
+                    </div>
+                `).join('') || `<p class="text-xs text-gray-400 italic py-2 col-span-2">No employee profiles inside database roster mappings.</p>`;
+            }
+
+            const shiftContainer = document.getElementById('shift-list-container');
+            if(shiftContainer) {
+                shiftContainer.innerHTML = state.shifts.map(s => state.editingShiftId === s.id ? `
+                    <div class="p-3 bg-blue-50/50 rounded-lg border border-blue-300 text-xs space-y-2">
+                        <input type="text" id="edit-shift-name-${s.id}" value="${escapeHTML(s.name)}" class="w-full px-2 py-1 bg-white border border-gray-300 rounded text-xs font-bold text-gray-800">
+                        <div id="es-days-p-${s.id}" class="flex justify-between gap-1"></div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div><div class="flex gap-1" id="es-in-p-${s.id}"></div></div>
+                            <div><div class="flex gap-1" id="es-out-p-${s.id}"></div></div>
+                        </div>
+                        <div class="pt-2 border-t border-blue-200">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <span class="text-[10px] font-bold text-blue-800">Edit Multiple Breaks</span>
+                                <button type="button" onclick="addEditBreakSubRowNode('${s.id}')" class="bg-blue-700 text-white text-[9px] px-1.5 py-0.5 rounded">+ Add Row</button>
+                            </div>
+                            <div id="edit-break-subrows-container-${s.id}" class="space-y-1.5"></div>
+                        </div>
+                        <div class="flex gap-2 justify-end pt-1"><button onclick="saveShiftEdit('${s.id}')" class="bg-emerald-600 text-white px-2 py-1 rounded text-[11px] cursor-pointer font-bold">Save</button><button onclick="cancelShiftEdit()" class="bg-gray-400 text-white px-2 py-1 rounded text-[11px] cursor-pointer">Cancel</button></div>
+                    </div>` : `
+                    <div class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-gray-200 text-xs shadow-2xs">
+                        <div class="max-w-[80%]">
+                            <p class="font-bold text-gray-900 truncate">${escapeHTML(s.name)} <span class="text-[10px] text-gray-400">(${s.days ? s.days.join(',') : 'All'})</span></p>
+                            <p class="text-gray-500 text-[11px] font-medium">Shift: ${s.inStart} to ${s.outStart}</p>
+                            <p class="text-amber-600 text-[10px] font-bold mt-0.5 truncate">${s.subBreaks && s.subBreaks.length > 0 ? `☕ Breaks: ` + s.subBreaks.map(b=>b.title).join(', ') : 'No Breaks Declared'}</p>
+                        </div>
+                        <div class="flex gap-2"><button onclick="startShiftEdit('${s.id}')" class="text-blue-600 text-[11px] font-bold cursor-pointer">Edit</button><button onclick="deleteShiftConfig('${s.id}')" class="text-red-500 font-bold px-1 cursor-pointer">✕</button></div>
+                    </div>
+                `).join('') || `<p class="text-xs text-gray-400 italic py-2">No profiles populated inside configuration maps.</p>`;
+
+                state.shifts.forEach(s => {
+                    if (state.editingShiftId === s.id) {
+                        document.getElementById(`es-days-p-${s.id}`).innerHTML = buildDaySelectorHTML(`es-${s.id}`, s.days);
+                        document.getElementById(`es-in-p-${s.id}`).innerHTML = build12HourSelectsHTML(`es-in-${s.id}`);
+                        document.getElementById(`es-out-p-${s.id}`).innerHTML = build12HourSelectsHTML(`es-out-${s.id}`);
+                        set12HourPickerValue(`es-in-${s.id}`, s.inStart);
+                        set12HourPickerValue(`es-out-${s.id}`, s.outStart);
+
+                        const subContainer = document.getElementById(`edit-break-subrows-container-${s.id}`);
+                        subContainer.innerHTML = '';
+                        if(s.subBreaks && s.subBreaks.length > 0) {
+                            s.subBreaks.forEach(sb => { addEditBreakSubRowNode(s.id, sb.title, sb.start, sb.end); });
+                        }
+                    }
+                });
+            }
+        }
+
+        function addEditBreakSubRowNode(shiftId, subTitle = "", startVal = "", endVal = "") {
+            const container = document.getElementById(`edit-break-subrows-container-${shiftId}`);
+            const nodeRowId = 'edit-subrow-' + Date.now() + Math.random().toString(36).substr(2,3);
+            const prefixOut = `eb-out-${nodeRowId}`;
+            const prefixIn = `eb-in-${nodeRowId}`;
+            
+            const div = document.createElement('div');
+            div.className = "p-2 bg-white border border-gray-200 rounded-lg space-y-1 edit-subbreak-node";
+            div.id = nodeRowId;
+            div.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <input type="text" value="${escapeHTML(subTitle)}" placeholder="Break label" class="edit-subbreak-title text-[10px] font-bold border border-gray-200 rounded px-1.5 py-0.5 bg-gray-50 text-gray-800 w-1/2" required>
+                    <button type="button" onclick="document.getElementById('${nodeRowId}').remove()" class="text-red-500 font-bold text-[10px] cursor-pointer">✕ Remove</button>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div id="${prefixOut}-container"></div>
+                    <div id="${prefixIn}-container"></div>
+                </div>
+            `;
+            container.appendChild(div);
+            
+            document.getElementById(`${prefixOut}-container`).innerHTML = build12HourSelectsHTML(prefixOut);
+            document.getElementById(`${prefixIn}-container`).innerHTML = build12HourSelectsHTML(prefixIn);
+            
+            if(startVal) set12HourPickerValue(prefixOut, startVal);
+            if(endVal) set12HourPickerValue(prefixIn, endVal);
+        }
+
+        function addNewShiftConfig() {
+            const name = document.getElementById('new-shift-name').value.trim();
+            if(!name) { alert("Please input profile configuration name."); return; }
+            
+            const days = getSelectedDaysFromCheckbox('ns-days');
+            const inStart = get12HourPickerValue('ns-in-start');
+            const outStart = get12HourPickerValue('ns-out-start');
+            const subNodes = document.querySelectorAll('#new-break-subrows-wrapper .subbreak-config-node');
+            const subBreaksArray = [];
+            
+            subNodes.forEach(node => {
+                const subTitle = node.querySelector('.subbreak-title').value.trim() || "Operational Break";
+                const rowId = node.id;
+                const start = get12HourPickerValue(`nsb-out-${rowId}`);
+                const end = get12HourPickerValue(`nsb-in-${rowId}`);
+                subBreaksArray.push({ title: subTitle, start, end });
+            });
+            
+            state.shifts.push({ id: 's_' + Date.now(), name, days, inStart, outStart, subBreaks: subBreaksArray });
+            saveStateToStorage();
+            renderAdminConfigLists();
+            populateKioskDropdowns();
+            autoDetectShiftByMachineTime();
+            
+            document.getElementById('new-shift-name').value = "";
+            document.getElementById('new-break-subrows-wrapper').innerHTML = '';
+            addNewBreakSubRow();
+        }
+
+        function startShiftEdit(id) { state.editingShiftId = id; renderAdminConfigLists(); }
+        function cancelShiftEdit() { state.editingShiftId = null; renderAdminConfigLists(); }
+        function saveShiftEdit(id) {
+            const node = state.shifts.find(s => s.id === id);
+            if(node) {
+                node.name = document.getElementById(`edit-shift-name-${id}`).value.trim();
+                node.days = getSelectedDaysFromCheckbox(`es-${id}-days`);
+                node.inStart = get12HourPickerValue(`es-in-${id}`);
+                node.outStart = get12HourPickerValue(`es-out-${id}`);
+                
+                const subNodes = document.querySelectorAll(`#edit-break-subrows-container-${id} .edit-subbreak-node`);
+                const subBreaksArray = [];
+                subNodes.forEach(n => {
+                    const nodeRowId = n.id;
+                    const subTitle = n.querySelector('.edit-subbreak-title').value.trim() || "Operational Break";
+                    const start = get12HourPickerValue(`eb-out-${nodeRowId}`);
+                    const end = get12HourPickerValue(`eb-in-${nodeRowId}`);
+                    subBreaksArray.push({ title: subTitle, start, end });
+                });
+                node.subBreaks = subBreaksArray;
+                
+                saveStateToStorage();
+                state.editingShiftId = null;
+                renderAdminConfigLists();
+                populateKioskDropdowns();
+                autoDetectShiftByMachineTime();
+            }
+        }
+        function deleteShiftConfig(id) {
+            state.shifts = state.shifts.filter(s => s.id !== id);
+            saveStateToStorage();
+            renderAdminConfigLists();
+            populateKioskDropdowns();
+            autoDetectShiftByMachineTime();
+        }
+
+        function changeAdminCredentials() {
+            const user = document.getElementById('new-admin-user').value.trim();
+            const pass = document.getElementById('new-admin-pass').value.trim();
+            if(!user || !pass) return;
+            state.adminAccount = { user, pass };
+            saveStateToStorage();
+            document.getElementById('new-admin-user').value = "";
+            document.getElementById('new-admin-pass').value = "";
+            alert("Security credentials modified successfully.");
+        }
+
+        function getTimeStringNow() {
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = now.getMinutes();
+            const period = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12;
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${period}`;
+        }
+
+        function timeToMinutes(tStr) {
+            if(!tStr || tStr === "--:--") return 0;
+            const [time, period] = tStr.split(' ');
+            let [h, m] = time.split(':').map(Number);
+            if (period === 'PM' && h !== 12) h += 12;
+            if (period === 'AM' && h === 12) h = 0;
+            return (h * 60) + m;
+        }
+
+        function generateRowHTML(log, isAdminRow = false) {
+            let shiftCell = `<div class="space-y-1">`;
+            if(log.timeIn) {
+                const lateTag = log.timeInLateMinutes > 0 ? `<span class="inline-block ml-0 sm:ml-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700">🔴 Overdue +${log.timeInLateMinutes}m</span>` : '';
+                shiftCell += `<p class="flex flex-col sm:flex-row sm:items-center gap-0.5"><span class="text-gray-400 text-[11px] sm:text-xs">In:</span> <span class="text-gray-700 font-medium">${log.timeIn}</span>${lateTag}</p>`;
+            }
+            if(log.timeOut) {
+                const earlyTag = log.timeOutEarlyMinutes > 0 ? `<span class="inline-block ml-0 sm:ml-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700">🔴 Early Out -${log.timeOutEarlyMinutes}m</span>` : '';
+                shiftCell += `<p class="flex flex-col sm:flex-row sm:items-center gap-0.5"><span class="text-gray-400 text-[11px] sm:text-xs">Out:</span> <span class="text-gray-700 font-medium">${log.timeOut}</span>${earlyTag}</p>`;
+            }
+            if(!log.timeIn && !log.timeOut) shiftCell += `<p class="text-gray-400 italic text-xs">No records active</p>`;
+            shiftCell += `</div>`;
+
+            let breakCell = `<div class="space-y-1.5 max-h-32 overflow-y-auto pr-1">`;
+            if(log.breakActivities && log.breakActivities.length > 0) {
+                log.breakActivities.forEach(b => {
+                    const earlyOutTag = b.breakOutEarlyMinutes > 0 ? `<span class="text-[9px] font-bold text-amber-600">(Early -${b.breakOutEarlyMinutes}m)</span>` : '';
+                    const lateOutTag = b.breakOutLateMinutes > 0 ? `<span class="text-[9px] font-bold text-red-600">(Late +${b.breakOutLateMinutes}m)</span>` : '';
+                    const overTag = b.overdueMinutes > 0 ? `<span class="inline-block px-1 rounded text-[9px] font-bold bg-red-100 text-red-700">⚠️ Overdue +${b.overdueMinutes}m</span>` : '';
+                    
+                    breakCell += `
+                        <div class="p-1.5 bg-gray-50 border border-gray-100 rounded text-[11px] leading-tight text-gray-700">
+                            <p class="font-bold text-gray-800 text-[11px] mb-0.5">☕ ${escapeHTML(b.breakName)}</p>
+                            <p><span class="text-gray-400">Out:</span> <span class="font-medium">${b.breakOut}</span> ${earlyOutTag}${lateOutTag}</p>
+                            <p><span class="text-gray-400">In:</span> <span class="font-medium">${b.breakIn || '<span class="text-amber-600 font-bold animate-pulse">On Break</span>'}</span> ${overTag}</p>
+                        </div>
+                    `;
+                });
+            } else {
+                breakCell += `<p class="text-gray-400 italic text-xs">No entries recorded</p>`;
+            }
+            breakCell += `</div>`;
+
+            const cleanName = log.name.split('(')[0].trim();
+
+            if (isAdminRow) {
+                return `
+                    <td class="px-4 py-4 text-center">
+                        <input type="checkbox" value="${log.id}" class="log-row-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500 scale-110 cursor-pointer">
+                    </td>
+                    <td class="px-4 py-4 break-words">
+                        <p class="font-bold text-gray-900">${escapeHTML(cleanName)}</p>
+                        <p class="text-[11px] font-mono font-semibold text-blue-600 mt-0.5">ID: ${escapeHTML(log.uniqueKey)}</p>
+                        <p class="text-[10px] text-gray-400 font-medium">Date: ${log.dateStamp || 'N/A'}</p>
+                    </td>
+                    <td class="px-4 py-4 text-gray-500 font-medium break-words">${escapeHTML(log.assignedShift)}</td>
+                    <td class="px-4 py-4">${shiftCell}</td>
+                    <td class="px-4 py-4">${breakCell}</td>
+                    <td class="px-4 py-4 text-center">
+                        <button onclick="deleteSingleLog('${log.id}')" class="text-red-600 hover:text-red-800 font-bold text-xs bg-red-50 hover:bg-red-100 px-2 py-1 rounded border border-red-200 transition-colors cursor-pointer">✕ Delete</button>
+                    </td>
+                `;
+            }
+
+            return `
+                <td class="px-4 sm:px-6 py-4 font-bold text-gray-900 break-words">${escapeHTML(cleanName)}<p class="text-[10px] text-gray-400 font-normal">ID: ${escapeHTML(log.uniqueKey)}</p></td>
+                <td class="px-4 sm:px-6 py-4 text-gray-500 font-medium break-words">${escapeHTML(log.assignedShift)}</td>
+                <td class="px-4 sm:px-6 py-4">${shiftCell}</td>
+                <td class="px-4 sm:px-6 py-4">${breakCell}</td>
+            `;
+        }
+
+        function renderLogsTable() {
+            const kioskTbody = document.getElementById('logs-tbody');
+            const adminTbody = document.getElementById('admin-logs-tbody');
+            if(!kioskTbody) return;
+            
+            const visibleKioskLogs = state.logs.filter(log => !state.kioskHiddenLogIds.includes(log.id));
+            
+            kioskTbody.innerHTML = visibleKioskLogs.map(log => `
+                <tr class="hover:bg-gray-50/50 transition-colors border-b border-gray-100">${generateRowHTML(log, false)}</tr>
+            `).join('') || `<tr><td colspan="4" class="px-6 py-8 text-center text-gray-400 italic text-xs sm:text-sm">No live workspace employee sessions stream profiles connected.</td></tr>`;
+
+            if(adminTbody) {
+                adminTbody.innerHTML = state.logs.map(log => `
+                    <tr class="hover:bg-gray-50/50 transition-colors border-b border-gray-100">${generateRowHTML(log, true)}</tr>
+                `).join('') || `<tr><td colspan="6" class="px-6 py-8 text-center text-gray-400 italic text-xs sm:text-sm">No recorded index history logs inside master partitions.</td></tr>`;
+            }
+        }
+
+        function exportToCSV() {
+            if(state.logs.length === 0) { alert("No logs recorded to generate raw summaries."); return; }
+            const startVal = document.getElementById('csv-start-date').value; 
+            const endVal = document.getElementById('csv-end-date').value;
+
+            let filteredLogs = state.logs;
+            if(startVal) filteredLogs = filteredLogs.filter(l => !l.dateStamp || l.dateStamp >= startVal);
+            if(endVal) filteredLogs = filteredLogs.filter(l => !l.dateStamp || l.dateStamp <= endVal);
+
+            if(filteredLogs.length === 0) { alert("No records matches specified filtering parameters criteria."); return; }
+
+            let csvRows = [["Date", "Employee ID", "Employee Name", "Assigned Shift Matrix", "Time In Stamp", "Time Out Stamp", "Allocated Break Summary"]];
+            filteredLogs.forEach(log => {
+                const cleanName = log.name.split('(')[0].trim();
+                let dynamicBreakSummary = log.breakActivities.map(b => `[${b.breakName} Out: ${b.breakOut} In: ${b.breakIn || 'Pending'}]`).join('; ');
+                csvRows.push([log.dateStamp||"N/A", `"${log.uniqueKey}"`, `"${cleanName}"`, `"${log.assignedShift}"`, log.timeIn||"", log.timeOut||"", `"${dynamicBreakSummary}"`]);
+            });
+            
+            const link = document.createElement("a");
+            link.setAttribute("href", encodeURI("data:text/csv;charset=utf-8," + csvRows.map(e => e.join(",")).join("\n")));
+            link.setAttribute("download", `Attendance_Report_${startVal||'Start'}_to_${endVal||'End'}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportDatabaseJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", `attendance_system_db_${Date.now()}.json`);
+            dlAnchorElem.click();
         }
 
         function importDatabaseJSON(event) {
@@ -332,16 +1602,19 @@
             reader.onload = function(e) {
                 try {
                     const parsed = JSON.parse(e.target.result);
-                    if (parsed && Array.isArray(parsed.shifts)) {
-                        state.shifts = parsed.shifts;
+                    if (parsed.shifts || parsed.employees || parsed.logs) {
+                        state.shifts = parsed.shifts || [];
+                        state.employees = parsed.employees || [];
                         state.logs = parsed.logs || [];
-                        adminAccount = parsed.adminAccount;
+                        state.kioskHiddenLogIds = parsed.kioskHiddenLogIds || [];
+                        state.systemMode = parsed.systemMode || "schedule";
+                        state.autoLogoutMinutes = parsed.autoLogoutMinutes || 0;
+                        if (parsed.adminAccount) state.adminAccount = parsed.adminAccount;
                         
-                        state.shifts.forEach(s => {
-                            if(!s.subBreaks) s.subBreaks = s.breaks || [];
-                        });
+                        state.shifts.forEach(s => { if(!s.subBreaks) s.subBreaks = s.breaks || []; });
 
                         saveStateToStorage();
+                        renderAdminConfigLists();
                         renderLogsTable();
                         populateKioskDropdowns();
                         applyModeLayoutRules();
@@ -364,10 +1637,11 @@
         }
 
         function escapeHTML(str) {
-            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+            return str.replace(/[&<>'\"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
         }
 
         initClockSize();
+        initCreationPickers();
         populateKioskDropdowns();
         applyModeLayoutRules();
         renderLogsTable();

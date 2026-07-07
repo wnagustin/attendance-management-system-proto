@@ -184,8 +184,8 @@
                     </div>
                     
                     <div class="flex flex-col gap-2 bg-gray-50 p-3 rounded-lg border border-gray-200 w-full lg:w-auto">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Download Logs CSV Report</span>
-                        <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center block w-full">Download Logs CSV Report</span>
+                        <div class="flex items-center justify-center gap-3 w-full">
                             <div class="flex items-center gap-1">
                                 <label class="text-[10px] font-medium text-gray-500">Start:</label>
                                 <input type="date" id="csv-start-date" class="bg-white border border-gray-300 rounded px-1.5 py-0.5 text-xs text-gray-800">
@@ -465,12 +465,11 @@
         <div class="bg-white rounded-xl shadow-xl border border-gray-200 w-full max-w-md p-5 sm:p-6 relative">
             <h3 id="modal-title" class="text-base sm:text-lg font-bold text-gray-900 mb-1">Verify Identity</h3>
             <p id="modal-subtitle" class="text-xs text-gray-500 mb-4">Please submit your identification coordinates.</p>
-            
             <div class="space-y-4">
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 uppercase mb-2">Employee ID Number</label>
                     <div class="relative flex items-center">
-                        <input type="text" id="modal-emp-identity" placeholder="Enter ID number strictly" inputmode="text" class="w-full pl-3 pr-10 py-2 border border-gray-300 bg-white text-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm">
+                        <input type="text" id="modal-emp-identity" placeholder="Enter ID number strictly" class="w-full pl-3 pr-10 py-2 border border-gray-300 bg-white text-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm">
                         <button onclick="toggleQRScanner()" class="absolute right-2 text-gray-500 hover:text-blue-600 p-1.5 rounded-md transition-colors cursor-pointer text-sm" title="Scan QR Code">📷</button>
                     </div>
                     <div id="qr-reader-container" class="hidden mt-3 p-2 bg-gray-50 border border-gray-200 rounded-lg">
@@ -488,12 +487,11 @@
 
     <script>
         const DAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-        
         let state = {
             adminAccount: null, 
             isAdminAuthenticated: false,
             editingShiftId: null,
-            shifts: [], // Sample schedules removed entirely
+            shifts: [],
             employees: [], 
             logs: [],
             kioskHiddenLogIds: [],
@@ -516,194 +514,61 @@
                     const parsed = JSON.parse(raw);
                     if (parsed && parsed.shifts) state = parsed;
                 } catch (e) {
-                    console.error("Failed parsing LocalStorage state parameters, reverting to system defaults.");
+                    console.error("Failed parsing LocalStorage state parameters, reverting to system defaults");
                 }
             }
-            
-            if (!state.adminAccount) {
-                document.getElementById('first-time-reg-overlay').classList.remove('hidden');
+            if (!state.shifts || state.shifts.length === 0) {
+                state.shifts = [{
+                    id: "sh-default",
+                    name: "Standard Default Roster",
+                    days: [true, true, true, true, true, false, false],
+                    timeIn: { h: "09", m: "00", r: "AM" },
+                    timeOut: { h: "06", m: "00", r: "PM" },
+                    breaks: [{ id: "br-1", label: "Lunch Break Window", start: { h: "12", m: "00", r: "PM" }, end: { h: "01", m: "00", r: "PM" } }]
+                }];
             }
-
+            if (!state.systemMode) state.systemMode = "schedule";
             saveStateToStorage();
-        }
-
-        function submitFirstTimeRegistration() {
-            const user = document.getElementById('reg-admin-user').value.trim();
-            const pass = document.getElementById('reg-admin-pass').value.trim();
-
-            if (!user || !pass) {
-                Swal.fire({ icon: 'warning', text: 'Admin configuration parameters cannot be saved empty.' });
-                return;
-            }
-
-            state.adminAccount = { user: user, pass: pass };
-            saveStateToStorage();
-            
-            document.getElementById('first-time-reg-overlay').classList.add('hidden');
-            Swal.fire({ icon: 'success', title: 'System Initialized', text: 'Root admin profile generated successfully.', timer: 2000, showConfirmButton: false });
-            applyModeLayoutRules();
+            checkFirstTimeRegistrationStatus();
         }
 
         function saveStateToStorage() {
             localStorage.setItem("attendance_system_state", JSON.stringify(state));
         }
 
-        function toggleKioskButtonLabel() {
-            const label = document.getElementById('kiosk-btn-label');
-            label.classList.toggle('hidden');
-        }
-
-        function openAdminSectionModal(modalId) {
-            document.getElementById(modalId).classList.remove('hidden');
-            renderAdminConfigLists();
-            renderLogsTable();
-        }
-
-        function closeAdminSectionModal(modalId) {
-            document.getElementById(modalId).classList.add('hidden');
-        }
-
-        function updateLiveStationClock() {
-            const now = new Date();
-            let hours = now.getHours();
-            const minutes = now.getMinutes();
-            const seconds = now.getSeconds();
-            const period = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12 || 12;
-            
-            const clockString = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')} ${period}`;
-            document.getElementById('station-clock').innerText = clockString;
-            
-            const options = { weekday: 'short', month: 'short', day: '2-digit', year: 'numeric' };
-            document.getElementById('station-date').innerText = now.toLocaleDateString('en-US', options);
-            
-            if (state.systemMode === "schedule" && !isManualOverrideActive) {
-                autoDetectShiftByMachineTime();
-            }
-        }
-
-        function resizeClock(scalePercent) {
-            const container = document.getElementById('clock-container');
-            const badge = document.getElementById('slider-percentage-badge');
-            container.style.fontSize = `${(scalePercent / 100) * 1.25}rem`;
-            badge.innerText = `${scalePercent}%`;
-        }
-
-        function initClockSize() {
-            const slider = document.getElementById('clock-size-slider');
-            if (slider) resizeClock(slider.value);
-        }
-
-        function switchTab(targetTab) {
-            activeInterfaceTab = targetTab;
-            const empBtn = document.getElementById('tab-employee');
-            const admBtn = document.getElementById('tab-admin');
-            const empSec = document.getElementById('view-employee');
-            const admSec = document.getElementById('view-admin');
-
-            if (targetTab === 'employee') {
-                empBtn.className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all bg-white text-gray-900 shadow-sm cursor-pointer";
-                admBtn.className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all text-gray-600 hover:text-gray-900 cursor-pointer";
-                empSec.classList.remove('hidden');
-                admSec.classList.add('hidden');
+        function checkFirstTimeRegistrationStatus() {
+            const overlay = document.getElementById('first-time-reg-overlay');
+            if (!state.adminAccount || !state.adminAccount.username) {
+                overlay.classList.remove('hidden');
             } else {
-                admBtn.className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all bg-white text-gray-900 shadow-sm cursor-pointer";
-                empBtn.className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all text-gray-600 hover:text-gray-900 cursor-pointer";
-                admSec.classList.remove('hidden');
-                empSec.classList.add('hidden');
-                applyModeLayoutRules();
+                overlay.classList.add('hidden');
             }
-            resetInactivityTimer();
         }
 
-        function applyModeLayoutRules() {
-            const authCard = document.getElementById('admin-auth-card');
-            const settingsPanel = document.getElementById('admin-settings-panel');
-            
-            if (state.isAdminAuthenticated) {
-                authCard.classList.add('hidden');
-                settingsPanel.classList.remove('hidden');
-                if (state.adminAccount) document.getElementById('new-admin-user').value = state.adminAccount.user;
-                document.getElementById('admin-lockout-time').value = state.autoLogoutMinutes;
-                
-                const modeSelect = document.getElementById('sys-mode-select');
-                modeSelect.innerHTML = `
-                    <option value="schedule" ${state.systemMode === 'schedule' ? 'selected' : ''}>Schedule Based Mode</option>
-                    <option value="ongoing" ${state.systemMode === 'ongoing' ? 'selected' : ''}>Ongoing Mode</option>
-                `;
-            } else {
-                authCard.classList.remove('hidden');
-                settingsPanel.classList.add('hidden');
-                document.getElementById('admin-user').value = "";
-                document.getElementById('admin-pass').value = "";
+        function submitFirstTimeRegistration() {
+            const u = document.getElementById('reg-admin-user').value.trim();
+            const p = document.getElementById('reg-admin-pass').value.trim();
+            if (!u || !p) {
+                Swal.fire('Input Required', 'Please configure valid username and password credentials.', 'warning');
+                return;
             }
-
-            const dropdownContainer = document.getElementById('kiosk-dropdown-container');
-            const breakHeader = document.getElementById('kiosk-break-header');
-            
-            if (state.systemMode === "ongoing") {
-                dropdownContainer.classList.add('hidden');
-                breakHeader.classList.add('hidden');
-            } else {
-                dropdownContainer.classList.remove('hidden');
-                breakHeader.classList.remove('hidden');
-            }
+            state.adminAccount = { username: u, password: p };
+            saveStateToStorage();
+            Swal.fire('Initialized', 'Primary administrator account initialized successfully.', 'success');
+            checkFirstTimeRegistrationStatus();
         }
 
         function handleAuthSubmit() {
-            const u = document.getElementById('admin-user').value;
-            const p = document.getElementById('admin-pass').value;
-            const feedback = document.getElementById('auth-feedback');
-
-            if (state.adminAccount && u === state.adminAccount.user && p === state.adminAccount.pass) {
+            const u = document.getElementById('admin-user').value.trim();
+            const p = document.getElementById('admin-pass').value.trim();
+            if (state.adminAccount && u === state.adminAccount.username && p === state.adminAccount.password) {
                 state.isAdminAuthenticated = true;
-                feedback.classList.add('hidden');
-                applyModeLayoutRules();
-                resetInactivityTimer();
-                Swal.fire({ icon: 'success', title: 'Authenticated', text: 'Admin settings dashboard unlocked.', timer: 1500, showConfirmButton: false });
+                document.getElementById('admin-auth-card').classList.add('hidden');
+                document.getElementById('admin-settings-panel').classList.remove('hidden');
+                resetInactivityLockoutCounter();
+                renderAdminProfilesDashboard();
             } else {
-                feedback.innerText = "Invalid credentials combination.";
-                feedback.className = "mt-3 text-xs sm:text-sm font-semibold text-red-600";
-                feedback.classList.remove('hidden');
-            }
-        }
-
-        function confirmModeChange(requestedValue) {
-            if (requestedValue === state.systemMode) return;
-
-            Swal.fire({
-                title: 'Change System Mode?',
-                text: `Are you sure you want to transition system operations into ${requestedValue === 'ongoing' ? 'Ongoing Mode' : 'Schedule Based Mode'}?`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#2563eb',
-                cancelButtonColor: '#64748b',
-                confirmButtonText: 'Yes, change mode',
-                cancelButtonText: 'Cancel'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    handleModeChange(requestedValue);
-                } else {
-                    document.getElementById('sys-mode-select').value = state.systemMode;
-                }
-            });
-        }
-
-        function handleModeChange(val) {
-            state.systemMode = val;
-            saveStateToStorage();
-            
-            applyModeLayoutRules();
-
-            const bannerStatus = document.getElementById('auto-shift-status');
-            if (val === "ongoing") {
-                bannerStatus.innerText = "⏸️ Manual Shift Select Queue Mode Active";
-                bannerStatus.className = "text-[10px] bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full font-bold self-stretch sm:self-auto text-center animate-none";
-            } else {
-                bannerStatus.innerText = "🔄 Auto-Switch Timeline Sync Active";
-                bannerStatus.className = "text-[10px] bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold animate-pulse self-stretch sm:self-auto text-center";
-                isManualOverrideActive = false;
-                autoDetectShiftByMachineTime();
+                Swal.fire('Security Error', 'Invalid administrative access parameters provided.', 'error');
             }
         }
 
@@ -717,673 +582,927 @@
 
         function confirmLogOutAdmin() {
             state.isAdminAuthenticated = false;
+            document.getElementById('admin-user').value = "";
+            document.getElementById('admin-pass').value = "";
+            document.getElementById('admin-settings-panel').classList.add('hidden');
+            document.getElementById('admin-auth-card').classList.remove('hidden');
             closeLogoutModal();
-            applyModeLayoutRules();
-            switchTab('employee');
+            clearTimeout(inactivityTimerReference);
+            Swal.fire('Logged Out', 'Administrative workflow section locked securely.', 'info');
         }
 
-        function resetInactivityTimer() {
-            if (inactivityTimerReference) clearTimeout(inactivityTimerReference);
-            if (state.autoLogoutMinutes > 0 && state.isAdminAuthenticated) {
-                inactivityTimerReference = setTimeout(() => {
-                    state.isAdminAuthenticated = false;
-                    applyModeLayoutRules();
-                    if (activeInterfaceTab === "admin") switchTab('employee');
-                    Swal.fire({ icon: 'info', title: 'Session Timeout', text: 'Security lockout automated idle sign-out triggered.', timer: 2000, showConfirmButton: false });
-                }, state.autoLogoutMinutes * 60000);
-            }
+        function resetInactivityLockoutCounter() {
+            clearTimeout(inactivityTimerReference);
+            if (!state.isAdminAuthenticated || parseInt(state.autoLogoutMinutes) === 0) return;
+            inactivityTimerReference = setTimeout(() => {
+                state.isAdminAuthenticated = false;
+                document.getElementById('admin-user').value = "";
+                document.getElementById('admin-pass').value = "";
+                document.getElementById('admin-settings-panel').classList.add('hidden');
+                document.getElementById('admin-auth-card').classList.remove('hidden');
+                Swal.fire('Session Timeout', 'Security terminal locked automatically due to admin inactivity.', 'warning');
+            }, parseInt(state.autoLogoutMinutes) * 60 * 1000);
         }
 
         function updateLockoutTimerSetting(val) {
-            state.autoLogoutMinutes = parseInt(val) || 0;
+            state.autoLogoutMinutes = parseInt(val);
             saveStateToStorage();
-            resetInactivityTimer();
+            resetInactivityLockoutCounter();
         }
 
-        ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(evt => {
-            window.addEventListener(evt, () => { if (state.isAdminAuthenticated) resetInactivityTimer(); });
-        });
+        window.addEventListener('mousemove', resetInactivityLockoutCounter);
+        window.addEventListener('keydown', resetInactivityLockoutCounter);
+
+        function changeAdminCredentials() {
+            const nu = document.getElementById('new-admin-user').value.trim();
+            const np = document.getElementById('new-admin-pass').value.trim();
+            if (!nu || !np) {
+                Swal.fire('Entries Empty', 'Please provide a non-empty set of credentials.', 'warning');
+                return;
+            }
+            state.adminAccount.username = nu;
+            state.adminAccount.password = np;
+            saveStateToStorage();
+            document.getElementById('new-admin-user').value = "";
+            document.getElementById('new-admin-pass').value = "";
+            Swal.fire('Access Modified', 'Primary authentication matrix configuration fields updated.', 'success');
+        }
+
+        function switchTab(target) {
+            activeInterfaceTab = target;
+            const btnEmp = document.getElementById('tab-employee');
+            const btnAdm = document.getElementById('tab-admin');
+            const viewEmp = document.getElementById('view-employee');
+            const viewAdm = document.getElementById('view-admin');
+
+            if (target === 'employee') {
+                btnEmp.className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all bg-white text-gray-900 shadow-sm cursor-pointer";
+                btnAdm.className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all text-gray-600 hover:text-gray-900 cursor-pointer";
+                viewEmp.classList.remove('hidden');
+                viewAdm.classList.add('hidden');
+            } else {
+                btnAdm.className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all bg-white text-gray-900 shadow-sm cursor-pointer";
+                btnEmp.className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all text-gray-600 hover:text-gray-900 cursor-pointer";
+                viewAdm.classList.remove('hidden');
+                viewEmp.classList.add('hidden');
+                if (state.isAdminAuthenticated) {
+                    document.getElementById('admin-auth-card').classList.add('hidden');
+                    document.getElementById('admin-settings-panel').classList.remove('hidden');
+                    renderAdminProfilesDashboard();
+                } else {
+                    document.getElementById('admin-auth-card').classList.remove('hidden');
+                    document.getElementById('admin-settings-panel').classList.add('hidden');
+                }
+            }
+        }
+
+        function initClockSize() {
+            const val = localStorage.getItem("clock_size_scale") || "100";
+            const slider = document.getElementById('clock-size-slider');
+            if (slider) slider.value = val;
+            resizeClock(val);
+        }
+
+        function resizeClock(percent) {
+            const container = document.getElementById('clock-container');
+            const badge = document.getElementById('slider-percentage-badge');
+            if (container) container.style.fontSize = `${(percent / 100) * 1.25}rem`;
+            if (badge) badge.innerText = `${percent}%`;
+            localStorage.setItem("clock_size_scale", percent);
+        }
+
+        function updateLiveStationClock() {
+            const now = new Date();
+            let h = now.getHours();
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12;
+            h = h ? h : 12;
+            const hStr = String(h).padStart(2, '0');
+
+            document.getElementById('station-clock').innerText = `${hStr}:${m}:${s} ${ampm}`;
+            
+            const options = { weekday: 'long', month: 'short', day: '2-digit' };
+            document.getElementById('station-date').innerText = now.toLocaleDateString('en-US', options);
+
+            if (state.systemMode === 'schedule' && !isManualOverrideActive) {
+                evaluateAutoShiftTrigger(now);
+            }
+        }
+
+        function evaluateAutoShiftTrigger(dateObj) {
+            let dayIndex = dateObj.getDay() - 1; 
+            if (dayIndex < 0) dayIndex = 6; 
+
+            const matched = state.shifts.filter(s => s.days[dayIndex]);
+            let target = null;
+
+            if (matched.length > 0) {
+                const currentMinutes = dateObj.getHours() * 60 + dateObj.getMinutes();
+                let closestDiff = Infinity;
+                
+                matched.forEach(s => {
+                    const inMinutes = convertTo24HourMinutes(s.timeIn);
+                    const diff = currentMinutes - inMinutes;
+                    if (diff >= 0 && diff < closestDiff) {
+                        closestDiff = diff;
+                        target = s;
+                    }
+                });
+                if (!target) target = matched[0];
+            }
+
+            const select = document.getElementById('emp-shift-select');
+            if (target && select && select.value !== target.id) {
+                select.value = target.id;
+                applyKioskDisplayRules(target);
+            } else if (!target && select && state.shifts.length > 0) {
+                applyKioskDisplayRules(state.shifts[0]);
+            }
+        }
+
+        function convertTo24HourMinutes(tObj) {
+            let h = parseInt(tObj.h);
+            if (tObj.r === 'PM' && h !== 12) h += 12;
+            if (tObj.r === 'AM' && h === 12) h = 0;
+            return h * 60 + parseInt(tObj.m);
+        }
 
         function populateKioskDropdowns() {
             const select = document.getElementById('emp-shift-select');
-            if (!select) return;
+            const modeSelect = document.getElementById('sys-mode-select');
+            if (!select || !modeSelect) return;
+
             select.innerHTML = "";
             state.shifts.forEach(s => {
                 const opt = document.createElement('option');
                 opt.value = s.id;
-                opt.innerText = `${s.name} (${s.startIn} - ${s.endOut})`;
+                opt.innerText = s.name;
                 select.appendChild(opt);
             });
-            updateKioskInfoBanner();
+
+            modeSelect.innerHTML = `
+                <option value="schedule" ${state.systemMode === 'schedule' ? 'selected' : ''}>Active Automatic Schedule Sync</option>
+                <option value="ongoing" ${state.systemMode === 'ongoing' ? 'selected' : ''}>Continuous Uninterrupted Ongoing Mode</option>
+            `;
+            applyModeLayoutRules();
         }
 
         function handleManualShiftChange() {
-            if (state.systemMode === "schedule") {
+            if (state.systemMode === 'schedule') {
                 isManualOverrideActive = true;
-                if (manualOverrideTimeout) clearTimeout(manualOverrideTimeout);
+                clearTimeout(manualOverrideTimeout);
+                document.getElementById('auto-shift-status').className = "text-[10px] bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full font-bold self-stretch sm:self-auto text-center";
+                document.getElementById('auto-shift-status').innerText = "⚠️ Manual Shift Override (Locking 5m)";
+                
                 manualOverrideTimeout = setTimeout(() => {
                     isManualOverrideActive = false;
-                }, 300000);
+                    document.getElementById('auto-shift-status').className = "text-[10px] bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold animate-pulse self-stretch sm:self-auto text-center";
+                    document.getElementById('auto-shift-status').innerText = "🔄 Auto-Switch Timeline Sync Active";
+                }, 5 * 60 * 1000);
             }
-            updateKioskInfoBanner();
+            const id = document.getElementById('emp-shift-select').value;
+            const shift = state.shifts.find(s => s.id === id);
+            if (shift) applyKioskDisplayRules(shift);
         }
 
-        function autoDetectShiftByMachineTime() {
-            if (state.shifts.length === 0 || isManualOverrideActive) return;
-            const now = new Date();
-            const currentDayShort = DAYS_SHORT[now.getDay() === 0 ? 6 : now.getDay() - 1];
-            const timeString = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
-            let matchedShift = state.shifts.find(s => s.days.includes(currentDayShort) && timeString >= s.startIn && timeString <= s.endOut);
-            if (!matchedShift) {
-                matchedShift = state.shifts.find(s => s.days.includes(currentDayShort)) || state.shifts[0];
-            }
-
-            if (matchedShift) {
-                const select = document.getElementById('emp-shift-select');
-                if (select && select.value !== matchedShift.id) {
-                    select.value = matchedShift.id;
-                    updateKioskInfoBanner();
-                }
-            }
+        function confirmModeChange(val) {
+            state.systemMode = val;
+            saveStateToStorage();
+            isManualOverrideActive = false;
+            clearTimeout(manualOverrideTimeout);
+            applyModeLayoutRules();
+            Swal.fire('Mode Updated', `Operational system flow rule assigned parameters modified successfully.`, 'success');
         }
 
-        function updateKioskInfoBanner() {
-            const select = document.getElementById('emp-shift-select');
-            const shiftBadge = document.getElementById('current-shift-badge');
-            const breakBadge = document.getElementById('current-break-badge');
-            
-            if (!select || !select.value) {
-                if (shiftBadge) shiftBadge.innerText = "None Configured";
-                if (breakBadge) breakBadge.innerText = "No Break Allocations";
-                return;
-            }
+        function applyModeLayoutRules() {
+            const autoStatus = document.getElementById('auto-shift-status');
+            const dropdownContainer = document.getElementById('kiosk-dropdown-container');
+            const breakHeader = document.getElementById('kiosk-break-header');
 
-            const activeShift = state.shifts.find(s => s.id === select.value);
-            if (activeShift) {
-                shiftBadge.innerText = `${activeShift.name} [${activeShift.startIn} - ${activeShift.endOut}] (${activeShift.days.join(', ')})`;
-                if (activeShift.subBreaks && activeShift.subBreaks.length > 0) {
-                    breakBadge.innerText = activeShift.subBreaks.map(b => `${b.name} (${b.out}-${b.in})`).join(' | ');
+            if (state.systemMode === 'ongoing') {
+                if (autoStatus) autoStatus.classList.add('hidden');
+                if (dropdownContainer) dropdownContainer.classList.add('hidden');
+                if (breakHeader) breakHeader.classList.add('hidden'); 
+            } else {
+                if (autoStatus) autoStatus.classList.remove('hidden');
+                if (dropdownContainer) dropdownContainer.classList.remove('hidden');
+                if (breakHeader) breakHeader.classList.remove('hidden'); 
+                if (isManualOverrideActive) {
+                    if (autoStatus) {
+                        autoStatus.className = "text-[10px] bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full font-bold self-stretch sm:self-auto text-center";
+                        autoStatus.innerText = "⚠️ Manual Shift Override (Locking 5m)";
+                    }
                 } else {
-                    breakBadge.innerText = "No break windows mapped.";
+                    if (autoStatus) {
+                        autoStatus.className = "text-[10px] bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold animate-pulse self-stretch sm:self-auto text-center";
+                        autoStatus.innerText = "🔄 Auto-Switch Timeline Sync Active";
+                    }
                 }
+            }
+
+            const activeId = document.getElementById('emp-shift-select').value || (state.shifts[0] ? state.shifts[0].id : null);
+            if (activeId) {
+                const s = state.shifts.find(x => x.id === activeId);
+                if (s) applyKioskDisplayRules(s);
+            }
+        }
+
+        function applyKioskDisplayRules(shift) {
+            document.getElementById('current-shift-badge').innerText = `${shift.name} (${shift.timeIn.h}:${shift.timeIn.m} ${shift.timeIn.r} - ${shift.timeOut.h}:${shift.timeOut.m} ${shift.timeOut.r})`;
+            if (shift.breaks && shift.breaks.length > 0) {
+                document.getElementById('current-break-badge').innerText = shift.breaks.map(b => `${b.label || 'Break'} [${b.start.h}:${b.start.m} ${b.start.r} - ${b.end.h}:${b.end.m} ${b.end.r}]`).join(', ');
+            } else {
+                document.getElementById('current-break-badge').innerText = "No Break Windows Assigned";
             }
         }
 
         function openPunchModal(actionType) {
             activePunchAction = actionType;
-            const modal = document.getElementById('punch-modal');
-            const title = document.getElementById('modal-title');
-            const subtitle = document.getElementById('modal-subtitle');
+            const titles = { timeIn: "Verify Employee Identity: TIME IN", timeOut: "Verify Employee Identity: TIME OUT", breakOut: "Verify Employee Identity: START BREAK", breakIn: "Verify Employee Identity: END BREAK" };
+            document.getElementById('modal-title').innerText = titles[actionType] || "Verify Identity";
+            document.getElementById('modal-emp-identity').value = "";
+            document.getElementById('punch-modal').classList.remove('hidden');
             
-            const labels = {
-                timeIn: { t: "Verify Identity: TIME IN", s: "Submit your account ID code to verify shift entry registration." },
-                timeOut: { t: "Verify Identity: TIME OUT", s: "Submit your account ID code to record workspace checkout profiles." },
-                breakOut: { t: "Verify Identity: START BREAK", s: "Register checkout boundary validation for break timeline syncs." },
-                breakIn: { t: "Verify Identity: END BREAK", s: "Re-entry clearance confirmation for workstation reporting logs." }
-            };
-
-            title.innerText = labels[actionType].t;
-            subtitle.innerText = labels[actionType].s;
-            
-            const inputField = document.getElementById('modal-emp-identity');
-            inputField.value = "";
-            
-            // Prevent auto-focusing on mobile device keyboards unless directly tapped
-            inputField.blur(); 
-            
-            modal.classList.remove('hidden');
-            
-            // Fire camera execution stream immediately following modal initialization
-            startQRScannerImmediately();
-        }
-
-        function removeEmployeeProfile(empId) {
-            const employee = state.employees.find(e => e.id === empId);
-            if (!employee) return;
-
-            Swal.fire({
-                title: 'Delete Employee Account?',
-                html: `
-                    <div class="text-left text-xs text-gray-600 space-y-2">
-                        <p>This action is irreversible. All tracking logs maps matching this index identifier key code will detach profiles mappings context.</p>
-                        <div class="bg-red-50 border border-red-100 p-2.5 rounded font-mono text-[11px] text-red-800">
-                            <b>Account Name:</b> ${escapeHTML(employee.name)}<br/>
-                            <b>ID Parameter:</b> ${escapeHTML(employee.id)}
-                        </div>
-                    </div>
-                `,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc2626',
-                confirmButtonText: 'Permanently Delete',
-                cancelButtonText: 'Cancel'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    state.employees = state.employees.filter(e => e.id !== empId);
-                    saveStateToStorage();
-                    renderAdminConfigLists();
-                    Swal.fire({ icon: 'success', title: 'Profile Cleared', text: `Roster metadata index purged.`, timer: 2000, showConfirmButton: false });
-                }
-            });
+            // Instantly start camera streams upon tapping any operational punch buttons
+            toggleQRScanner(); 
         }
 
         function closePunchModal() {
             stopQRScanner();
             document.getElementById('punch-modal').classList.add('hidden');
-        }
-
-        function startQRScannerImmediately() {
-            const container = document.getElementById('qr-reader-container');
-            container.classList.remove('hidden');
-            isCameraStreamRunning = true;
-            html5QrcodeInstance = new Html5Qrcode("qr-reader");
-            html5QrcodeInstance.start(
-                { facingMode: "environment" },
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                (decodedText) => {
-                    document.getElementById('modal-emp-identity').value = decodedText;
-                    stopQRScanner();
-                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'QR Code Scanned', showConfirmButton: false, timer: 1000 });
-                },
-                () => {}
-            ).catch(err => {
-                console.error("Camera node deployment error: ", err);
-                container.classList.add('hidden');
-                isCameraStreamRunning = false;
-            });
+            activePunchAction = null;
         }
 
         function toggleQRScanner() {
+            const container = document.getElementById('qr-reader-container');
             if (isCameraStreamRunning) {
                 stopQRScanner();
-            } else {
-                startQRScannerImmediately();
+                return;
             }
+            container.classList.remove('hidden');
+            isCameraStreamRunning = true;
+            
+            setTimeout(() => {
+                html5QrcodeInstance = new Html5Qrcode("qr-reader");
+                html5QrcodeInstance.start(
+                    { facingMode: "user" },
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    (qrText) => {
+                        document.getElementById('modal-emp-identity').value = qrText.trim();
+                        stopQRScanner();
+                        submitPunchModal();
+                    },
+                    () => {}
+                ).catch(() => {
+                    isCameraStreamRunning = false;
+                    container.classList.add('hidden');
+                });
+            }, 50);
         }
 
         function stopQRScanner() {
             const container = document.getElementById('qr-reader-container');
-            container.classList.add('hidden');
-            isCameraStreamRunning = false;
-            if (html5QrcodeInstance) {
+            if (html5QrcodeInstance && isCameraStreamRunning) {
                 html5QrcodeInstance.stop().then(() => {
                     html5QrcodeInstance = null;
-                }).catch(err => console.error("Error destroying streaming video traces:", err));
+                    isCameraStreamRunning = false;
+                    container.classList.add('hidden');
+                }).catch(() => {
+                    html5QrcodeInstance = null;
+                    isCameraStreamRunning = false;
+                    container.classList.add('hidden');
+                });
+            } else {
+                isCameraStreamRunning = false;
+                container.className = "hidden mt-3 p-2 bg-gray-50 border border-gray-200 rounded-lg";
             }
         }
 
         function submitPunchModal() {
-            const rawId = document.getElementById('modal-emp-identity').value.trim();
-            if (!rawId) {
-                Swal.fire({ icon: 'warning', title: 'Missing parameters', text: 'Identification entries cannot remain empty.' });
+            const empId = document.getElementById('modal-emp-identity').value.trim();
+            if (!empId) {
+                Swal.fire('Required Identifier', 'Please state or snap an Employee identification target parameter.', 'warning');
                 return;
             }
 
-            const matchedEmp = state.employees.find(e => e.id.toLowerCase() === rawId.toLowerCase());
-            if (!matchedEmp) {
-                Swal.fire({ icon: 'error', title: 'Access Denied', text: 'No active master profile record matches submitted ID parameters.' });
+            const emp = state.employees.find(e => e.id === empId);
+            if (!emp) {
+                Swal.fire('Account Fault', 'Employee ID reference matching target record sets not found in configuration rosters.', 'error');
                 return;
             }
 
-            const currentShiftSelect = document.getElementById('emp-shift-select').value;
-            const activeShiftObj = state.shifts.find(s => s.id === currentShiftSelect);
-
-            if (!activeShiftObj) {
-                Swal.fire({ icon: 'error', title: 'Operational Failure', text: 'Please define and select an operational profile configuration before submitting punches.' });
-                return;
-            }
-
+            const activeShiftId = document.getElementById('emp-shift-select').value;
+            const shiftRef = state.shifts.find(s => s.id === activeShiftId);
             const now = new Date();
-            const stamp = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            const todayStr = now.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+            const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
 
-            let userLog = state.logs.find(l => l.empId === matchedEmp.id && l.date === todayStr && l.shiftId === activeShiftObj.id);
-            
-            if (!userLog) {
-                userLog = {
-                    id: "LOG-" + Math.random().toString(36).substr(2, 9).toUpperCase(),
-                    empId: matchedEmp.id,
-                    empName: matchedEmp.name,
-                    date: todayStr,
-                    shiftId: activeShiftObj.id,
-                    shiftName: activeShiftObj.name,
-                    shiftWindow: `${activeShiftObj.startIn} - ${activeShiftObj.endOut}`,
-                    timeIn: "---",
-                    timeOut: "---",
-                    breaks: []
-                };
-                state.logs.unshift(userLog);
+            let log = state.logs.find(l => l.employeeId === empId && l.date === dateStr);
+            if (!log) {
+                log = { id: "log-" + Date.now() + Math.floor(Math.random()*100), employeeId: empId, employeeName: emp.name, date: dateStr, shiftId: activeShiftId, shiftName: shiftRef ? shiftRef.name : "Continuous Stream", timeIn: "", timeOut: "", breaks: [] };
+                state.logs.push(log);
             }
 
+            let msg = "";
             if (activePunchAction === 'timeIn') {
-                userLog.timeIn = stamp;
+                if (log.timeIn) { Swal.fire('Duplicate Input', 'Employee has already submitted a starting boundary parameter timestamp for today.', 'warning'); closePunchModal(); return; }
+                log.timeIn = timeStr;
+                msg = `${emp.name} logged inside core operational matrix assignments cleanly at ${timeStr}.`;
             } else if (activePunchAction === 'timeOut') {
-                userLog.timeOut = stamp;
+                if (!log.timeIn) { Swal.fire('Timeline Error', 'Cannot trigger terminal boundary coordinates without a baseline operational entry stamp.', 'warning'); closePunchModal(); return; }
+                if (log.timeOut) { Swal.fire('Duplicate Input', 'Employee already recorded an exit checkpoint boundary today.', 'warning'); closePunchModal(); return; }
+                log.timeOut = timeStr;
+                msg = `${emp.name} signed outside database tracking rows successfully at ${timeStr}.`;
             } else if (activePunchAction === 'breakOut') {
-                userLog.breaks.push({ name: `Break ${userLog.breaks.length + 1}`, out: stamp, in: "---" });
+                if (!log.timeIn || log.timeOut) { Swal.fire('Sequence Disruption', 'Break parameter rows are locked for employees outside active core shifts.', 'warning'); closePunchModal(); return; }
+                if (log.breaks.length > 0 && !log.breaks[log.breaks.length - 1].end) { Swal.fire('Unresolved Sequence', 'Please resolve current active sub-break matrix segments before allocating rows.', 'warning'); closePunchModal(); return; }
+                log.breaks.push({ start: timeStr, end: "" });
+                msg = `${emp.name} departed on break row tracking indexes at ${timeStr}.`;
             } else if (activePunchAction === 'breakIn') {
-                const openBreak = userLog.breaks.find(b => b.in === "---");
-                if (openBreak) openBreak.in = stamp;
-                else userLog.breaks.push({ name: `Break ${userLog.breaks.length + 1}`, out: "---", in: stamp });
+                if (log.breaks.length === 0 || log.breaks[log.breaks.length - 1].end) { Swal.fire('Reference Core Error', 'No active unresolved sub-break record tracks open under this account hierarchy.', 'warning'); closePunchModal(); return; }
+                log.breaks[log.breaks.length - 1].end = timeStr;
+                msg = `${emp.name} returned back from allocated break streams safely at ${timeStr}.`;
             }
 
             saveStateToStorage();
             closePunchModal();
-            renderLogsTable();
-
-            Swal.fire({
-                icon: 'success',
-                title: 'Punch Registered Successfully',
-                html: `<div class='text-left text-xs bg-gray-50 p-3 rounded space-y-1 font-mono border border-gray-100'>
-                        <div><b>Name:</b> ${escapeHTML(matchedEmp.name)}</div>
-                        <div><b>Action:</b> ${activePunchAction.toUpperCase()}</div>
-                        <div><b>Timestamp:</b> ${stamp}</div>
-                       </div>`,
-                timer: 3000
-            });
-        }
-
-        function secureClearKioskDisplay() {
-            state.logs.forEach(l => {
-                if (!state.kioskHiddenLogIds.includes(l.id)) state.kioskHiddenLogIds.push(l.id);
-            });
-            saveStateToStorage();
-            renderLogsTable();
-            Swal.fire({ toast: true, position: 'bottom-end', icon: 'info', title: 'Public monitoring stream hidden.', timer: 1500, showConfirmButton: false });
-        }
-
-        function renderLogsTable() {
-            const publicBody = document.getElementById('logs-tbody');
-            const adminBody = document.getElementById('admin-logs-tbody');
-            
-            if (publicBody) publicBody.innerHTML = "";
-            if (adminBody) adminBody.innerHTML = "";
-
-            state.logs.forEach(l => {
-                const breaksHtml = l.breaks.map(b => `<span class="inline-block bg-gray-100 text-gray-700 font-mono text-[10px] px-1.5 py-0.5 rounded border border-gray-200 mb-1 mr-1">${b.name}: ${b.out} ➔ ${b.in}</span>`).join('') || '<span class="text-gray-300 font-normal">None</span>';
-                
-                if (publicBody && !state.kioskHiddenLogIds.includes(l.id)) {
-                    const row = document.createElement('tr');
-                    row.className = "hover:bg-gray-50/50 transition-colors";
-                    row.innerHTML = `
-                        <td class="px-4 sm:px-6 py-3.5">
-                            <div class="font-bold text-gray-900">${escapeHTML(l.empName)}</div>
-                            <div class="text-[10px] text-gray-400 font-mono tracking-wider">${l.empId}</div>
-                        </td>
-                        <td class="px-4 sm:px-6 py-3.5">
-                            <span class="bg-blue-50 text-blue-800 text-[11px] font-bold px-2 py-0.5 rounded-full border border-blue-100">${escapeHTML(l.shiftName)}</span>
-                        </td>
-                        <td class="px-4 sm:px-6 py-3.5 font-mono text-xs space-y-1">
-                            <div class="text-gray-400 font-sans font-semibold text-[10px] uppercase tracking-wide">Date: ${l.date}</div>
-                            <div><span class="text-emerald-600 font-bold">IN:</span> ${l.timeIn}</div>
-                            <div><span class="text-slate-600 font-bold">OUT:</span> ${l.timeOut}</div>
-                        </td>
-                        <td class="px-4 sm:px-6 py-3.5 text-xs">${breaksHtml}</td>
-                    `;
-                    publicBody.appendChild(row);
-                }
-
-                if (adminBody) {
-                    const row = document.createElement('tr');
-                    row.className = "hover:bg-gray-50 transition-colors";
-                    row.innerHTML = `
-                        <td class="px-4 py-3 text-center">
-                            <input type="checkbox" value="${l.id}" class="log-row-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer scale-110">
-                        </td>
-                        <td class="px-4 py-3">
-                            <div class="font-bold text-gray-900">${escapeHTML(l.empName)}</div>
-                            <div class="text-[10px] text-gray-400 font-mono tracking-wider">${l.empId}</div>
-                        </td>
-                        <td class="px-4 py-3">
-                            <span class="bg-slate-100 text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-200">${escapeHTML(l.shiftName)}</span>
-                        </td>
-                        <td class="px-4 py-3 font-mono text-xs space-y-0.5">
-                            <div class="text-[10px] text-gray-400 font-sans font-semibold">Date: ${l.date}</div>
-                            <div><span class="text-emerald-600 font-bold">IN:</span> ${l.timeIn}</div>
-                            <div><span class="text-slate-600 font-bold">OUT:</span> ${l.timeOut}</div>
-                        </td>
-                        <td class="px-4 py-3 text-xs">${breaksHtml}</td>
-                        <td class="px-4 py-3 text-center">
-                            <button onclick="deleteSingleSystemLog('${l.id}')" class="text-red-500 hover:text-red-700 font-bold text-xs p-1">✕</button>
-                        </td>
-                    `;
-                    adminBody.appendChild(row);
-                }
-            });
-        }
-
-        function toggleSelectAllLogs(masterNode) {
-            document.querySelectorAll('.log-row-checkbox').forEach(box => box.checked = masterNode.checked);
-        }
-
-        function deleteSingleSystemLog(logId) {
-            state.logs = state.logs.filter(l => l.id !== logId);
-            state.kioskHiddenLogIds = state.kioskHiddenLogIds.filter(id => id !== logId);
-            saveStateToStorage();
+            triggerKioskFeedbackStream(msg, true);
             renderLogsTable();
         }
 
-        function deleteSelectedLogs() {
-            const checkedBoxes = document.querySelectorAll('.log-row-checkbox:checked');
-            if (checkedBoxes.length === 0) {
-                Swal.fire({ icon: 'warning', text: 'No record items marked for deletion mapping criteria parameters.' });
-                return;
-            }
-            const targets = Array.from(checkedBoxes).map(b => b.value);
-            state.logs = state.logs.filter(l => !targets.includes(l.id));
-            state.kioskHiddenLogIds = state.kioskHiddenLogIds.filter(id => !targets.includes(id));
-            saveStateToStorage();
-            renderLogsTable();
-            document.getElementById('select-all-logs').checked = false;
-            Swal.fire({ icon: 'success', text: 'Selected operations record traces cleared.' });
-        }
-
-        function clearAllLogs() {
-            Swal.fire({
-                title: 'Clear All Attendance Data?',
-                text: "Warning: Master administrative operational data arrays will completely wipe permanently.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                confirmButtonText: 'Purge Archive Data'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    state.logs = [];
-                    state.kioskHiddenLogIds = [];
-                    saveStateToStorage();
-                    renderLogsTable();
-                    Swal.fire('Database Blanked', 'Roster matrices data traces wiped completely.', 'success');
-                }
-            });
-        }
-
-        function renderAdminConfigLists() {
-            const empContainer = document.getElementById('employee-list-container');
-            if (empContainer) {
-                empContainer.innerHTML = "";
-                if (state.employees.length === 0) {
-                    empContainer.innerHTML = `<div class="col-span-2 text-center py-6 text-xs text-gray-400 font-medium bg-gray-50 rounded-xl border border-dashed border-gray-200">No profile profiles registered currently inside standard databases roster.</div>`;
-                }
-                state.employees.forEach(e => {
-                    const d = document.createElement('div');
-                    d.className = "bg-white p-3 rounded-lg border border-gray-200 flex items-center justify-between shadow-2xs hover:border-gray-300 transition-all";
-                    d.innerHTML = `
-                        <div>
-                            <div class="font-bold text-gray-900 text-xs sm:text-sm">${escapeHTML(e.name)}</div>
-                            <div class="text-[10px] font-mono tracking-wider text-gray-400 uppercase font-bold mt-0.5">${e.id}</div>
-                        </div>
-                        <button onclick="removeEmployeeProfile('${e.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 text-[10px] py-1 px-2 rounded transition-colors font-semibold">Clear Profile</button>
-                    `;
-                    empContainer.appendChild(d);
-                });
-            }
-
-            const shiftContainer = document.getElementById('shift-list-container');
-            if (shiftContainer) {
-                shiftContainer.innerHTML = "";
-                if (state.shifts.length === 0) {
-                    shiftContainer.innerHTML = `<div class="text-center py-6 text-xs text-gray-400 font-medium bg-gray-50 rounded-xl border border-dashed border-gray-200">No shift profiles configured.</div>`;
-                }
-                state.shifts.forEach(s => {
-                    const d = document.createElement('div');
-                    d.className = `p-3 rounded-lg border text-left transition-all relative ${state.editingShiftId === s.id ? 'bg-blue-50/70 border-blue-400 ring-2 ring-blue-100' : 'bg-white border-gray-200 hover:border-gray-300'}`;
-                    
-                    const daysTags = s.days.map(day => `<span class="bg-gray-100 border border-gray-200 rounded text-[9px] font-bold px-1 py-0.5 text-gray-500">${day}</span>`).join(' ');
-                    const breakLabels = s.subBreaks && s.subBreaks.length > 0 ? `${s.subBreaks.length} break segments mapped` : 'No mapped breaks';
-
-                    d.innerHTML = `
-                        <div class="pr-12">
-                            <div class="font-bold text-gray-900 text-xs sm:text-sm">${escapeHTML(s.name)}</div>
-                            <div class="font-mono text-[11px] text-blue-600 font-bold mt-0.5">${s.startIn} ➔ ${s.endOut}</div>
-                            <div class="flex flex-wrap gap-1 mt-2">${daysTags}</div>
-                            <div class="text-[10px] text-gray-400 mt-1.5 font-medium flex items-center gap-1">☕ ${breakLabels}</div>
-                        </div>
-                        <div class="absolute right-2 top-2 flex flex-col gap-1">
-                            <button onclick="loadShiftToEditor('${s.id}')" class="text-blue-600 hover:text-blue-800 text-[10px] font-bold bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded">Edit</button>
-                            <button onclick="removeShiftConfig('${s.id}')" class="text-red-600 hover:text-red-800 text-[10px] font-bold bg-red-50 border border-red-100 px-1.5 py-0.5 rounded">Delete</button>
-                        </div>
-                    `;
-                    shiftContainer.appendChild(d);
-                });
-            }
-        }
-
-        function addNewEmployeeProfile() {
-            const idNode = document.getElementById('new-emp-id');
-            const nameNode = document.getElementById('new-emp-name');
-            const id = idNode.value.trim();
-            const name = nameNode.value.trim();
-
-            if (!id || !name) {
-                Swal.fire({ icon: 'warning', text: 'All data profile key index metrics strings are strictly mandatory.' });
-                return;
-            }
-            if (state.employees.some(e => e.id.toLowerCase() === id.toLowerCase())) {
-                Swal.fire({ icon: 'error', text: 'This target unique record allocation ID code already maps inside active systems directories rosters.' });
-                return;
-            }
-
-            state.employees.push({ id, name });
-            saveStateToStorage();
-            idNode.value = "";
-            nameNode.value = "";
-            renderAdminConfigLists();
-            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Roster Profile Registered', timer: 1500, showConfirmButton: false });
+        function triggerKioskFeedbackStream(txt, isSuccess) {
+            const box = document.getElementById('kiosk-feedback');
+            if (!box) return;
+            box.innerText = txt;
+            box.className = `mt-4 text-xs sm:text-sm font-bold p-3 rounded-lg text-center ${isSuccess ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-800 border border-red-200'} animate-fade-in`;
         }
 
         function initCreationPickers() {
+            const fillSelects = (containerId, prefix) => {
+                const c = document.getElementById(containerId);
+                if (!c) return;
+                c.innerHTML = "";
+                const hSel = document.createElement('select');
+                hSel.id = `${prefix}-h`;
+                hSel.className = "bg-white border border-gray-300 rounded text-xs p-1 font-semibold";
+                for(let i=1; i<=12; i++) {
+                    const opt = document.createElement('option');
+                    opt.value = String(i).padStart(2,'0'); opt.innerText = String(i).padStart(2,'0');
+                    hSel.appendChild(opt);
+                }
+                const mSel = document.createElement('select');
+                mSel.id = `${prefix}-m`;
+                mSel.className = "bg-white border border-gray-300 rounded text-xs p-1 font-semibold";
+                for(let i=0; i<60; i+=5) {
+                    const opt = document.createElement('option');
+                    opt.value = String(i).padStart(2,'0'); opt.innerText = String(i).padStart(2,'0');
+                    mSel.appendChild(opt);
+                }
+                const rSel = document.createElement('select');
+                rSel.id = `${prefix}-r`;
+                rSel.className = "bg-white border border-gray-300 rounded text-xs p-1 font-semibold";
+                ['AM','PM'].forEach(x => {
+                    const opt = document.createElement('option');
+                    opt.value = x; opt.innerText = x; rSel.appendChild(opt);
+                });
+                c.appendChild(hSel); c.appendChild(document.createTextNode(" : "));
+                c.appendChild(mSel); c.appendChild(document.createTextNode(" "));
+                c.appendChild(rSel);
+            };
+
+            fillSelects('time-in-start-picker', 'new-shift-in');
+            fillSelects('time-out-start-picker', 'new-shift-out');
+
             const daysContainer = document.getElementById('new-shift-days');
             if (daysContainer) {
                 daysContainer.innerHTML = "";
-                DAYS_SHORT.forEach(day => {
-                    daysContainer.innerHTML += `
-                        <label class="flex-1 text-center border border-gray-200 bg-white rounded py-1 text-[10px] font-bold cursor-pointer select-none transition-all has-[:checked]:bg-blue-600 has-[:checked]:text-white has-[:checked]:border-blue-600">
-                            <input type="checkbox" value="${day}" class="hidden shift-days-checkbox"> ${day}
-                        </label>
-                    `;
+                DAYS_SHORT.forEach((d, idx) => {
+                    const btn = document.createElement('button');
+                    btn.type = "button";
+                    btn.dataset.index = idx;
+                    btn.dataset.checked = "false";
+                    btn.className = "w-8 h-8 rounded-md bg-gray-200 border border-gray-300 text-[10px] font-bold text-gray-700 flex items-center justify-center transition-all cursor-pointer select-none hover:bg-gray-300";
+                    btn.innerText = d;
+                    btn.onclick = () => {
+                        const isChecked = btn.dataset.checked === "true";
+                        btn.dataset.checked = isChecked ? "false" : "true";
+                        btn.className = isChecked 
+                            ? "w-8 h-8 rounded-md bg-gray-200 border border-gray-300 text-[10px] font-bold text-gray-700 flex items-center justify-center transition-all cursor-pointer select-none hover:bg-gray-300"
+                            : "w-8 h-8 rounded-md bg-blue-600 border border-blue-700 text-white text-[10px] font-bold flex items-center justify-center transition-all cursor-pointer select-none shadow-xs";
+                    };
+                    daysContainer.appendChild(btn);
                 });
             }
-
-            const inContainer = document.getElementById('time-in-start-picker');
-            const outContainer = document.getElementById('time-out-start-picker');
-            
-            if (inContainer) inContainer.innerHTML = `<input type="time" id="picker-start-in" value="09:00" class="w-full bg-white border border-gray-300 rounded-md px-2 py-1 text-xs font-mono font-bold">`;
-            if (outContainer) outContainer.innerHTML = `<input type="time" id="picker-end-out" value="18:00" class="w-full bg-white border border-gray-300 rounded-md px-2 py-1 text-xs font-mono font-bold">`;
-            
-            const wrapper = document.getElementById('new-break-subrows-wrapper');
-            if (wrapper) wrapper.innerHTML = "";
+            addNewBreakSubRow();
         }
 
-        function addNewBreakSubRow(name = "", outTime = "", inTime = "") {
+        function addNewBreakSubRow() {
             const wrapper = document.getElementById('new-break-subrows-wrapper');
-            const rowId = "row-" + Math.random().toString(36).substr(2, 9);
-            const d = document.createElement('div');
-            d.id = rowId;
-            d.className = "grid grid-cols-1 sm:grid-cols-3 gap-2 items-center bg-gray-50 border border-gray-200 rounded-md p-2 relative pr-8 animate-fade-in";
-            d.innerHTML = `
-                <input type="text" placeholder="Break Label Name" value="${name}" class="break-name border border-gray-300 rounded bg-white px-2 py-1 text-xs font-medium">
-                <div class="flex items-center gap-1"><span class="text-[9px] font-bold text-gray-400 uppercase">OUT:</span><input type="time" value="${outTime}" class="break-out border border-gray-300 rounded bg-white px-1.5 py-0.5 text-xs font-mono flex-1"></div>
-                <div class="flex items-center gap-1"><span class="text-[9px] font-bold text-gray-400 uppercase">IN:</span><input type="time" value="${inTime}" class="break-in border border-gray-300 rounded bg-white px-1.5 py-0.5 text-xs font-mono flex-1"></div>
-                <button type="button" onclick="document.getElementById('${rowId}').remove()" class="absolute right-2 text-red-500 hover:text-red-700 font-bold text-sm">✕</button>
-            `;
-            wrapper.appendChild(d);
+            if (!wrapper) return;
+            const rowId = "br-row-" + Date.now() + Math.floor(Math.random()*100);
+            const div = document.createElement('div');
+            div.id = rowId;
+            div.className = "flex flex-wrap items-center gap-2 bg-gray-100 p-2 border border-gray-200 rounded-lg animate-fade-in";
+
+            const labelInput = document.createElement('input');
+            labelInput.type = "text";
+            labelInput.placeholder = "Break Label Name";
+            labelInput.className = "bg-white border border-gray-300 rounded text-xs p-1 font-medium flex-1 min-w-[110px]";
+
+            const startSpan = document.createElement('span');
+            startSpan.className = "flex items-center gap-0.5 text-[11px] font-bold text-gray-500 uppercase";
+            startSpan.innerText = "Start:";
+
+            const startH = document.createElement('select'); startH.className = "bg-white border border-gray-300 rounded text-xs p-0.5 font-bold";
+            for(let i=1;i<=12;i++) { const o = document.createElement('option'); o.value=String(i).padStart(2,'0'); o.innerText=String(i).padStart(2,'0'); startH.appendChild(o); }
+            const startM = document.createElement('select'); startM.className = "bg-white border border-gray-300 rounded text-xs p-0.5 font-bold";
+            for(let i=0;i<60;i+=5) { const o = document.createElement('option'); o.value=String(i).padStart(2,'0'); o.innerText=String(i).padStart(2,'0'); startM.appendChild(o); }
+            const startR = document.createElement('select'); startR.className = "bg-white border border-gray-300 rounded text-xs p-0.5 font-bold";
+            ['AM','PM'].forEach(x=>{ const o=document.createElement('option'); o.value=x; o.innerText=x; startR.appendChild(o); });
+
+            const endSpan = document.createElement('span');
+            endSpan.className = "flex items-center gap-0.5 text-[11px] font-bold text-gray-500 uppercase";
+            endSpan.innerText = "End:";
+
+            const endH = document.createElement('select'); endH.className = "bg-white border border-gray-300 rounded text-xs p-0.5 font-bold";
+            for(let i=1;i<=12;i++) { const o = document.createElement('option'); o.value=String(i).padStart(2,'0'); o.innerText=String(i).padStart(2,'0'); endH.appendChild(o); }
+            const endM = document.createElement('select'); endM.className = "bg-white border border-gray-300 rounded text-xs p-0.5 font-bold";
+            for(let i=0;i<60;i+=5) { const o = document.createElement('option'); o.value=String(i).padStart(2,'0'); o.innerText=String(i).padStart(2,'0'); endH.appendChild(o); }
+            const endR = document.createElement('select'); endR.className = "bg-white border border-gray-300 rounded text-xs p-0.5 font-bold";
+            ['AM','PM'].forEach(x=>{ const o=document.createElement('option'); o.value=x; o.innerText=x; endR.appendChild(o); });
+
+            const remBtn = document.createElement('button');
+            remBtn.type = "button";
+            remBtn.className = "text-red-500 hover:text-red-700 font-bold text-sm px-1.5 cursor-pointer";
+            remBtn.innerText = "✕";
+            remBtn.onclick = () => { div.remove(); };
+
+            div.appendChild(labelInput);
+            div.appendChild(startSpan); div.appendChild(startH); div.appendChild(startM); div.appendChild(startR);
+            div.appendChild(endSpan); div.appendChild(endH); div.appendChild(endM); div.appendChild(endR);
+            div.appendChild(remBtn);
+            wrapper.appendChild(div);
+        }
+
+        function openAdminSectionModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+            if (modalId === 'admin-modal-section-2') renderEmployeeRosterSettingsList();
+            if (modalId === 'admin-modal-section-1') renderAdminLogsViewTable();
+        }
+
+        function closeAdminSectionModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function renderAdminProfilesDashboard() {
+            const c = document.getElementById('shift-list-container');
+            if (!c) return;
+            c.innerHTML = "";
+
+            if(state.shifts.length === 0) {
+                c.innerHTML = `<div class="text-xs text-gray-400 italic text-center p-4">No operational shift profiles compiled inside database configurations currently.</div>`;
+                return;
+            }
+
+            state.shifts.forEach(s => {
+                const div = document.createElement('div');
+                div.className = "bg-white border border-gray-200 rounded-lg p-3 relative shadow-xs flex flex-col gap-1 hover:border-gray-300 transition-colors";
+                
+                let activeDaysStr = DAYS_SHORT.filter((_, i) => s.days[i]).join(', ');
+                if (!activeDaysStr) activeDaysStr = "No active scheduled days selected";
+
+                div.innerHTML = `
+                    <div class="pr-12">
+                        <h4 class="text-xs sm:text-sm font-bold text-gray-900">${escapeHTML(s.name)}</h4>
+                        <p class="text-[11px] font-semibold text-blue-600 mt-0.5">⏱️ Boundaries: ${s.timeIn.h}:${s.timeIn.m} ${s.timeIn.r} - ${s.timeOut.h}:${s.timeOut.m} ${s.timeOut.r}</p>
+                        <p class="text-[10px] text-gray-400 mt-0.5 leading-tight">🗓️ Days: ${activeDaysStr}</p>
+                        <p class="text-[10px] text-gray-500 font-medium mt-1 bg-gray-50 p-1 border border-gray-100 rounded">☕ Break Count Allocation Matrix segments: ${s.breaks ? s.breaks.length : 0} defined rows.</p>
+                    </div>
+                    <div class="absolute right-2 top-2 flex flex-col gap-1">
+                        <button onclick="editShiftConfig('${s.id}')" class="text-blue-600 hover:text-blue-800 text-[10px] font-bold border border-blue-200 rounded bg-blue-50 px-1 py-0.5 cursor-pointer">Edit</button>
+                        <button onclick="deleteShiftConfig('${s.id}')" class="text-red-600 hover:text-red-800 text-[10px] font-bold border border-red-200 rounded bg-red-50 px-1 py-0.5 cursor-pointer">Delete</button>
+                    </div>
+                `;
+                c.appendChild(div);
+            });
         }
 
         function addNewShiftConfig() {
             const name = document.getElementById('new-shift-name').value.trim();
-            const checkedDays = Array.from(document.querySelectorAll('.shift-days-checkbox:checked')).map(box => box.value);
-            const startIn = document.getElementById('picker-start-in').value;
-            const endOut = document.getElementById('picker-end-out').value;
+            if (!name) { Swal.fire('Profile Title Error', 'Unified operational boundary maps must possess descriptive naming criteria titles.', 'warning'); return; }
 
-            if (!name || checkedDays.length === 0 || !startIn || !endOut) {
-                Swal.fire({ icon: 'warning', text: 'Operational profile configurations require all tracking timeline parameters specified.' });
-                return;
-            }
+            const days = [];
+            const dayBtns = document.querySelectorAll('#new-shift-days button');
+            dayBtns.forEach(b => { days.push(b.dataset.checked === "true"); });
 
-            const breakSubrows = document.getElementById('new-break-subrows-wrapper').children;
-            const subBreaks = [];
-            for (let i = 0; i < breakSubrows.length; i++) {
-                const row = breakSubrows[i];
-                const bName = row.querySelector('.break-name').value.trim() || `Break ${i + 1}`;
-                const bOut = row.querySelector('.break-out').value;
-                const bIn = row.querySelector('.break-in').value;
-                if (bOut || bIn) {
-                    subBreaks.push({ name: bName, out: bOut || "00:00", in: bIn || "00:00" });
-                }
-            }
+            const sIn = { h: document.getElementById('new-shift-in-h').value, m: document.getElementById('new-shift-in-m').value, r: document.getElementById('new-shift-in-r').value };
+            const sOut = { h: document.getElementById('new-shift-out-h').value, m: document.getElementById('new-shift-out-m').value, r: document.getElementById('new-shift-out-r').value };
+
+            const brRows = document.querySelectorAll('#new-break-subrows-wrapper > div');
+            const breaks = [];
+            let timelineBreaksFaulty = false;
+
+            brRows.forEach(r => {
+                const inputs = r.querySelectorAll('input, select');
+                const label = inputs[0].value.trim() || "Dynamic Sub Break Allocation Item";
+                const bHStart = inputs[1].value; const bMStart = inputs[2].value; const bRStart = inputs[3].value;
+                const bHEnd = inputs[4].value; const bMEnd = inputs[5].value; const bREnd = inputs[6].value;
+
+                breaks.push({ id: "br-" + Math.random().toString(36).substr(2, 5), label: label, start: { h: bHStart, m: bMStart, r: bRStart }, end: { h: bHEnd, m: bMEnd, r: bREnd } });
+            });
+
+            if (timelineBreaksFaulty) return;
 
             if (state.editingShiftId) {
-                const existing = state.shifts.find(s => s.id === state.editingShiftId);
-                if (existing) {
-                    existing.name = name;
-                    existing.days = checkedDays;
-                    existing.startIn = startIn;
-                    existing.endOut = endOut;
-                    existing.subBreaks = subBreaks;
-                }
+                const idx = state.shifts.findIndex(x => x.id === state.editingShiftId);
+                if (idx !== -1) { state.shifts[idx] = { id: state.editingShiftId, name, days, timeIn: sIn, timeOut: sOut, breaks }; }
                 state.editingShiftId = null;
+                Swal.fire('Profile Modified', 'Operational timeline parameter references compiled smoothly.', 'success');
             } else {
-                state.shifts.push({
-                    id: "s-" + Math.random().toString(36).substr(2, 9),
-                    name, days: checkedDays, startIn, endOut, subBreaks
-                });
+                state.shifts.push({ id: "sh-" + Date.now(), name, days, timeIn: sIn, timeOut: sOut, breaks });
+                Swal.fire('Roster Profile Catalogued', 'Unified master timeline tracking block injected into primary database state files.', 'success');
             }
 
             saveStateToStorage();
             document.getElementById('new-shift-name').value = "";
-            initCreationPickers();
-            renderAdminConfigLists();
+            dayBtns.forEach(b => {
+                b.dataset.checked = "false";
+                b.className = "w-8 h-8 rounded-md bg-gray-200 border border-gray-300 text-[10px] font-bold text-gray-700 flex items-center justify-center transition-all cursor-pointer select-none hover:bg-gray-300";
+            });
+            document.getElementById('new-break-subrows-wrapper').innerHTML = "";
+            addNewBreakSubRow();
             populateKioskDropdowns();
-            Swal.fire({ icon: 'success', title: 'Operational roster timeline unified config maps updated.' });
+            renderAdminProfilesDashboard();
         }
 
-        function loadShiftToEditor(shiftId) {
-            const s = state.shifts.find(item => item.id === shiftId);
+        function editShiftConfig(id) {
+            const s = state.shifts.find(x => x.id === id);
             if (!s) return;
+            state.editingShiftId = id;
 
-            state.editingShiftId = s.id;
             document.getElementById('new-shift-name').value = s.name;
-
-            document.querySelectorAll('.shift-days-checkbox').forEach(box => {
-                box.checked = s.days.includes(box.value);
-                const parent = box.parentElement;
-                if (box.checked) {
-                    parent.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
-                } else {
-                    parent.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
-                }
+            const dayBtns = document.querySelectorAll('#new-shift-days button');
+            dayBtns.forEach((b, idx) => {
+                const ch = s.days[idx];
+                b.dataset.checked = ch ? "true" : "false";
+                b.className = ch 
+                    ? "w-8 h-8 rounded-md bg-blue-600 border border-blue-700 text-white text-[10px] font-bold flex items-center justify-center transition-all cursor-pointer select-none shadow-xs"
+                    : "w-8 h-8 rounded-md bg-gray-200 border border-gray-300 text-[10px] font-bold text-gray-700 flex items-center justify-center transition-all cursor-pointer select-none hover:bg-gray-300";
             });
 
-            document.getElementById('picker-start-in').value = s.startIn;
-            document.getElementById('picker-end-out').value = s.endOut;
+            document.getElementById('new-shift-in-h').value = s.timeIn.h;
+            document.getElementById('new-shift-in-m').value = s.timeIn.m;
+            document.getElementById('new-shift-in-r').value = s.timeIn.r;
+
+            document.getElementById('new-shift-out-h').value = s.timeOut.h;
+            document.getElementById('new-shift-out-m').value = s.timeOut.m;
+            document.getElementById('new-shift-out-r').value = s.timeOut.r;
 
             const wrapper = document.getElementById('new-break-subrows-wrapper');
             wrapper.innerHTML = "";
-            if (s.subBreaks) {
-                s.subBreaks.forEach(b => addNewBreakSubRow(b.name, b.out, b.in));
+
+            if (s.breaks && s.breaks.length > 0) {
+                s.breaks.forEach(b => {
+                    addNewBreakSubRow();
+                    const row = wrapper.lastChild;
+                    const inputs = row.querySelectorAll('input, select');
+                    inputs[0].value = b.label;
+                    inputs[1].value = b.start.h; inputs[2].value = b.start.m; inputs[3].value = b.start.r;
+                    inputs[4].value = b.end.h; inputs[5].value = b.end.m; inputs[6].value = b.end.r;
+                });
+            } else {
+                addNewBreakSubRow();
             }
-            renderAdminConfigLists();
         }
 
-        function removeShiftConfig(shiftId) {
-            state.shifts = state.shifts.filter(s => s.id !== shiftId);
-            if (state.editingShiftId === shiftId) state.editingShiftId = null;
+        function deleteShiftConfig(id) {
+            if (state.shifts.length <= 1) { Swal.fire('Terminal Constraint Check', 'The environment demands at least one primary background baseline architecture tracking structure row remaining.', 'warning'); return; }
+            state.shifts = state.shifts.filter(x => x.id !== id);
+            if (state.editingShiftId === id) state.editingShiftId = null;
             saveStateToStorage();
-            renderAdminConfigLists();
             populateKioskDropdowns();
+            renderAdminProfilesDashboard();
+            Swal.fire('Record Cleared', 'Target profile schema rows deleted.', 'info');
         }
 
-        function changeAdminCredentials() {
-            const u = document.getElementById('new-admin-user').value.trim();
-            const p = document.getElementById('new-admin-pass').value.trim();
+        function renderEmployeeRosterSettingsList() {
+            const c = document.getElementById('employee-list-container');
+            if (!c) return;
+            c.innerHTML = "";
 
-            if (!u || !p) {
-                Swal.fire({ icon: 'warning', text: 'Administrative credential token tracking vectors cannot remain blank.' });
+            if(state.employees.length === 0) {
+                c.innerHTML = `<div class="text-xs text-gray-400 italic p-4 text-center col-span-2">Roster roster arrays currently report empty metrics values inside system parameters.</div>`;
                 return;
             }
 
-            state.adminAccount.user = u;
-            state.adminAccount.pass = p;
+            state.employees.forEach(e => {
+                const div = document.createElement('div');
+                div.className = "bg-gray-50 border border-gray-200 rounded-lg p-3 flex items-center justify-between shadow-xs";
+                div.innerHTML = `
+                    <div class="overflow-hidden truncate pr-2">
+                        <span class="block text-xs font-bold text-gray-900 truncate">${escapeHTML(e.name)}</span>
+                        <span class="block text-[10px] font-mono text-gray-400 mt-0.5 tracking-tight truncate">ID: ${escapeHTML(e.id)}</span>
+                    </div>
+                    <button onclick="deleteEmployeeProfile('${e.id}')" class="text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 px-2 py-1 rounded transition-colors cursor-pointer shrink-0">Clear</button>
+                `;
+                c.appendChild(div);
+            });
+        }
+
+        function addNewEmployeeProfile() {
+            const id = document.getElementById('new-emp-id').value.trim();
+            const name = document.getElementById('new-emp-name').value.trim();
+
+            if (!id || !name) { Swal.fire('Profile Form Incomplete', 'ID matrices boundaries parameters fields must specify distinct content values.', 'warning'); return; }
+            if (state.employees.some(e => e.id === id)) { Swal.fire('Key Identity Conflict', 'Employee ID records matched duplicate entries located inside system datasets.', 'error'); return; }
+
+            state.employees.push({ id, name });
             saveStateToStorage();
-            Swal.fire({ icon: 'success', title: 'Credentials Parameter Access Token Updated Successfully.' });
+            document.getElementById('new-emp-id').value = "";
+            document.getElementById('new-emp-name').value = "";
+            renderEmployeeRosterSettingsList();
+            Swal.fire('Injected Account Profile', 'Roster file profile schema row captured and configured securely.', 'success');
+        }
+
+        function deleteEmployeeProfile(id) {
+            state.employees = state.employees.filter(e => e.id !== id);
+            saveStateToStorage();
+            renderEmployeeRosterSettingsList();
+            Swal.fire('Account Dropped', 'Roster assignment criteria records removed from registry tables.', 'info');
         }
 
         function downloadEmployeeTemplateCSV() {
-            let csv = "Employee ID,Full Name\n";
+            if (state.employees.length === 0) { Swal.fire('Roster Roster Block Empty', 'No record parameters registered to structure file streams.', 'warning'); return; }
+            let csv = "Employee ID,Employee Full Name\n";
             state.employees.forEach(e => { csv += `"${e.id.replace(/"/g, '""')}","${e.name.replace(/"/g, '""')}"\n`; });
-            triggerFileDownload(csv, "attendance_employee_roster.csv", "text/csv");
+            triggerFileDownload(csv, "system_roster_matrix_export.csv", "text/csv");
         }
 
         function importEmployeesFromCSV(event) {
-            const file = event.target.files[0];
+            const file = event.target.value === "" ? null : event.target.files[0];
             if (!file) return;
+
             const reader = new FileReader();
             reader.onload = function(e) {
-                const lines = e.target.result.split(/\r?\n/);
-                let addedCount = 0;
-                lines.forEach((line, idx) => {
-                    if (idx === 0 || !line.trim()) return; 
-                    const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                    if (parts.length >= 2) {
-                        const id = parts[0].replace(/^"|"$/g, '').trim();
-                        const name = parts[1].replace(/^"|"$/g, '').trim();
-                        if (id && name && !state.employees.some(emp => emp.id.toLowerCase() === id.toLowerCase())) {
+                const text = e.target.result;
+                const rows = text.split(/\r?\n/);
+                let count = 0;
+                let conflicts = 0;
+
+                for(let i=1; i<rows.length; i++) {
+                    if(!rows[i].trim()) continue;
+                    const parts = rows[i].split(",");
+                    if(parts.length >= 2) {
+                        const id = parts[0].replace(/^["']|["']$/g, '').trim();
+                        const name = parts[1].replace(/^["']|["']$/g, '').trim();
+                        if(id && name) {
+                            if(state.employees.some(emp => emp.id === id)) { conflicts++; continue; }
                             state.employees.push({ id, name });
-                            addedCount++;
+                            count++;
                         }
                     }
-                });
-                if (addedCount > 0) {
-                    saveStateToStorage();
-                    renderAdminConfigLists();
-                    Swal.fire({ icon: 'success', text: `Imported ${addedCount} roster profile details successfully mapping configuration tables.` });
-                } else {
-                    Swal.fire({ icon: 'info', text: 'No unique new identities matched database templates.' });
                 }
+                saveStateToStorage();
+                renderEmployeeRosterSettingsList();
+                Swal.fire('Data Import Resolved', `Bulk database actions update complete. Rows Injected: ${count}, Conflict Rows Skipped: ${conflicts}.`, 'success');
                 event.target.value = "";
             };
             reader.readAsText(file);
         }
 
-        function exportToCSV() {
-            const startStr = document.getElementById('csv-start-date').value;
-            const endStr = document.getElementById('csv-end-date').value;
+        function renderLogsTable() {
+            const tbody = document.getElementById('logs-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = "";
 
-            let filteredLogs = state.logs;
-            if (startStr) filteredLogs = filteredLogs.filter(l => new Date(l.date) >= new Date(startStr));
-            if (endStr) filteredLogs = filteredLogs.filter(l => new Date(l.date) <= new Date(endStr));
+            const displayLogs = state.logs.filter(l => !state.kioskHiddenLogIds.includes(l.id));
 
-            let csv = "Log ID,Employee ID,Employee Name,Date,Shift,Shift Hours,Time In,Time Out,Breaks Mapping\n";
-            filteredLogs.forEach(l => {
-                const brkStr = l.breaks.map(b => `${b.name}[${b.out}->${b.in}]`).join(' | ');
-                csv += `"${l.id}","${l.empId}","${l.empName}","${l.date}","${l.shiftName}","${l.shiftWindow}","${l.timeIn}","${l.timeOut}","${brkStr}"\n`;
+            if (displayLogs.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-6 py-8 text-center text-xs sm:text-sm text-gray-400 italic">
+                            Live attendance data streams monitor reports clear operational tracking state indexes currently.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            displayLogs.slice().reverse().forEach(l => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors border-b border-gray-100";
+                
+                let breakCellContent = `<span class="text-gray-400 italic text-[11px]">No break records reported</span>`;
+                if(l.breaks && l.breaks.length > 0) {
+                    breakCellContent = `<div class="flex flex-col gap-0.5">` + l.breaks.map((b, idx) => `
+                        <span class="text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-100 rounded px-1.5 py-0.5 w-fit">
+                            Row #${idx+1}: Out ${b.start} ${b.end ? `&rarr; In ${b.end}` : `(Active Overtime Out)`}
+                        </span>
+                    `).join('') + `</div>`;
+                }
+
+                tr.innerHTML = `
+                    <td class="px-4 sm:px-6 py-3.5 font-medium text-gray-900">
+                        <span class="block font-bold text-gray-800">${escapeHTML(l.employeeName)}</span>
+                        <span class="block text-[10px] font-mono text-gray-400 uppercase mt-0.5 tracking-tight">ID: ${escapeHTML(l.employeeId)}</span>
+                    </td>
+                    <td class="px-4 sm:px-6 py-3.5 text-xs text-gray-500 font-semibold">${escapeHTML(l.shiftName)}</td>
+                    <td class="px-4 sm:px-6 py-3.5">
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                            <span class="text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md w-fit">📥 IN: ${l.timeIn || 'Pending Entry'}</span>
+                            <span class="text-[11px] font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md w-fit">📤 OUT: ${l.timeOut || 'Pending Exit'}</span>
+                        </div>
+                        <span class="block text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-wider">Date Track: ${l.date}</span>
+                    </td>
+                    <td class="px-4 sm:px-6 py-3.5">${breakCellContent}</td>
+                `;
+                tbody.appendChild(tr);
             });
-            triggerFileDownload(csv, `attendance_logs_report.csv`, "text/csv");
+        }
+
+        let isLabelLongFormat = false;
+        function toggleKioskButtonLabel() {
+            isLabelLongFormat = !isLabelLongFormat;
+            const lbl = document.getElementById('kiosk-btn-label');
+            if (lbl) {
+                if (isLabelLongFormat) { lbl.classList.remove('hidden'); }
+                else { lbl.classList.add('hidden'); }
+            }
+        }
+
+        function secureClearKioskDisplay() {
+            state.logs.forEach(l => { if (!state.kioskHiddenLogIds.includes(l.id)) state.kioskHiddenLogIds.push(l.id); });
+            saveStateToStorage();
+            renderLogsTable();
+            Swal.fire('Monitor Flushed', 'Public visibility log sets archived from current active dashboard grid scopes.', 'info');
+        }
+
+        function renderAdminLogsViewTable() {
+            const tbody = document.getElementById('admin-logs-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = "";
+            document.getElementById('select-all-logs').checked = false;
+
+            if (state.logs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-xs text-gray-400 italic">No historical tracking records logged inside database structures yet.</td></tr>`;
+                return;
+            }
+
+            state.logs.slice().reverse().forEach(l => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors border-b border-gray-100 bg-white";
+                
+                let breakCellContent = `<span class="text-gray-400 italic text-[10px]">No break indexes stored</span>`;
+                if(l.breaks && l.breaks.length > 0) {
+                    breakCellContent = `<div class="flex flex-col gap-0.5">` + l.breaks.map((b, idx) => `
+                        <span class="text-[10px] font-medium text-amber-800 bg-amber-50 border border-amber-100 rounded px-1 py-0.5 w-fit">
+                            #${idx+1}: Out ${b.start} / In ${b.end || 'Open'}
+                        </span>
+                    `).join('') + `</div>`;
+                }
+
+                tr.innerHTML = `
+                    <td class="px-4 py-3 text-center">
+                        <input type="checkbox" data-log-id="${l.id}" class="log-row-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500 scale-105 cursor-pointer">
+                    </td>
+                    <td class="px-4 py-3 font-medium text-gray-900">
+                        <span class="block font-bold text-gray-800 text-xs">${escapeHTML(l.employeeName)}</span>
+                        <span class="block text-[10px] font-mono text-gray-400 tracking-tight">ID: ${escapeHTML(l.employeeId)}</span>
+                    </td>
+                    <td class="px-4 py-3 text-xs font-semibold text-gray-500">${escapeHTML(l.shiftName)}</td>
+                    <td class="px-4 py-3">
+                        <div class="flex flex-col gap-0.5">
+                            <span class="text-[10px] font-bold text-blue-700">IN: ${l.timeIn || 'Null'}</span>
+                            <span class="text-[10px] font-bold text-slate-700">OUT: ${l.timeOut || 'Null'}</span>
+                        </div>
+                        <span class="block text-[9px] text-gray-400 mt-0.5 font-medium">Date: ${l.date}</span>
+                    </td>
+                    <td class="px-4 py-3">${breakCellContent}</td>
+                    <td class="px-4 py-3 text-center">
+                        <button onclick="deleteSingleLogRecord('${l.id}')" class="text-[10px] font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 border border-red-200 px-1.5 py-0.5 rounded cursor-pointer">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function toggleSelectAllLogs(masterCheckbox) {
+            const checkboxes = document.querySelectorAll('.log-row-checkbox');
+            checkboxes.forEach(c => { c.checked = masterCheckbox.checked; });
+        }
+
+        function deleteSelectedLogs() {
+            const checkboxes = document.querySelectorAll('.log-row-checkbox:checked');
+            if (checkboxes.length === 0) { Swal.fire('Selection Null', 'Please click rows intended to clear metrics data definitions fields.', 'warning'); return; }
+
+            Swal.fire({
+                title: 'Purge Selected Records?',
+                text: "Selected system records will be destroyed cleanly without restoration windows parameters.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, Purge Rows'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    checkboxes.forEach(c => {
+                        const id = c.dataset.logId;
+                        state.logs = state.logs.filter(l => l.id !== id);
+                        state.kioskHiddenLogIds = state.kioskHiddenLogIds.filter(x => x !== id);
+                    });
+                    saveStateToStorage();
+                    renderAdminLogsViewTable();
+                    renderLogsTable();
+                    Swal.fire('Selected Data Purged', 'Target records erased from indexing nodes.', 'success');
+                }
+            });
+        }
+
+        function deleteSingleLogRecord(id) {
+            state.logs = state.logs.filter(l => l.id !== id);
+            state.kioskHiddenLogIds = state.kioskHiddenLogIds.filter(x => x !== id);
+            saveStateToStorage();
+            renderAdminLogsViewTable();
+            renderLogsTable();
+            Swal.fire('Record Erased', 'Specific target metrics logging structure drop sequence complete.', 'info');
+        }
+
+        function clearAllLogs() {
+            if (state.logs.length === 0) return;
+            Swal.fire({
+                title: 'Truncate All Database Logs?',
+                text: "This wipes every log entry completely.",
+                icon: 'danger',
+                showCancelButton: true,
+                confirmButtonText: 'Truncate Database All'
+            }).then(r => {
+                if(r.isConfirmed) {
+                    state.logs = [];
+                    state.kioskHiddenLogIds = [];
+                    saveStateToStorage();
+                    renderAdminLogsViewTable();
+                    renderLogsTable();
+                    Swal.fire('Database Logs Flushed', 'Archive arrays normalized to empty definitions fields.', 'success');
+                }
+            });
+        }
+
+        function exportToCSV() {
+            const startInput = document.getElementById('csv-start-date').value;
+            const endInput = document.getElementById('csv-end-date').value;
+
+            if (!startInput || !endInput) {
+                Swal.fire('Date Parameters Truncated', 'Provide filtering window dates parameters accurately.', 'warning');
+                return;
+            }
+
+            const startBound = new Date(startInput); startBound.setHours(0,0,0,0);
+            const endBound = new Date(endInput); endBound.setHours(23,59,59,999);
+
+            if(startBound > endBound) { Swal.fire('Filter Sequence Fault', 'Starting criteria bounds cannot overlap trailing bounds parameters fields.', 'error'); return; }
+
+            const filtered = state.logs.filter(l => {
+                const parts = l.date.split("/");
+                const logDate = new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]));
+                return logDate >= startBound && logDate <= endBound;
+            });
+
+            if(filtered.length === 0) { Swal.fire('Dataset Zero', 'No log information rows fall inside specific bounds fields parameters configurations.', 'info'); return; }
+
+            let csv = "Log ID,Employee ID,Employee Name,Date,Shift Profile,Time In,Time Out,Break Breakdown Matrix History\n";
+            filtered.forEach(l => {
+                let breakDetails = l.breaks.map((b, idx) => `[Break #${idx+1} Out: ${b.start} End: ${b.end || 'Open'}]`).join(" | ");
+                csv += `"${l.id}","${l.employeeId.replace(/"/g, '""')}","${l.employeeName.replace(/"/g, '""')}","${l.date}","${l.shiftName.replace(/"/g, '""')}","${l.timeIn}","${l.timeOut}","${breakDetails.replace(/"/g, '""')}"\n`;
+            });
+
+            triggerFileDownload(csv, `attendance_logs_${startInput}_to_${endInput}.csv`, "text/csv");
         }
 
         function exportDatabaseJSON() {
-            const rawString = JSON.stringify(state, null, 4);
-            triggerFileDownload(rawString, "attendance_system_master_db.json", "application/json");
+            const dataStr = JSON.stringify(state, null, 2);
+            triggerFileDownload(dataStr, "attendance_system_master_db.json", "application/json");
         }
 
         function importDatabaseJSON(event) {
-            const file = event.target.files[0];
+            const file = event.target.value === "" ? null : event.target.files[0];
             if (!file) return;
+
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
                     const parsed = JSON.parse(e.target.result);
                     if (parsed && parsed.shifts && parsed.employees && parsed.logs) {
                         state = parsed;
-                        state.isAdminAuthenticated = true;
-                        state.shifts.forEach(s => { if (!s.subBreaks) s.subBreaks = []; });
                         saveStateToStorage();
-                        renderAdminConfigLists();
-                        renderLogsTable();
                         populateKioskDropdowns();
-                        applyModeLayoutRules();
-                        Swal.fire('Database Restored', 'Maps configurations imported successfully.', 'success');
+                        renderLogsTable();
+                        checkFirstTimeRegistrationStatus();
+                        if (state.isAdminAuthenticated) {
+                            renderAdminProfilesDashboard();
+                        }
+                        Swal.fire('Database Injected', 'System parameters definitions structures fully recovered.', 'success');
                     } else {
                         Swal.fire('Structure Mismatch', 'Templates mapping profile format tracking discrepancies found.', 'error');
                     }
@@ -1407,9 +1526,10 @@
 
         function escapeHTML(str) {
             if (!str) return '';
-            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+            return str.replace(/[&<>'\"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
         }
 
+        // System Initialization Trigger Routines
         window.addEventListener('DOMContentLoaded', () => {
             loadStateFromStorage();
             initClockSize();

@@ -470,7 +470,7 @@
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 uppercase mb-2">Employee ID Number</label>
                     <div class="relative flex items-center">
-                        <input type="text" id="modal-emp-identity" placeholder="Enter ID number strictly" class="w-full pl-3 pr-10 py-2 border border-gray-300 bg-white text-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm">
+                        <input type="text" id="modal-emp-identity" placeholder="Enter ID number strictly" inputmode="text" class="w-full pl-3 pr-10 py-2 border border-gray-300 bg-white text-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm">
                         <button onclick="toggleQRScanner()" class="absolute right-2 text-gray-500 hover:text-blue-600 p-1.5 rounded-md transition-colors cursor-pointer text-sm" title="Scan QR Code">📷</button>
                     </div>
                     <div id="qr-reader-container" class="hidden mt-3 p-2 bg-gray-50 border border-gray-200 rounded-lg">
@@ -490,11 +490,11 @@
         const DAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         
         let state = {
-            adminAccount: null, // Cleared out hardcoded defaults to support initialization flow
+            adminAccount: null, 
             isAdminAuthenticated: false,
             editingShiftId: null,
-            shifts: [],
-            employees: [], // Cleared sample accounts entirely
+            shifts: [], // Sample schedules removed entirely
+            employees: [], 
             logs: [],
             kioskHiddenLogIds: [],
             systemMode: "schedule",
@@ -509,7 +509,6 @@
         let inactivityTimerReference = null;
         let activeInterfaceTab = "employee";
 
-        // Seed default parameters if storage empty
         function loadStateFromStorage() {
             const raw = localStorage.getItem("attendance_system_state");
             if (raw) {
@@ -520,14 +519,7 @@
                     console.error("Failed parsing LocalStorage state parameters, reverting to system defaults.");
                 }
             }
-            if (state.shifts.length === 0) {
-                state.shifts = [
-                    { id: "s1", name: "Standard Day Shift", days: ["Mon", "Tue", "Wed", "Thu", "Fri"], startIn: "09:00", endOut: "18:00", subBreaks: [{ name: "Lunch Break", out: "12:00", in: "13:00" }] },
-                    { id: "s2", name: "Evening Operations", days: ["Mon", "Tue", "Wed", "Thu", "Fri"], startIn: "18:00", endOut: "02:00", subBreaks: [{ name: "Night Meal", out: "21:00", in: "22:00" }] }
-                ];
-            }
             
-            // Check for First-Time Launcher Admin Registration Trigger
             if (!state.adminAccount) {
                 document.getElementById('first-time-reg-overlay').classList.remove('hidden');
             }
@@ -556,7 +548,6 @@
             localStorage.setItem("attendance_system_state", JSON.stringify(state));
         }
 
-        // Toggles display tracking description helpers
         function toggleKioskButtonLabel() {
             const label = document.getElementById('kiosk-btn-label');
             label.classList.toggle('hidden');
@@ -635,7 +626,6 @@
                 if (state.adminAccount) document.getElementById('new-admin-user').value = state.adminAccount.user;
                 document.getElementById('admin-lockout-time').value = state.autoLogoutMinutes;
                 
-                // Repopulate system mode options view setup dynamically
                 const modeSelect = document.getElementById('sys-mode-select');
                 modeSelect.innerHTML = `
                     <option value="schedule" ${state.systemMode === 'schedule' ? 'selected' : ''}>Schedule Based Mode</option>
@@ -648,12 +638,15 @@
                 document.getElementById('admin-pass').value = "";
             }
 
-            // Hide the queue select row components completely when active operational ongoing mode triggers
             const dropdownContainer = document.getElementById('kiosk-dropdown-container');
+            const breakHeader = document.getElementById('kiosk-break-header');
+            
             if (state.systemMode === "ongoing") {
                 dropdownContainer.classList.add('hidden');
+                breakHeader.classList.add('hidden');
             } else {
                 dropdownContainer.classList.remove('hidden');
+                breakHeader.classList.remove('hidden');
             }
         }
 
@@ -675,7 +668,6 @@
             }
         }
 
-        // Custom Confirmation dialog wrapper when modifying system states
         function confirmModeChange(requestedValue) {
             if (requestedValue === state.systemMode) return;
 
@@ -692,7 +684,6 @@
                 if (result.isConfirmed) {
                     handleModeChange(requestedValue);
                 } else {
-                    // Revert UI selector value matching current application scope parameters back
                     document.getElementById('sys-mode-select').value = state.systemMode;
                 }
             });
@@ -702,7 +693,6 @@
             state.systemMode = val;
             saveStateToStorage();
             
-            // Re-eval layout conditional matrices
             applyModeLayoutRules();
 
             const bannerStatus = document.getElementById('auto-shift-status');
@@ -750,7 +740,6 @@
             resetInactivityTimer();
         }
 
-        // Global monitor activity tracking hooks
         ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(evt => {
             window.addEventListener(evt, () => { if (state.isAdminAuthenticated) resetInactivityTimer(); });
         });
@@ -806,7 +795,7 @@
             
             if (!select || !select.value) {
                 if (shiftBadge) shiftBadge.innerText = "None Configured";
-                if (breakBadge) breakBadge.innerText = "None Allocations";
+                if (breakBadge) breakBadge.innerText = "No Break Allocations";
                 return;
             }
 
@@ -836,8 +825,17 @@
 
             title.innerText = labels[actionType].t;
             subtitle.innerText = labels[actionType].s;
-            document.getElementById('modal-emp-identity').value = "";
+            
+            const inputField = document.getElementById('modal-emp-identity');
+            inputField.value = "";
+            
+            // Prevent auto-focusing on mobile device keyboards unless directly tapped
+            inputField.blur(); 
+            
             modal.classList.remove('hidden');
+            
+            // Fire camera execution stream immediately following modal initialization
+            startQRScannerImmediately();
         }
 
         function removeEmployeeProfile(empId) {
@@ -853,26 +851,13 @@
                             <b>Account Name:</b> ${escapeHTML(employee.name)}<br/>
                             <b>ID Parameter:</b> ${escapeHTML(employee.id)}
                         </div>
-                        <p class="mt-2 font-medium text-gray-700">Type <span class="font-bold text-gray-900 select-all">DELETE</span> to execute extraction validation profile:</p>
                     </div>
                 `,
-                input: 'text',
-                inputAttributes: {
-                    autocapitalize: 'off',
-                    autocomplete: 'off',
-                    placeholder: 'Type DELETE to verify'
-                },
+                icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc2626',
                 confirmButtonText: 'Permanently Delete',
-                cancelButtonText: 'Cancel',
-                preConfirm: (inputValue) => {
-                    if (inputValue !== 'DELETE') {
-                        Swal.showValidationMessage('String token code validation error.');
-                        return false;
-                    }
-                    return true;
-                }
+                cancelButtonText: 'Cancel'
             }).then((result) => {
                 if (result.isConfirmed) {
                     state.employees = state.employees.filter(e => e.id !== empId);
@@ -888,29 +873,32 @@
             document.getElementById('punch-modal').classList.add('hidden');
         }
 
-        function toggleQRScanner() {
+        function startQRScannerImmediately() {
             const container = document.getElementById('qr-reader-container');
+            container.classList.remove('hidden');
+            isCameraStreamRunning = true;
+            html5QrcodeInstance = new Html5Qrcode("qr-reader");
+            html5QrcodeInstance.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                (decodedText) => {
+                    document.getElementById('modal-emp-identity').value = decodedText;
+                    stopQRScanner();
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'QR Code Scanned', showConfirmButton: false, timer: 1000 });
+                },
+                () => {}
+            ).catch(err => {
+                console.error("Camera node deployment error: ", err);
+                container.classList.add('hidden');
+                isCameraStreamRunning = false;
+            });
+        }
+
+        function toggleQRScanner() {
             if (isCameraStreamRunning) {
                 stopQRScanner();
             } else {
-                container.classList.remove('hidden');
-                isCameraStreamRunning = true;
-                html5QrcodeInstance = new Html5Qrcode("qr-reader");
-                html5QrcodeInstance.start(
-                    { facingMode: "environment" },
-                    { fps: 10, qrbox: { width: 250, height: 250 } },
-                    (decodedText) => {
-                        document.getElementById('modal-emp-identity').value = decodedText;
-                        stopQRScanner();
-                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'QR Code Scanned', showConfirmButton: false, timer: 1000 });
-                    },
-                    () => {}
-                ).catch(err => {
-                    console.error("Camera node deployment error: ", err);
-                    container.classList.add('hidden');
-                    isCameraStreamRunning = false;
-                    Swal.fire({ icon: 'error', title: 'Camera Error', text: 'Unable to capture active video channel stream node device details.' });
-                });
+                startQRScannerImmediately();
             }
         }
 
@@ -921,7 +909,7 @@
             if (html5QrcodeInstance) {
                 html5QrcodeInstance.stop().then(() => {
                     html5QrcodeInstance = null;
-                }).catch(err => console.error("Error destroying streaming video component traces:", err));
+                }).catch(err => console.error("Error destroying streaming video traces:", err));
             }
         }
 
@@ -940,6 +928,11 @@
 
             const currentShiftSelect = document.getElementById('emp-shift-select').value;
             const activeShiftObj = state.shifts.find(s => s.id === currentShiftSelect);
+
+            if (!activeShiftObj) {
+                Swal.fire({ icon: 'error', title: 'Operational Failure', text: 'Please define and select an operational profile configuration before submitting punches.' });
+                return;
+            }
 
             const now = new Date();
             const stamp = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -1088,7 +1081,7 @@
 
         function clearAllLogs() {
             Swal.fire({
-                title: 'Reset Matrix Log Archives?',
+                title: 'Clear All Attendance Data?',
                 text: "Warning: Master administrative operational data arrays will completely wipe permanently.",
                 icon: 'warning',
                 showCancelButton: true,
@@ -1129,6 +1122,9 @@
             const shiftContainer = document.getElementById('shift-list-container');
             if (shiftContainer) {
                 shiftContainer.innerHTML = "";
+                if (state.shifts.length === 0) {
+                    shiftContainer.innerHTML = `<div class="text-center py-6 text-xs text-gray-400 font-medium bg-gray-50 rounded-xl border border-dashed border-gray-200">No shift profiles configured.</div>`;
+                }
                 state.shifts.forEach(s => {
                     const d = document.createElement('div');
                     d.className = `p-3 rounded-lg border text-left transition-all relative ${state.editingShiftId === s.id ? 'bg-blue-50/70 border-blue-400 ring-2 ring-blue-100' : 'bg-white border-gray-200 hover:border-gray-300'}`;
@@ -1414,7 +1410,6 @@
             return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
         }
 
-        // System Initialization Trigger Routines
         window.addEventListener('DOMContentLoaded', () => {
             loadStateFromStorage();
             initClockSize();

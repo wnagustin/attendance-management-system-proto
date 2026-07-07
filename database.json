@@ -1,1 +1,127 @@
-
+{
+  "adminAccount": {
+    "user": "admin",
+    "pass": "1234"
+  },
+  "isAdminAuthenticated": true,
+  "editingShiftId": null,
+  "shifts": [
+    {
+      "id": "s_1783346936361",
+      "name": "Uncompressed Night Shift",
+      "inStart": "07:00 PM",
+      "outStart": "05:00 AM",
+      "days": [
+        "Thu",
+        "Fri"
+      ],
+      "subBreaks": [
+        {
+          "title": "Night Lunch",
+          "start": "12:00 AM",
+          "end": "01:00 AM"
+        },
+        {
+          "title": "Night Break",
+          "start": "03:00 AM",
+          "end": "03:15 AM"
+        }
+      ]
+    },
+    {
+      "id": "s_1783347300034",
+      "name": "Uncompressed Day Shift",
+      "inStart": "07:00 AM",
+      "outStart": "05:00 PM",
+      "days": [
+        "Thu",
+        "Fri"
+      ],
+      "subBreaks": [
+        {
+          "title": "Lunch",
+          "start": "12:00 PM",
+          "end": "01:00 PM"
+        },
+        {
+          "title": "Break",
+          "start": "03:00 PM",
+          "end": "03:15 PM"
+        }
+      ]
+    },
+    {
+      "id": "s_1783347354687",
+      "name": "Compressed Day Shift",
+      "inStart": "07:00 AM",
+      "outStart": "06:00 PM",
+      "days": [
+        "Thu",
+        "Fri"
+      ],
+      "subBreaks": [
+        {
+          "title": "Break",
+          "start": "03:00 PM",
+          "end": "03:15 PM"
+        },
+        {
+          "title": "Lunch",
+          "start": "12:00 PM",
+          "end": "01:00 PM"
+        }
+      ]
+    },
+    {
+      "id": "s_1783347413186",
+      "name": "Compressed Night Shift",
+      "inStart": "07:00 PM",
+      "outStart": "06:00 AM",
+      "days": [
+        "Mon",
+        "Tue",
+        "Wed"
+      ],
+      "subBreaks": [
+        {
+          "title": "Night Lunch",
+          "start": "12:00 AM",
+          "end": "01:00 AM"
+        },
+        {
+          "title": "Night Break",
+          "start": "03:00 AM",
+          "end": "03:15 AM"
+        }
+      ]
+    }
+  ],
+  "employees": [
+    {
+      "idNumber": "7kM9xP2vL4nQ8wT1",
+      "employeeName": "Johnny Doe"
+    },
+    {
+      "idNumber": "bZ5vR9tX1mN4kC7p",
+      "employeeName": "Jenny Doe"
+    },
+    {
+      "idNumber": "W3mQ7xL2kP8vN5tB",
+      "employeeName": "Jack Daniel"
+    }
+  ],
+  "logs": [
+    {
+      "id": "log_1783424380044",
+      "uniqueKey": "7kM9xP2vL4nQ8wT1",
+      "name": "Johnny Doe",
+      "assignedShift": "Compressed Night Shift [Mon,Tue,Wed]",
+      "timeIn": "07:39 PM (Tue)",
+      "timeInLateMinutes": 39,
+      "timeOut": "07:42 PM (Tue)",
+      "timeOutEarlyMinutes": 0,
+      "breakActivities": []
+    }
+  ],
+  "kioskHiddenLogIds": []
+}

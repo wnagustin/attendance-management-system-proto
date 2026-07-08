@@ -13,115 +13,153 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen text-gray-800 font-sans antialiased text-[14px] sm:text-base transition-colors duration-200">
+<body class="bg-gray-50 min-h-screen text-gray-800 font-sans antialiased text-base md:text-lg transition-colors duration-200">
 
-    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 grid grid-cols-1 md:grid-cols-3 items-center gap-4 shadow-xs">
-        <div class="text-center md:text-left">
-            <h1 class="text-lg sm:text-xl font-bold text-gray-900 tracking-tight whitespace-nowrap">⏱️ Attendance Monitoring System</h1>
+    <header class="bg-white border-b border-gray-200 px-6 py-5 grid grid-cols-1 md:grid-cols-3 items-center gap-4 shadow-xs">
+        <div class="text-center md:text-left flex items-center justify-between md:justify-start gap-4">
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">⏱️ Attendance Monitoring System</h1>
         </div>
         
         <div class="flex flex-col items-center justify-center w-full">
-            <div class="flex items-center gap-4 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100 w-full max-w-xs sm:max-w-md justify-center relative">
-                <div id="clock-container" class="transition-all duration-100 ease-out flex flex-col justify-center items-center text-center leading-none" style="font-size: 1.25rem;">
+            <div class="flex items-center gap-4 bg-gray-50 px-6 py-4 rounded-xl border border-gray-100 w-full max-w-md justify-center relative shadow-inner">
+                <div id="clock-container" class="transition-all duration-100 ease-out flex flex-col justify-center items-center text-center leading-none" style="font-size: 2.25rem;">
                     <div id="station-clock" class="font-mono font-bold tracking-tight text-gray-900">00:00:00 AM</div>
-                    <div id="station-date" class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mt-0.5">Monday, Jan 01</div>
-                </div>
-                <div class="h-6 w-[1px] bg-gray-200 mx-1"></div>
-                <button onclick="toggleResizerPanel()" class="text-gray-400 hover:text-gray-600 p-1 rounded-md transition-colors cursor-pointer" title="Adjust Clock Dimensions">⚙️</button>
-                <div id="clock-resizer-panel" class="hidden absolute top-full mt-2 bg-white border border-gray-200 p-2.5 rounded-lg shadow-md z-30 flex items-center gap-2">
-                    <label for="clock-size-slider" class="text-[9px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Size Scale</label>
-                    <input type="range" id="clock-size-slider" min="50" max="180" value="100" oninput="resizeClock(this.value)" class="w-20 sm:w-24 accent-blue-600 cursor-pointer">
+                    <div id="station-date" class="text-sm font-semibold text-gray-500 uppercase tracking-wider mt-2">Monday, Jan 01</div>
                 </div>
             </div>
         </div>
 
         <div class="flex items-center justify-center md:justify-end gap-3 w-full">
-            <div class="flex gap-1 bg-gray-100 p-1 rounded-lg flex-1 md:flex-initial">
-                <button id="tab-employee" onclick="switchTab('employee')" class="flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all bg-white text-gray-900 shadow-xs cursor-pointer">Employee Kiosk</button>
-                <button id="tab-admin" onclick="switchTab('admin')" class="flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all text-gray-600 hover:text-gray-900 cursor-pointer">Admin Settings</button>
+            <div class="flex gap-2 bg-gray-100 p-1.5 rounded-xl w-full md:w-auto items-center">
+                <button id="tab-employee" onclick="switchTab('employee')" class="flex-1 px-5 py-2.5 rounded-lg text-sm sm:text-base font-medium transition-all bg-white text-gray-900 shadow-xs cursor-pointer">Employee Kiosk</button>
+                <button id="tab-admin" onclick="switchTab('admin')" class="flex-1 px-5 py-2.5 rounded-lg text-sm sm:text-base font-medium transition-all text-gray-600 hover:text-gray-900 cursor-pointer">Admin Settings</button>
+                <button id="header-logout-btn" onclick="openLogoutModal()" class="hidden bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-medium py-2 px-3 rounded-lg text-sm transition-colors cursor-pointer">Logout</button>
             </div>
         </div>
     </header>
 
-    <main class="w-full max-w-7xl mx-auto p-3 sm:p-6 space-y-6">
+    <main class="w-full max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
+
+        <!-- FIRST TIME ADMIN INITIALIZATION OVERLAY -->
+        <div id="first-time-registration-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 animate-fade-in">
+            <div class="bg-white rounded-2xl shadow-2xl border border-gray-200 p-6 sm:p-8 w-full max-w-md text-left">
+                <div class="text-center mb-4">
+                    <span class="text-4xl">🛠️</span>
+                    <h3 class="font-bold text-gray-900 text-xl sm:text-2xl mt-2">Initialize Admin Account</h3>
+                    <p class="text-sm text-gray-500">New device detected. Create your primary administrative security profile credentials before continuing.</p>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Set Admin Username</label>
+                        <input type="text" id="reg-admin-user" placeholder="Create username" class="w-full px-4 py-3 border border-gray-300 bg-white text-gray-800 rounded-xl text-base">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Set Admin Password</label>
+                        <input type="password" id="reg-admin-pass" placeholder="Create password" class="w-full px-4 py-3 border border-gray-300 bg-white text-gray-800 rounded-xl text-base">
+                    </div>
+                    <button onclick="submitFirstTimeRegistration()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-base transition-colors cursor-pointer shadow-md">Complete System Initialization</button>
+                </div>
+            </div>
+        </div>
 
         <section id="view-employee" class="space-y-6">
             
-            <div id="shift-info-banner" class="bg-blue-50 border border-blue-200 rounded-lg p-3 flex flex-col lg:flex-row gap-3 text-xs font-medium text-blue-800 items-start lg:items-center justify-between">
+            <div id="shift-info-banner" class="bg-blue-50 border border-blue-200 rounded-xl p-4 flex flex-col lg:flex-row gap-3 text-sm font-medium text-blue-800 items-start lg:items-center justify-between">
                 <div class="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-4 w-full lg:w-auto">
                     <div>🎯 <span class="text-blue-600 font-bold">Active Profile:</span> <span id="current-shift-badge">Loading...</span></div>
                     <div class="hidden sm:block text-blue-300">|</div>
                     <div>☕ <span class="text-blue-600 font-bold">Allocated Profile Breaks:</span> <span id="current-break-badge">Loading...</span></div>
                 </div>
-                <div id="auto-shift-status" class="text-[10px] bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold animate-pulse self-stretch sm:self-auto text-center">🔄 Auto-Switch Timeline Sync Active</div>
+                <div id="auto-shift-status" class="text-xs bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full font-bold animate-pulse self-stretch sm:self-auto text-center">🔄 Auto-Switch Timeline Sync Active</div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-xs border border-gray-200 p-4 sm:p-6">
-                <h2 class="text-base sm:text-lg font-semibold mb-3">Employee Punch Station</h2>
+            <div class="bg-white rounded-xl shadow-xs border border-gray-200 p-5 sm:p-6">
+                <h2 class="text-lg sm:text-xl font-bold mb-4">Employee Punch Station</h2>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     
-                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 flex flex-col">
+                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-5 flex flex-col">
                         <div id="kiosk-dropdown-container">
-                            <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">1. Working Profile Profile Queue</label>
-                            <select id="emp-shift-select" onchange="handleManualShiftChange()" class="w-full mb-4 px-3 py-2.5 border border-gray-300 bg-white rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-medium text-sm text-gray-800"></select>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">1. Working Profile Profile Queue</label>
+                            <select id="emp-shift-select" onchange="handleManualShiftChange()" class="w-full mb-4 px-4 py-3 border border-gray-300 bg-white rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-medium text-base text-gray-800"></select>
                         </div>
                         
-                        <div class="grid grid-cols-2 gap-3 flex-1">
-                            <button id="btn-time-in" onclick="openPunchModal('timeIn')" class="aspect-square w-full bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex flex-col items-center justify-center gap-2 p-4 shadow-xs transition-all active:scale-98 cursor-pointer disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed">
-                                <span class="text-2xl sm:text-3xl">📥</span>
-                                <span class="text-sm sm:text-base tracking-wide uppercase">Time In</span>
+                        <div class="grid grid-cols-2 gap-4 flex-1">
+                            <button id="btn-time-in" onclick="openPunchModal('timeIn')" class="aspect-square w-full bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex flex-col items-center justify-center gap-3 p-5 shadow-xs transition-all active:scale-98 cursor-pointer disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed">
+                                <span class="text-3xl sm:text-4xl">📥</span>
+                                <span class="text-base sm:text-lg tracking-wide uppercase">Time In</span>
                             </button>
-                            <button id="btn-time-out" onclick="openPunchModal('timeOut')" class="aspect-square w-full bg-slate-700 hover:bg-slate-800 text-white font-bold rounded-xl flex flex-col items-center justify-center gap-2 p-4 shadow-xs transition-all active:scale-98 cursor-pointer disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed">
-                                <span class="text-2xl sm:text-3xl">📤</span>
-                                <span class="text-sm sm:text-base tracking-wide uppercase">Time Out</span>
+                            <button id="btn-time-out" onclick="openPunchModal('timeOut')" class="aspect-square w-full bg-slate-700 hover:bg-slate-800 text-white font-bold rounded-xl flex flex-col items-center justify-center gap-3 p-5 shadow-xs transition-all active:scale-98 cursor-pointer disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed">
+                                <span class="text-3xl sm:text-4xl">📤</span>
+                                <span class="text-base sm:text-lg tracking-wide uppercase">Time Out</span>
                             </button>
                         </div>
                     </div>
 
-                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 flex flex-col">
+                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-5 flex flex-col">
                         <div id="kiosk-break-header">
-                            <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">2. Manage Breaks</label>
-                            <div class="text-xs text-gray-400 bg-white border border-gray-200 rounded-lg p-2.5 mb-4 font-medium flex-1 overflow-y-auto max-h-[50px] flex items-center justify-center text-center">
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">2. Manage Breaks</label>
+                            <div class="text-sm text-gray-400 bg-white border border-gray-200 rounded-xl p-3 mb-4 font-medium flex-1 overflow-y-auto max-h-[60px] flex items-center justify-center text-center">
                                 Breaks trigger automatically based on active profile setup map assignments.
                             </div>
                         </div>
                         
-                        <div class="grid grid-cols-2 gap-3 flex-1">
-                            <button id="btn-break-out" onclick="openPunchModal('breakOut')" class="aspect-square w-full bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl flex flex-col items-center justify-center gap-2 p-4 shadow-xs transition-all active:scale-98 cursor-pointer disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed">
-                                <span class="text-2xl sm:text-3xl">☕</span>
-                                <span class="text-sm sm:text-base tracking-wide uppercase">Start Break</span>
+                        <div class="grid grid-cols-2 gap-4 flex-1">
+                            <button id="btn-break-out" onclick="openPunchModal('breakOut')" class="aspect-square w-full bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl flex flex-col items-center justify-center gap-3 p-5 shadow-xs transition-all active:scale-98 cursor-pointer disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed">
+                                <span class="text-3xl sm:text-4xl">☕</span>
+                                <span class="text-base sm:text-lg tracking-wide uppercase">Start Break</span>
                             </button>
-                            <button id="btn-break-in" onclick="openPunchModal('breakIn')" class="aspect-square w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl flex flex-col items-center justify-center gap-2 p-4 shadow-xs transition-all active:scale-98 cursor-pointer disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed">
-                                <span class="text-2xl sm:text-3xl">🏁</span>
-                                <span class="text-sm sm:text-base tracking-wide uppercase">End Break</span>
+                            <button id="btn-break-in" onclick="openPunchModal('breakIn')" class="aspect-square w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl flex flex-col items-center justify-center gap-3 p-5 shadow-xs transition-all active:scale-98 cursor-pointer disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed">
+                                <span class="text-3xl sm:text-4xl">🏁</span>
+                                <span class="text-base sm:text-lg tracking-wide uppercase">End Break</span>
                             </button>
                         </div>
                     </div>
 
                 </div>
 
-                <p id="kiosk-feedback" class="mt-4 text-xs sm:text-sm hidden font-medium"></p>
+                <p id="kiosk-feedback" class="mt-4 text-base hidden font-medium"></p>
             </div>
 
             <div class="bg-white rounded-xl shadow-xs border border-gray-200 overflow-hidden">
-                <div class="px-4 sm:px-6 py-4 border-b border-gray-200 flex flex-row justify-between items-center gap-2">
-                    <h3 class="font-semibold text-gray-900 text-sm sm:text-base">Attendance Log Book</h3>
-                    <div class="flex items-center gap-1 bg-gray-50 p-1 rounded-lg border border-gray-200">
-                        <button onclick="toggleKioskButtonLabel()" class="text-gray-400 hover:text-gray-600 p-1 text-xs cursor-pointer" title="Toggle Button Description">⚙️</button>
-                        <button onclick="secureClearKioskDisplay()" class="text-center bg-gray-100 hover:bg-amber-50 hover:text-amber-800 text-gray-600 text-[11px] font-bold py-1 px-2 rounded-md transition-colors cursor-pointer border border-gray-200 flex items-center gap-1">
+                <div class="px-5 py-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div class="w-full sm:w-auto">
+                        <h3 class="font-bold text-gray-900 text-base sm:text-lg">Attendance Log Book</h3>
+                        <!-- LOGBOOK CATEGORY FILTER CONTROLS -->
+                        <div class="flex flex-wrap gap-2 mt-3 items-center">
+                            <div class="relative inline-block text-left">
+                                <button onclick="toggleFilterDropdown('logbook-filter-menu')" class="px-3 py-1.5 bg-blue-600 text-white font-semibold rounded-lg text-xs hover:bg-blue-700 flex items-center gap-1">
+                                    🔍 Filter Category ⚙️
+                                </button>
+                                <div id="logbook-filter-menu" class="hidden absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-40 p-3 space-y-2">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Search Keywords</label>
+                                        <input type="text" id="filter-logbook-search" oninput="renderLogsTable()" placeholder="Name or activity..." class="px-2 py-1 bg-gray-50 border border-gray-200 rounded-md text-xs w-full focus:outline-hidden">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Target Date</label>
+                                        <input type="date" id="filter-logbook-date" onchange="renderLogsTable()" class="px-2 py-1 bg-gray-50 border border-gray-200 rounded-md text-xs w-full focus:outline-hidden">
+                                    </div>
+                                    <button onclick="clearLogbookFilters(); toggleFilterDropdown('logbook-filter-menu');" class="w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 rounded text-[10px] font-bold">Reset Filters</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 bg-gray-50 p-1.5 rounded-xl border border-gray-200 self-stretch sm:self-auto justify-end">
+                        <button onclick="toggleKioskButtonLabel()" class="text-gray-400 hover:text-gray-600 p-1 text-sm cursor-pointer" title="Toggle Button Description">⚙️</button>
+                        <button onclick="secureClearKioskDisplay()" class="text-center bg-gray-100 hover:bg-amber-50 hover:text-amber-800 text-gray-600 text-xs font-bold py-2 px-3 rounded-lg transition-colors cursor-pointer border border-gray-200 flex items-center gap-1">
                             🧹 <span id="kiosk-btn-label" class="hidden">Clear Public Monitor</span>
                         </button>
                     </div>
                 </div>
-                <div class="w-full overflow-x-auto min-w-full inline-block align-middle">
-                    <table class="w-full text-left text-xs sm:text-sm border-collapse min-w-[700px] lg:min-w-full">
+                <div class="w-full overflow-x-auto">
+                    <table class="w-full text-left text-sm border-collapse min-w-[600px]">
                         <thead>
-                            <tr id="kiosk-table-header" class="bg-gray-50 text-gray-500 uppercase text-[10px] sm:text-[11px] font-bold tracking-wider border-b border-gray-200">
-                                <th class="px-4 sm:px-6 py-3 w-[25%]">Employee Info</th>
-                                <th class="px-4 sm:px-6 py-3 w-[25%]">Target Shift Assigned</th>
-                                <th class="px-4 sm:px-6 py-3 w-[25%]">Shift Main Window (In / Out)</th>
-                                <th class="px-4 sm:px-6 py-3 w-[25%]">Break History Profiles</th>
+                            <tr id="kiosk-table-header" class="bg-gray-50 text-gray-500 uppercase text-xs font-bold tracking-wider border-b border-gray-200">
+                                <th class="px-5 py-4 w-[30%]">Employee Info</th>
+                                <th class="px-5 py-4 w-[25%]">Target Shift Assigned</th>
+                                <th class="px-5 py-4 w-[35%]">Activity Timestamps Matrix</th>
+                                <th class="px-5 py-4 w-[10%] text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="logs-tbody" class="divide-y divide-gray-100"></tbody>
@@ -132,99 +170,93 @@
 
         <section id="view-admin" class="hidden space-y-6">
             
-            <div id="admin-auth-card" class="max-w-md mx-auto bg-white rounded-xl shadow-xs border border-gray-200 p-5 sm:p-6">
-                <h2 id="auth-title" class="text-base sm:text-lg font-semibold mb-1">Admin Identity Gate</h2>
-                <p id="auth-desc" class="text-xs text-gray-500 mb-4">Initialize or input credentials to modify scheduling rosters.</p>
+            <div id="admin-auth-card" class="max-w-md mx-auto bg-white rounded-2xl shadow-xs border border-gray-200 p-6 sm:p-8">
+                <h2 id="auth-title" class="text-lg sm:text-xl font-bold mb-2">Admin Identity Gate</h2>
+                <p id="auth-desc" class="text-sm text-gray-500 mb-4">Initialize or input credentials to modify scheduling rosters.</p>
                 
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-[11px] font-semibold text-gray-500 uppercase mb-1">Username</label>
-                        <input type="text" id="admin-user" class="w-full px-3 py-2 border border-gray-300 bg-white text-gray-800 rounded-lg text-xs sm:text-sm">
+                        <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Username</label>
+                        <input type="text" id="admin-user" class="w-full px-4 py-3 border border-gray-300 bg-white text-gray-800 rounded-xl text-base">
                     </div>
                     <div>
-                        <label class="block text-[11px] font-semibold text-gray-500 uppercase mb-1">Password</label>
-                        <input type="password" id="admin-pass" class="w-full px-3 py-2 border border-gray-300 bg-white text-gray-800 rounded-lg text-xs sm:text-sm">
+                        <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Password</label>
+                        <input type="password" id="admin-pass" class="w-full px-4 py-3 border border-gray-300 bg-white text-gray-800 rounded-xl text-base">
                     </div>
-                    <button onclick="handleAuthSubmit()" id="btn-auth-submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg text-xs sm:text-sm transition-colors cursor-pointer">Enter Settings Panel</button>
+                    <button onclick="handleAuthSubmit()" id="btn-auth-submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-base transition-colors cursor-pointer">Enter Settings Panel</button>
                 </div>
-                <p id="auth-feedback" class="mt-3 text-xs sm:text-sm font-medium hidden"></p>
+                <p id="auth-feedback" class="mt-3 text-base font-medium hidden"></p>
             </div>
 
             <div id="admin-settings-panel" class="hidden space-y-6">
-                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-xs">
-                    <div>
-                        <h2 class="text-base sm:text-lg font-bold text-gray-900">Control & Configuration Panel</h2>
-                        <p class="text-xs text-gray-500">Configure operational modes, rosters, reports, and administrative credentials.</p>
-                        
-                        <div class="mt-3 flex items-center gap-3 bg-gray-50 border border-gray-200 p-2 rounded-lg w-fit">
-                            <span class="text-xs font-bold text-gray-600 uppercase tracking-wider">System Mode:</span>
-                            <select id="sys-mode-select" onchange="handleModeChange(this.value)" class="bg-white border border-gray-300 rounded px-2 py-1 text-xs font-semibold text-gray-800 focus:outline-hidden">
+                <div class="flex flex-col lg:flex-row lg:items-stretch justify-between gap-4 bg-white p-5 rounded-xl border border-gray-200 shadow-xs">
+                    
+                    <!-- DUAL PLACEMENT: SYSTEM MODE & DOWNLOAD CSV SIDE BY SIDE -->
+                    <div class="flex flex-col sm:flex-row gap-4 items-center flex-1">
+                        <div class="bg-gray-50 border border-gray-200 p-4 rounded-xl w-full sm:w-auto flex-1">
+                            <span class="text-xs font-bold text-gray-600 uppercase tracking-wider block mb-2">System Operational Mode</span>
+                            <select id="sys-mode-select" onchange="promptModeChangeConfirmation(this.value)" class="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm font-semibold text-gray-800 focus:outline-hidden w-full">
                                 <option value="schedule">Schedule Based Mode</option>
                                 <option value="ongoing">Ongoing Mode</option>
                             </select>
                         </div>
-                    </div>
-                    
-                    <div class="flex flex-col gap-2 bg-gray-50 p-3 rounded-lg border border-gray-200 w-full lg:w-auto">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Download Logs CSV Report</span>
-                        <div class="flex flex-wrap items-center gap-2">
-                            <div class="flex items-center gap-1">
-                                <label class="text-[10px] font-medium text-gray-500">Start:</label>
-                                <input type="date" id="csv-start-date" class="bg-white border border-gray-300 rounded px-1.5 py-0.5 text-xs text-gray-800">
-                            </div>
-                            <div class="flex items-center gap-1">
-                                <label class="text-[10px] font-medium text-gray-500">End:</label>
-                                <input type="date" id="csv-end-date" class="bg-white border border-gray-300 rounded px-1.5 py-0.5 text-xs text-gray-800">
-                            </div>
-                            <button onclick="exportToCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-1 px-3 rounded-md text-xs transition-colors cursor-pointer">📥 Download</button>
+                        
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 w-full sm:w-auto flex-1 flex flex-col justify-center">
+                            <span class="text-xs font-bold text-gray-600 uppercase tracking-wider block mb-2">Export Log Summaries</span>
+                            <button onclick="openDownloadCSVModal()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors cursor-pointer flex items-center justify-center gap-2">
+                                📥 Download Logs CSV
+                            </button>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 w-full lg:w-auto">
-                        <button onclick="exportDatabaseJSON()" class="justify-center inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-3 rounded-lg text-xs transition-colors cursor-pointer">📤 Export DB</button>
-                        <label class="justify-center inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-3 rounded-lg text-xs transition-colors cursor-pointer col-span-2 sm:col-span-1">
-                            📥 Import DB (.json)
-                            <input type="file" id="db-import-file" accept=".json" onchange="importDatabaseJSON(event)" class="hidden">
-                        </label>
-                        <button onclick="openLogoutModal()" class="justify-center bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-medium py-2 px-3 rounded-lg text-xs transition-colors cursor-pointer col-span-2 sm:col-span-1">Logout Panel</button>
+                    <!-- SEPARATED EXPORT/IMPORT DATABASE SECTION -->
+                    <div class="bg-blue-50/50 border border-blue-200 p-4 rounded-xl w-full lg:w-96 flex flex-col justify-center">
+                        <span class="text-xs font-bold text-blue-800 uppercase tracking-wider block mb-2">📦 Database Backup Management</span>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="exportDatabaseJSON()" class="justify-center inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg text-xs transition-colors cursor-pointer">Export DB</button>
+                            <label class="justify-center inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-lg text-xs transition-colors cursor-pointer text-center">
+                                Import DB (.json)
+                                <input type="file" id="db-import-file" accept=".json" onchange="importDatabaseJSON(event)" class="hidden">
+                            </label>
+                        </div>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <button onclick="openAdminSectionModal('admin-modal-section-1')" class="bg-white border border-gray-200 rounded-xl p-5 shadow-xs hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group min-h-[140px] cursor-pointer">
-                        <div class="space-y-1">
-                            <span class="text-2xl">🛡️</span>
-                            <h3 class="font-bold text-gray-900 text-base group-hover:text-blue-600 transition-colors">Attendance Management</h3>
-                            <p class="text-xs text-gray-500 font-normal">Unfiltered database system archive log records view.</p>
+                    <button onclick="openAdminSectionModal('admin-modal-section-1')" class="bg-white border border-gray-200 rounded-2xl p-6 shadow-xs hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group min-h-[160px] cursor-pointer">
+                        <div class="space-y-2">
+                            <span class="text-3xl">🛡️</span>
+                            <h3 class="font-bold text-gray-900 text-lg group-hover:text-blue-600 transition-colors">Attendance Management</h3>
+                            <p class="text-sm text-gray-500 font-normal">Unfiltered database system archive log records view.</p>
                         </div>
-                        <span class="text-xs font-semibold text-blue-600 uppercase tracking-wider mt-2 inline-flex items-center gap-1">Open Panel &rarr;</span>
+                        <span class="text-sm font-semibold text-blue-600 uppercase tracking-wider mt-2 inline-flex items-center gap-1">Open Panel &rarr;</span>
                     </button>
 
-                    <button onclick="openAdminSectionModal('admin-modal-section-2')" class="bg-white border border-gray-200 rounded-xl p-5 shadow-xs hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group min-h-[140px] cursor-pointer">
-                        <div class="space-y-1">
-                            <span class="text-2xl">👥</span>
-                            <h3 class="font-bold text-gray-900 text-base group-hover:text-blue-600 transition-colors">Employee Accounts</h3>
-                            <p class="text-xs text-gray-500 font-normal">Add, import/export employee rosters, or clear accounts.</p>
+                    <button onclick="openAdminSectionModal('admin-modal-section-2')" class="bg-white border border-gray-200 rounded-2xl p-6 shadow-xs hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group min-h-[160px] cursor-pointer">
+                        <div class="space-y-2">
+                            <span class="text-3xl">👥</span>
+                            <h3 class="font-bold text-gray-900 text-lg group-hover:text-blue-600 transition-colors">Employee Accounts</h3>
+                            <p class="text-sm text-gray-500 font-normal">Add, import/export employee rosters, or clear accounts.</p>
                         </div>
-                        <span class="text-xs font-semibold text-blue-600 uppercase tracking-wider mt-2 inline-flex items-center gap-1">Open Panel &rarr;</span>
+                        <span class="text-sm font-semibold text-blue-600 uppercase tracking-wider mt-2 inline-flex items-center gap-1">Open Panel &rarr;</span>
                     </button>
 
-                    <button onclick="openAdminSectionModal('admin-modal-section-3')" class="bg-white border border-gray-200 rounded-xl p-5 shadow-xs hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group min-h-[140px] cursor-pointer">
-                        <div class="space-y-1">
-                            <span class="text-2xl">📋</span>
-                            <h3 class="font-bold text-gray-900 text-base group-hover:text-blue-600 transition-colors">Shift Profiles Config</h3>
-                            <p class="text-xs text-gray-500 font-normal">Define shift timeline parameters and multi-break matrices.</p>
+                    <button onclick="openAdminSectionModal('admin-modal-section-3')" class="bg-white border border-gray-200 rounded-2xl p-6 shadow-xs hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group min-h-[160px] cursor-pointer">
+                        <div class="space-y-2">
+                            <span class="text-3xl">📋</span>
+                            <h3 class="font-bold text-gray-900 text-lg group-hover:text-blue-600 transition-colors">Shift Profiles Config</h3>
+                            <p class="text-sm text-gray-500 font-normal">Define shift timeline parameters and multi-break matrices.</p>
                         </div>
-                        <span class="text-xs font-semibold text-blue-600 uppercase tracking-wider mt-2 inline-flex items-center gap-1">Open Panel &rarr;</span>
+                        <span class="text-sm font-semibold text-blue-600 uppercase tracking-wider mt-2 inline-flex items-center gap-1">Open Panel &rarr;</span>
                     </button>
 
-                    <button onclick="openAdminSectionModal('admin-modal-section-4')" class="bg-white border border-gray-200 rounded-xl p-5 shadow-xs hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group min-h-[140px] cursor-pointer">
-                        <div class="space-y-1">
-                            <span class="text-2xl">🔑</span>
-                            <h3 class="font-bold text-gray-900 text-base group-hover:text-blue-600 transition-colors">Admin Access</h3>
-                            <p class="text-xs text-gray-500 font-normal">Modify primary authorization values and login criteria passwords.</p>
+                    <button onclick="openAdminSectionModal('admin-modal-section-4')" class="bg-white border border-gray-200 rounded-2xl p-6 shadow-xs hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group min-h-[160px] cursor-pointer">
+                        <div class="space-y-2">
+                            <span class="text-3xl">🔑</span>
+                            <h3 class="font-bold text-gray-900 text-lg group-hover:text-blue-600 transition-colors">Admin & Clock Options</h3>
+                            <p class="text-sm text-gray-500 font-normal">Modify authorization values, inactivity counters, and station clock scaling values.</p>
                         </div>
-                        <span class="text-xs font-semibold text-blue-600 uppercase tracking-wider mt-2 inline-flex items-center gap-1">Open Panel &rarr;</span>
+                        <span class="text-sm font-semibold text-blue-600 uppercase tracking-wider mt-2 inline-flex items-center gap-1">Open Panel &rarr;</span>
                     </button>
                 </div>
 
@@ -232,37 +264,121 @@
         </section>
     </main>
 
+    <!-- DOWNLOAD CSV PARAMETERS MODAL DIALOGUE BOX -->
+    <div id="download-csv-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 animate-fade-in">
+        <div class="bg-white rounded-xl border border-gray-200 shadow-2xl p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-gray-900 text-lg">Configure Logs CSV Parameters</h3>
+                <button onclick="closeDownloadCSVModal()" class="text-gray-400 hover:text-gray-600 font-bold">✕</button>
+            </div>
+            <div class="space-y-3 mb-5">
+                <div>
+                    <label class="text-xs font-semibold text-gray-500 uppercase block mb-1">Timeline Start Date</label>
+                    <input type="date" id="csv-start-date" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-gray-500 uppercase block mb-1">Timeline End Date</label>
+                    <input type="date" id="csv-end-date" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800">
+                </div>
+            </div>
+            <div class="flex gap-2 justify-end">
+                <button onclick="closeDownloadCSVModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg text-sm transition-colors">Cancel</button>
+                <button onclick="executeCSVExportWorkflow()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm transition-colors">Confirm & Download</button>
+            </div>
+        </div>
+    </div>
+
     <!-- LOGOUT CONFIRMATION MODAL -->
     <div id="logout-confirm-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 animate-fade-in">
-        <div class="bg-white rounded-xl border border-gray-200 shadow-2xl p-5 w-full max-w-sm text-center">
+        <div class="bg-white rounded-xl border border-gray-200 shadow-2xl p-6 w-full max-w-sm text-center">
             <span class="text-3xl block mb-2">🔒</span>
-            <h3 class="font-bold text-gray-900 text-base mb-1">Confirm Administration Logout</h3>
-            <p class="text-xs text-gray-500 mb-5">Are you sure you want to exit the control panel? Access changes will be locked.</p>
+            <h3 class="font-bold text-gray-900 text-lg mb-1">Confirm Administration Logout</h3>
+            <p class="text-sm text-gray-500 mb-5">Are you sure you want to exit the control panel? Access changes will be locked.</p>
             <div class="flex gap-2 justify-center">
-                <button onclick="closeLogoutModal()" class="px-4 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-md transition-colors cursor-pointer">Cancel</button>
-                <button onclick="confirmLogOutAdmin()" class="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-md transition-colors cursor-pointer">Logout Panel</button>
+                <button onclick="closeLogoutModal()" class="px-5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg text-sm transition-colors cursor-pointer">Cancel</button>
+                <button onclick="confirmLogOutAdmin()" class="px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg text-sm transition-colors cursor-pointer">Logout Panel</button>
             </div>
+        </div>
+    </div>
+
+    <!-- VIEW MORE SPECIFIC LOG OVERLAY MODAL -->
+    <div id="logbook-viewmore-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 animate-fade-in">
+        <div class="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-lg p-6 space-y-4">
+            <div class="flex justify-between items-start border-b border-gray-100 pb-3">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900" id="vm-employee-name">Employee Details</h3>
+                    <p class="text-sm font-mono text-blue-600 font-semibold" id="vm-employee-id">ID: --</p>
+                </div>
+                <button onclick="closeLogbookViewMoreModal()" class="text-gray-400 hover:text-gray-600 font-bold text-xl p-1">✕</button>
+            </div>
+            <div class="space-y-3 text-sm">
+                <div><span class="text-gray-400 font-medium block">Assigned Window Group:</span> <p class="font-semibold text-gray-800 text-base" id="vm-assigned-shift">--</p></div>
+                <div><span class="text-gray-400 font-medium block">Log Activation Date:</span> <p class="font-semibold text-gray-800" id="vm-log-date">--</p></div>
+                <div class="border-t border-gray-100 pt-2"><span class="text-gray-400 font-medium block mb-1">Main Work Stamps:</span> <div class="bg-gray-50 rounded-xl p-3 space-y-1 font-medium" id="vm-shift-stamps">--</div></div>
+                <div><span class="text-gray-400 font-medium block mb-1">Allocated Break Summary Matrix:</span> <div class="bg-gray-50 rounded-xl p-3 max-h-40 overflow-y-auto space-y-2" id="vm-breaks-stamps">--</div></div>
+            </div>
+            <div class="flex justify-end pt-2">
+                <button onclick="closeLogbookViewMoreModal()" class="px-5 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-xl text-sm">Close View</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUCCESS SCAN POPUP DIALOGUE ALERT -->
+    <div id="success-scan-alert-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 animate-fade-in">
+        <div class="bg-white rounded-2xl shadow-2xl border border-gray-200 p-6 w-full max-w-md text-center space-y-4">
+            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-3xl">✓</div>
+            <div>
+                <h3 class="text-xl font-bold text-gray-900">Scanning Successful!</h3>
+                <p class="text-sm text-gray-500 mt-1">Punch station validation transaction authenticated.</p>
+            </div>
+            <div class="bg-gray-50 border border-gray-100 rounded-xl p-4 text-left">
+                <p class="text-xs uppercase font-bold text-gray-400 tracking-wider">Employee Workspace Account</p>
+                <p class="text-lg font-bold text-gray-800 mt-0.5" id="alert-display-name">--</p>
+                <p class="text-sm font-mono text-blue-600 font-semibold mt-0.5" id="alert-display-id">ID: --</p>
+            </div>
+            <button onclick="closeSuccessScanAlert()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition-colors shadow-xs">Dismiss Alert</button>
         </div>
     </div>
 
     <!-- ADMIN MODAL SECTION 1 -->
     <div id="admin-modal-section-1" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-40 animate-fade-in">
         <div class="bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-6xl max-h-[90vh] flex flex-col">
-            <div class="px-6 py-4 border-b border-gray-200 bg-slate-50 flex justify-between items-center">
+            <div class="px-6 py-4 border-b border-gray-200 bg-slate-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h3 class="font-bold text-gray-900 text-base sm:text-lg flex items-center gap-2">🛡️ Attendance Management</h3>
-                    <p class="text-xs text-gray-500 font-normal">Master live log matrix data view.</p>
+                    <h3 class="font-bold text-gray-900 text-lg flex items-center gap-2">🛡️ Attendance Management</h3>
+                    <p class="text-sm text-gray-500 font-normal">Master live log matrix data view.</p>
+                    <!-- SECTION 1 CATEGORY FILTER CONTROLS -->
+                    <div class="flex flex-wrap gap-2 mt-3 relative">
+                        <button onclick="toggleFilterDropdown('section1-filter-menu')" class="px-3 py-1 bg-blue-600 text-white rounded text-xs font-semibold hover:bg-blue-700 flex items-center gap-1">
+                            🔍 Filter Category ⚙️
+                        </button>
+                        <div id="section1-filter-menu" class="hidden absolute left-0 top-full mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 p-3 space-y-2 text-left">
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Keywords Input</label>
+                                <input type="text" id="filter-s1-search" oninput="renderLogsTable()" placeholder="Name, Date, Activity..." class="px-2 py-1 bg-white border border-gray-300 rounded text-xs w-full focus:outline-hidden">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Inactivity Windows Range</label>
+                                <div class="flex items-center gap-1">
+                                    <input type="time" id="filter-s1-time-start" onchange="renderLogsTable()" class="text-xs bg-gray-50 border border-gray-300 rounded p-1 w-full">
+                                    <span class="text-xs text-gray-400">-</span>
+                                    <input type="time" id="filter-s1-time-end" onchange="renderLogsTable()" class="text-xs bg-gray-50 border border-gray-300 rounded p-1 w-full">
+                                </div>
+                            </div>
+                            <button onclick="clearS1Filters(); toggleFilterDropdown('section1-filter-menu');" class="w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 rounded text-[10px] font-bold">Reset Filters</button>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="deleteSelectedLogs()" class="bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 text-xs font-semibold py-1 px-2.5 rounded transition-colors cursor-pointer">Delete Selected</button>
-                    <button onclick="clearAllLogs()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold py-1 px-2.5 rounded transition-colors cursor-pointer">Clear All Data</button>
+                <div class="flex items-center gap-2 self-end sm:self-auto">
+                    <button onclick="deleteSelectedLogs()" class="bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 text-xs font-semibold py-2 px-3 rounded-lg transition-colors cursor-pointer">Delete Selected</button>
+                    <button onclick="clearAllLogs()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold py-2 px-3 rounded-lg transition-colors cursor-pointer">Clear All Data</button>
                     <button onclick="closeAdminSectionModal('admin-modal-section-1')" class="text-gray-400 hover:text-gray-600 font-bold text-lg p-1.5 ml-2 cursor-pointer">✕</button>
                 </div>
             </div>
             <div class="p-0 overflow-auto flex-1">
-                <table class="w-full text-left text-xs sm:text-sm border-collapse min-w-[800px]">
+                <table class="w-full text-left text-sm border-collapse min-w-[800px]">
                     <thead>
-                        <tr id="admin-table-header" class="bg-gray-100 text-gray-500 uppercase text-[10px] sm:text-[11px] font-bold tracking-wider border-b border-gray-200 sticky top-0 z-10">
+                        <tr id="admin-table-header" class="bg-gray-100 text-gray-500 uppercase text-xs font-bold tracking-wider border-b border-gray-200 sticky top-0 z-10">
                             <th class="px-4 py-3 w-[5%] text-center bg-gray-100">
                                 <input type="checkbox" id="select-all-logs" onclick="toggleSelectAllLogs(this)" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 scale-110 cursor-pointer">
                             </th>
@@ -277,150 +393,202 @@
                 </table>
             </div>
             <div class="px-6 py-3 border-t border-gray-100 bg-gray-50 flex justify-end">
-                <button onclick="closeAdminSectionModal('admin-modal-section-1')" class="px-4 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer">Close Window</button>
+                <button onclick="closeAdminSectionModal('admin-modal-section-1')" class="px-5 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-semibold transition-colors cursor-pointer">Close Window</button>
             </div>
         </div>
     </div>
 
-    <!-- ADMIN MODAL SECTION 2 -->
+    <!-- ADMIN MODAL SECTION 2 (EMPLOYEE ACCOUNT CONFS) -->
     <div id="admin-modal-section-2" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-40 animate-fade-in">
-        <div class="bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-4xl max-h-[85vh] flex flex-col">
+        <div class="bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-5xl max-h-[85vh] flex flex-col">
             <div class="px-6 py-4 border-b border-gray-200 bg-slate-50 flex justify-between items-center">
                 <div>
-                    <h3 class="font-bold text-gray-900 text-base sm:text-lg flex items-center gap-2">👥 Employee Account Configuration</h3>
-                    <p class="text-xs text-gray-500 font-normal">Manage database accounts manually or trigger bulk CSV data transfers.</p>
+                    <h3 class="font-bold text-gray-900 text-lg flex items-center gap-2">👥 Employee Account Configuration</h3>
+                    <p class="text-sm text-gray-500 font-normal">Manage database accounts manually or trigger bulk CSV data transfers.</p>
                 </div>
                 <button onclick="closeAdminSectionModal('admin-modal-section-2')" class="text-gray-400 hover:text-gray-600 font-bold text-lg p-1.5 cursor-pointer">✕</button>
             </div>
             <div class="p-6 overflow-auto flex-1 space-y-4">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-                    <div class="space-y-4">
-                        <div class="bg-gray-50 p-4 rounded-lg space-y-3 border border-gray-200 shadow-2xs">
-                            <span class="text-xs font-bold text-gray-600 block border-b border-gray-200 pb-1">Register Account Manually</span>
-                            <div>
-                                <label class="text-[10px] text-gray-500 font-medium block">Employee ID Number</label>
-                                <input type="text" id="new-emp-id" placeholder="e.g., EMP-2026-01" class="w-full px-2 py-1.5 bg-white border border-gray-300 text-gray-800 rounded text-xs">
-                            </div>
-                            <div>
-                                <label class="text-[10px] text-gray-500 font-medium block">Employee Full Name</label>
-                                <input type="text" id="new-emp-name" placeholder="e.g., John Doe" class="w-full px-2 py-1.5 bg-white border border-gray-300 text-gray-800 rounded text-xs">
-                            </div>
-                            <button onclick="addNewEmployeeProfile()" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-2 rounded font-medium cursor-pointer">+ Save Profile Account</button>
-                        </div>
-                        
-                        <div class="bg-gray-50 p-4 rounded-lg space-y-3 border border-gray-200 shadow-2xs">
-                            <span class="text-xs font-bold text-gray-600 block border-b border-gray-200 pb-1">Bulk CSV Roster Actions</span>
-                            <div class="flex flex-col gap-2">
-                                <button onclick="downloadEmployeeTemplateCSV()" class="w-full bg-slate-700 hover:bg-slate-800 text-white text-xs py-1.5 rounded font-medium cursor-pointer flex justify-center items-center gap-1">📋 Export Roster CSV</button>
-                                <label class="w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white text-xs py-1.5 rounded font-medium cursor-pointer block">
-                                    📥 Import Roster CSV
-                                    <input type="file" id="emp-csv-import" accept=".csv" onchange="importEmployeesFromCSV(event)" class="hidden">
-                                </label>
-                            </div>
-                        </div>
-                    </div>
+                <div class="flex justify-between items-center border-b border-gray-200 pb-3">
+                    <button onclick="openEmployeeCreationModal()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-4 rounded-xl shadow-xs transition-colors">+ Add Account Profile</button>
                     
-                    <div class="lg:col-span-2">
-                        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">Registered Employee Database Roster & Clearers</label>
-                        <div id="employee-list-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-72 overflow-y-auto pr-1"></div>
+                    <div class="bg-gray-50 px-3 py-2 rounded-xl border border-gray-200 flex items-center gap-2">
+                        <span class="text-xs font-bold text-gray-500 uppercase">Roster Bulk Matrix:</span>
+                        <button onclick="downloadEmployeeTemplateCSV()" class="bg-slate-700 hover:bg-slate-800 text-white text-xs font-semibold py-1 px-2 rounded">Export CSV</button>
+                        <label class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold py-1 px-2 rounded cursor-pointer">
+                            Import CSV
+                            <input type="file" id="emp-csv-import" accept=".csv" onchange="importEmployeesFromCSV(event)" class="hidden">
+                        </label>
                     </div>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-1 border-b border-gray-200">
+                        <label class="text-sm font-bold text-gray-500 uppercase tracking-wider block">Registered Employee Accounts</label>
+                        
+                        <!-- SECTION 2 CATEGORY FILTER CONTROLS -->
+                        <div class="flex gap-2 w-full sm:w-auto relative">
+                            <button onclick="toggleFilterDropdown('section2-filter-menu')" class="px-3 py-1 bg-blue-600 text-white rounded text-xs font-semibold hover:bg-blue-700 flex items-center gap-1">
+                                🔍 Filter Category ⚙️
+                            </button>
+                            <div id="section2-filter-menu" class="hidden absolute right-0 top-full mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 p-3 space-y-2 text-left">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Keywords Input</label>
+                                    <input type="text" id="filter-s2-search" oninput="renderAdminConfigLists()" placeholder="Filter name or date..." class="px-2 py-1 bg-white border border-gray-300 rounded text-xs w-full focus:outline-hidden">
+                                </div>
+                                <button onclick="clearS2Filters(); toggleFilterDropdown('section2-filter-menu');" class="w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 rounded text-[10px] font-bold">Reset Filters</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="employee-list-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-1"></div>
                 </div>
             </div>
             <div class="px-6 py-3 border-t border-gray-100 bg-gray-50 flex justify-end">
-                <button onclick="closeAdminSectionModal('admin-modal-section-2')" class="px-4 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer">Close Window</button>
+                <button onclick="closeAdminSectionModal('admin-modal-section-2')" class="px-5 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-semibold transition-colors cursor-pointer">Close Window</button>
             </div>
         </div>
     </div>
 
-    <!-- ADMIN MODAL SECTION 3 -->
+    <!-- ADD/MODIFY EMPLOYEE MODAL DIALOGUE BOX -->
+    <div id="employee-creation-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 animate-fade-in">
+        <div class="bg-white rounded-2xl shadow-xl border border-gray-200 w-full max-w-md p-6">
+            <div class="flex justify-between items-center border-b border-gray-200 pb-2 mb-4">
+                <h3 class="font-bold text-gray-700 text-base" id="manual-register-title">Register Account Manually</h3>
+                <button onclick="closeEmployeeCreationModal()" class="text-gray-400 hover:text-gray-600 font-bold">✕</button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-xs text-gray-500 font-bold uppercase block mb-1">Employee ID Number</label>
+                    <div class="flex gap-1">
+                        <input type="text" id="new-emp-id" placeholder="insert employee ID" class="flex-1 px-3 py-2 bg-white border border-gray-300 text-gray-800 rounded-lg text-sm">
+                        <button onclick="generateSecureIDToken()" class="bg-slate-700 hover:bg-slate-800 text-white px-2.5 rounded-lg text-sm font-mono" title="Generate 16-Digit Alpha-Numeric Token">🎲 Key</button>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-xs text-gray-500 font-bold uppercase block mb-1">First Name</label>
+                        <input type="text" id="new-emp-firstname" placeholder="insert employee Name" class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-800 rounded-lg text-sm">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 font-bold uppercase block mb-1">Last Name</label>
+                        <input type="text" id="new-emp-lastname" placeholder="insert employee Name" class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-800 rounded-lg text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-xs text-gray-500 font-bold uppercase block mb-1">Account Creation Date</label>
+                    <input type="date" id="new-emp-created-date" class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-800 rounded-lg text-sm">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 mt-5">
+                <button onclick="closeEmployeeCreationModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium">Cancel</button>
+                <button onclick="addNewEmployeeProfile()" id="btn-save-manual-emp" class="bg-blue-600 hover:bg-blue-700 text-white text-sm py-2 px-4 rounded-lg font-bold shadow-xs">+ Save Profile Account</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN MODAL SECTION 3 (SHIFT/BREAK CONFS) -->
     <div id="admin-modal-section-3" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-40 animate-fade-in">
         <div class="bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-5xl max-h-[90vh] flex flex-col">
             <div class="px-6 py-4 border-b border-gray-200 bg-slate-50 flex justify-between items-center">
                 <div>
-                    <h3 class="font-bold text-gray-900 text-base sm:text-lg flex items-center gap-2">📋 Shift/Break Schedule Configuration</h3>
-                    <p class="text-xs text-gray-500 font-normal">Define profiles combining dynamic shift windows and custom multiple break allocation rows.</p>
+                    <h3 class="font-bold text-gray-900 text-lg flex items-center gap-2">📋 Shift/Break Schedule Configuration</h3>
+                    <p class="text-sm text-gray-500 font-normal">Define profiles combining dynamic shift windows and custom multiple break allocation rows.</p>
                 </div>
                 <button onclick="closeAdminSectionModal('admin-modal-section-3')" class="text-gray-400 hover:text-gray-600 font-bold text-lg p-1.5 cursor-pointer">✕</button>
             </div>
             <div class="p-6 overflow-auto flex-1">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-1 space-y-4">
-                        <h3 class="font-bold text-xs sm:text-sm text-gray-900 border-b border-gray-200 pb-2">📋 Configured Operational Profiles</h3>
+                <div class="mb-4">
+                    <button onclick="openShiftProfileCreationModal()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-4 rounded-xl shadow-xs transition-colors">+ Add Shift Profile</button>
+                </div>
+
+                <div class="grid grid-cols-1 gap-6">
+                    <div class="space-y-4">
+                        <h3 class="font-bold text-sm text-gray-900 border-b border-gray-200 pb-2">📋 Configured Operational Profiles</h3>
                         <div id="shift-list-container" class="space-y-2 max-h-[480px] overflow-y-auto pr-1"></div>
-                    </div>
-
-                    <div class="lg:col-span-2 bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-4">
-                        <span class="text-sm font-bold text-gray-700 block border-b border-gray-200 pb-2">Create / Modify Master Profile Target Allocation</span>
-                        
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-[11px] text-gray-500 font-bold uppercase block mb-1">Profile Name / Designation</label>
-                                <input type="text" id="new-shift-name" placeholder="e.g., Standard Day Roster" class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-800 rounded-lg text-xs">
-                            </div>
-                            <div>
-                                <label class="text-[11px] text-gray-500 font-bold uppercase block mb-1">Active Scheduled Rota Days</label>
-                                <div id="new-shift-days" class="flex justify-between gap-1"></div>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-                            <div class="bg-white p-3 rounded-lg border border-gray-200">
-                                <label class="text-[11px] text-gray-600 font-bold uppercase block mb-1.5">⏱️ Shift Time In Boundary</label>
-                                <div class="flex gap-1" id="time-in-start-picker"></div>
-                            </div>
-                            <div class="bg-white p-3 rounded-lg border border-gray-200">
-                                <label class="text-[11px] text-gray-600 font-bold uppercase block mb-1.5">⏱️ Shift Time Out Boundary</label>
-                                <div class="flex gap-1" id="time-out-start-picker"></div>
-                            </div>
-                        </div>
-
-                        <div class="pt-3 border-t border-gray-200 bg-white p-3 rounded-lg border border-gray-200">
-                            <div class="flex items-center justify-between mb-3">
-                                <label class="text-[11px] font-bold text-gray-700 uppercase tracking-tight flex items-center gap-1.5">☕ Assigned Operational Breaks <span class="text-[10px] text-gray-400 font-normal uppercase">(Add Multiple)</span></label>
-                                <button type="button" onclick="addNewBreakSubRow()" class="bg-slate-700 hover:bg-slate-800 text-white text-[10px] font-bold py-1 px-2.5 rounded-md transition-colors cursor-pointer">+ Add Break Window</button>
-                            </div>
-                            <div id="new-break-subrows-wrapper" class="space-y-2"></div>
-                        </div>
-
-                        <button onclick="addNewShiftConfig()" class="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white text-xs py-2.5 rounded-lg font-bold shadow-xs transition-all cursor-pointer">📦 Save Unified Operational Profile</button>
                     </div>
                 </div>
             </div>
             <div class="px-6 py-3 border-t border-gray-100 bg-gray-50 flex justify-end">
-                <button onclick="closeAdminSectionModal('admin-modal-section-3')" class="px-4 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer">Close Window</button>
+                <button onclick="closeAdminSectionModal('admin-modal-section-3')" class="px-5 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-semibold transition-colors cursor-pointer">Close Window</button>
             </div>
         </div>
     </div>
 
-    <!-- ADMIN MODAL SECTION 4 -->
+    <!-- ADD/MODIFY SHIFT PROFILE DIALOGUE BOX -->
+    <div id="shift-profile-creation-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 animate-fade-in">
+        <div class="bg-white rounded-2xl shadow-xl border border-gray-200 w-full max-w-2xl p-6 max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center border-b border-gray-200 pb-2 mb-4">
+                <h3 class="font-bold text-gray-700 text-base">Create / Modify Master Profile Target Allocation</h3>
+                <button onclick="closeShiftProfileCreationModal()" class="text-gray-400 hover:text-gray-600 font-bold">✕</button>
+            </div>
+            <div class="space-y-4 overflow-y-auto flex-1 p-1">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs text-gray-500 font-bold uppercase block mb-1">Profile Name / Designation</label>
+                        <input type="text" id="new-shift-name" placeholder="e.g., Standard Day Roster" class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-800 rounded-lg text-sm">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 font-bold uppercase block mb-1">Active Scheduled Rota Days</label>
+                        <div id="new-shift-days" class="flex justify-between gap-1"></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <label class="text-xs text-gray-600 font-bold uppercase block mb-1.5">⏱️ Shift Time In Boundary</label>
+                        <div class="flex gap-1" id="time-in-start-picker"></div>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <label class="text-xs text-gray-600 font-bold uppercase block mb-1.5">⏱️ Shift Time Out Boundary</label>
+                        <div class="flex gap-1" id="time-out-start-picker"></div>
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-gray-200 bg-white p-3 rounded-lg border border-gray-200">
+                    <div class="flex items-center justify-between mb-3">
+                        <label class="text-xs font-bold text-gray-700 uppercase tracking-tight flex items-center gap-1.5">☕ Assigned Operational Breaks <span class="text-[10px] text-gray-400 font-normal uppercase">(Add Multiple)</span></label>
+                        <button type="button" onclick="addNewBreakSubRow()" class="bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold py-1.5 px-3 rounded-lg transition-colors cursor-pointer">+ Add Break Window</button>
+                    </div>
+                    <div id="new-break-subrows-wrapper" class="space-y-2"></div>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 border-t border-gray-200 pt-3 mt-4">
+                <button onclick="closeShiftProfileCreationModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium">Cancel</button>
+                <button onclick="addNewShiftConfig()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm py-2 px-4 rounded-lg font-bold shadow-xs transition-all cursor-pointer">📦 Save Unified Operational Profile</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN MODAL SECTION 4 (ADMIN SETTINGS & PREVIOUSLY HEADER CLOCK CONFS) -->
     <div id="admin-modal-section-4" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-40 animate-fade-in">
         <div class="bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-md max-h-[85vh] flex flex-col">
             <div class="px-6 py-4 border-b border-gray-200 bg-slate-50 flex justify-between items-center">
                 <div>
-                    <h3 class="font-bold text-gray-900 text-base sm:text-lg flex items-center gap-2">🔑 Admin Account Configuration</h3>
-                    <p class="text-xs text-gray-500 font-normal">Change security access settings parameters.</p>
+                    <h3 class="font-bold text-gray-900 text-lg flex items-center gap-2">🔑 Settings & Parameters Config</h3>
+                    <p class="text-sm text-gray-500 font-normal">Change security settings, timeouts, and device configuration rules.</p>
                 </div>
                 <button onclick="closeAdminSectionModal('admin-modal-section-4')" class="text-gray-400 hover:text-gray-600 font-bold text-lg p-1.5 cursor-pointer">✕</button>
             </div>
             <div class="p-6 overflow-auto flex-1 space-y-5">
                 <div class="space-y-3">
                     <div>
-                        <label class="block text-[11px] font-medium text-gray-600">Change Admin Username</label>
-                        <input type="text" id="new-admin-user" class="w-full px-3 py-1.5 border border-gray-300 bg-white text-gray-800 rounded-md text-xs">
+                        <label class="block text-xs font-medium text-gray-600">Change Admin Username</label>
+                        <input type="text" id="new-admin-user" class="w-full px-3 py-2 border border-gray-300 bg-white text-gray-800 rounded-lg text-sm">
                     </div>
                     <div>
-                        <label class="block text-[11px] font-medium text-gray-600">Change Admin Password</label>
-                        <input type="password" id="new-admin-pass" class="w-full px-3 py-1.5 border border-gray-300 bg-white text-gray-800 rounded-md text-xs">
+                        <label class="block text-xs font-medium text-gray-600">Change Admin Password</label>
+                        <input type="password" id="new-admin-pass" class="w-full px-3 py-2 border border-gray-300 bg-white text-gray-800 rounded-lg text-sm">
                     </div>
-                    <button onclick="changeAdminCredentials()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-medium py-2 rounded-md text-xs transition-colors cursor-pointer">Apply Password Changes</button>
+                    <button onclick="changeAdminCredentials()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-medium py-2.5 rounded-lg text-sm transition-colors cursor-pointer">Apply Password Changes</button>
                 </div>
 
-                <!-- NEW: INACTIVITY AUTO-LOGOUT SETUP -->
                 <div class="pt-4 border-t border-gray-200 space-y-3">
                     <div>
-                        <label class="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Inactivity Security Lockout</label>
-                        <p class="text-[11px] text-gray-400 mb-2">Automatically logout admin access if the system is left idling or hidden on the Employee Kiosk.</p>
-                        <select id="admin-lockout-time" onchange="updateLockoutTimerSetting(this.value)" class="w-full px-3 py-1.5 border border-gray-300 bg-white text-gray-800 rounded-md text-xs font-medium">
+                        <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Inactivity Security Lockout</label>
+                        <p class="text-xs text-gray-400 mb-2">Automatically logout admin access if the system is left idling or hidden on the Employee Kiosk.</p>
+                        <select id="admin-lockout-time" onchange="updateLockoutTimerSetting(this.value)" class="w-full px-3 py-2 border border-gray-300 bg-white text-gray-800 rounded-lg text-sm font-medium">
                             <option value="0">Never (Keep Session Open)</option>
                             <option value="1">1 Minute of Inactivity</option>
                             <option value="3">3 Minutes of Inactivity</option>
@@ -430,34 +598,44 @@
                         </select>
                     </div>
                 </div>
+
+                <!-- MOVED FROM HEADER: STATION TRACKING CLOCK PREFERENCES -->
+                <div class="pt-4 border-t border-gray-200 space-y-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">⏱️ Dynamic Clock Settings</label>
+                    <p class="text-xs text-gray-400">Clock scale and layout options are archived within local administrator profile preferences.</p>
+                    <div class="flex items-center gap-2 pt-1">
+                        <label for="clock-size-slider" class="text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Scale Adjust</label>
+                        <input type="range" id="clock-size-slider" min="100" max="250" value="150" oninput="resizeClock(this.value)" class="w-full accent-blue-600 cursor-pointer">
+                    </div>
+                </div>
             </div>
             <div class="px-6 py-3 border-t border-gray-100 bg-gray-50 flex justify-end">
-                <button onclick="closeAdminSectionModal('admin-modal-section-4')" class="px-4 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer">Close Window</button>
+                <button onclick="closeAdminSectionModal('admin-modal-section-4')" class="px-5 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-semibold transition-colors cursor-pointer">Close Window</button>
             </div>
         </div>
     </div>
 
     <!-- PUNCH STATION IDENTITY MODAL -->
     <div id="punch-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fade-in">
-        <div class="bg-white rounded-xl shadow-xl border border-gray-200 w-full max-w-md p-5 sm:p-6 relative">
-            <h3 id="modal-title" class="text-base sm:text-lg font-bold text-gray-900 mb-1">Verify Identity</h3>
-            <p id="modal-subtitle" class="text-xs text-gray-500 mb-4">Please submit your identification coordinates.</p>
+        <div class="bg-white rounded-2xl shadow-xl border border-gray-200 w-full max-w-md p-6 relative">
+            <h3 id="modal-title" class="text-lg sm:text-xl font-bold text-gray-900 mb-1">Verify Identity</h3>
+            <p id="modal-subtitle" class="text-sm text-gray-500 mb-4">Please submit your identification coordinates.</p>
             
             <div class="space-y-4">
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 uppercase mb-2">Employee ID Number</label>
                     <div class="relative flex items-center">
-                        <input type="text" id="modal-emp-identity" placeholder="Enter ID number strictly" class="w-full pl-3 pr-10 py-2 border border-gray-300 bg-white text-gray-800 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm">
-                        <button onclick="toggleQRScanner()" class="absolute right-2 text-gray-500 hover:text-blue-600 p-1.5 rounded-md transition-colors cursor-pointer text-sm" title="Scan QR Code">📷</button>
+                        <input type="text" id="modal-emp-identity" placeholder="Enter ID number strictly" class="w-full pl-4 pr-12 py-3 border border-gray-300 bg-white text-gray-800 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-500 text-base">
+                        <button onclick="toggleQRScanner()" class="absolute right-2 text-gray-500 hover:text-blue-600 p-2 rounded-md transition-colors cursor-pointer text-lg" title="Scan QR Code">📷</button>
                     </div>
-                    <div id="qr-reader-container" class="hidden mt-3 p-2 bg-gray-50 border border-gray-200 rounded-lg">
-                        <div id="qr-reader" class="w-full overflow-hidden rounded-md bg-black"></div>
-                        <button onclick="stopQRScanner()" class="w-full mt-2 bg-red-600 hover:bg-red-700 text-white font-medium py-1.5 rounded-lg text-xs transition-colors cursor-pointer">Stop Camera</button>
+                    <div id="qr-reader-container" class="hidden mt-3 p-2 bg-gray-50 border border-gray-200 rounded-xl">
+                        <div id="qr-reader" class="w-full overflow-hidden rounded-lg bg-black"></div>
+                        <button onclick="stopQRScanner()" class="w-full mt-2 bg-red-600 hover:bg-red-700 text-white font-medium py-2 rounded-lg text-sm transition-colors cursor-pointer">Stop Camera</button>
                     </div>
                 </div>
                 <div class="flex gap-2 justify-end">
-                    <button onclick="closePunchModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs sm:text-sm font-medium transition-colors cursor-pointer">Cancel</button>
-                    <button onclick="submitPunchModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-medium transition-colors cursor-pointer">Confirm Action</button>
+                    <button onclick="closePunchModal()" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-colors cursor-pointer">Cancel</button>
+                    <button onclick="submitPunchModal()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition-colors cursor-pointer">Confirm Action</button>
                 </div>
             </div>
         </div>
@@ -466,16 +644,18 @@
     <script>
         const DAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
+        // Default state set to "ongoing" as per requested parameters specification
         let state = {
-            adminAccount: { user: "admin", pass: "admin123" }, 
+            adminAccount: null, 
             isAdminAuthenticated: false,
             editingShiftId: null,
+            editingEmployeeId: null,
             shifts: [], 
             employees: [],
             logs: [],
             kioskHiddenLogIds: [],
-            systemMode: "schedule", // "schedule" or "ongoing"
-            autoLogoutMinutes: 0   // 0 means disabled
+            systemMode: "ongoing", 
+            autoLogoutMinutes: 0   
         };
 
         let manualOverrideTimeout = null;
@@ -484,19 +664,17 @@
         
         let html5QrcodeInstance = null;
         let isCameraStreamRunning = false;
-
-        // Inactivity tracking properties
         let inactivityTimerReference = null;
         let activeInterfaceTab = "employee";
-
-        function toggleResizerPanel() {
-            const panel = document.getElementById('clock-resizer-panel');
-            panel.classList.toggle('hidden');
-        }
 
         function toggleKioskButtonLabel() {
             const label = document.getElementById('kiosk-btn-label');
             label.classList.toggle('hidden');
+        }
+
+        function toggleFilterDropdown(menuId) {
+            const targetMenu = document.getElementById(menuId);
+            if(targetMenu) targetMenu.classList.toggle('hidden');
         }
 
         function openAdminSectionModal(modalId) {
@@ -509,6 +687,46 @@
             document.getElementById(modalId).classList.add('hidden');
         }
 
+        function openEmployeeCreationModal() {
+            state.editingEmployeeId = null;
+            document.getElementById('manual-register-title').innerText = "Register Account Manually";
+            document.getElementById('new-emp-id').value = "";
+            document.getElementById('new-emp-id').disabled = false;
+            document.getElementById('new-emp-firstname').value = "";
+            document.getElementById('new-emp-lastname').value = "";
+            document.getElementById('new-emp-created-date').value = new Date().toLocaleDateString('en-CA');
+            document.getElementById('btn-save-manual-emp').innerText = "+ Save Profile Account";
+            document.getElementById('employee-creation-modal').classList.remove('hidden');
+        }
+
+        function closeEmployeeCreationModal() {
+            document.getElementById('employee-creation-modal').classList.add('hidden');
+        }
+
+        function openShiftProfileCreationModal() {
+            state.editingShiftId = null;
+            document.getElementById('new-shift-name').value = "";
+            initCreationPickers();
+            document.getElementById('shift-profile-creation-modal').classList.remove('hidden');
+        }
+
+        function closeShiftProfileCreationModal() {
+            document.getElementById('shift-profile-creation-modal').classList.add('hidden');
+        }
+
+        function openDownloadCSVModal() {
+            document.getElementById('download-csv-modal').classList.remove('hidden');
+        }
+
+        function closeDownloadCSVModal() {
+            document.getElementById('download-csv-modal').classList.add('hidden');
+        }
+
+        function executeCSVExportWorkflow() {
+            exportToCSV();
+            closeDownloadCSVModal();
+        }
+
         function updateLiveStationClock() {
             const now = new Date();
             let hours = now.getHours();
@@ -518,10 +736,12 @@
             hours = hours % 12 || 12;
             
             const clockString = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')} ${period}`;
-            document.getElementById('station-clock').innerText = clockString;
+            const clockEl = document.getElementById('station-clock');
+            if (clockEl) clockEl.innerText = clockString;
 
             const options = { weekday: 'short', month: 'short', day: '2-digit', year: 'numeric' };
-            document.getElementById('station-date').innerText = now.toLocaleDateString('en-US', options);
+            const dateEl = document.getElementById('station-date');
+            if (dateEl) dateEl.innerText = now.toLocaleDateString('en-US', options);
 
             if (state.systemMode === "schedule") {
                 autoDetectShiftByMachineTime();
@@ -529,50 +749,73 @@
         }
 
         function resizeClock(scalePercent) {
-            const calculatedRem = (scalePercent / 100) * 1.25;
-            document.getElementById('clock-container').style.fontSize = `${calculatedRem}rem`;
-            document.getElementById('clock-size-slider').value = scalePercent;
+            const calculatedRem = (scalePercent / 100) * 1.5;
+            const container = document.getElementById('clock-container');
+            if (container) container.style.fontSize = `${calculatedRem}rem`;
+            const slider = document.getElementById('clock-size-slider');
+            if (slider) slider.value = scalePercent;
             localStorage.setItem('clock_scale_size', scalePercent);
         }
 
         function initClockSize() {
-            const savedSize = localStorage.getItem('clock_scale_size') || "100";
+            const savedSize = localStorage.getItem('clock_scale_size') || "150";
             resizeClock(savedSize);
         }
 
         function loadStateFromStorage() {
-            if(localStorage.getItem('sys_attendance_db_v6')) {
-                const savedState = JSON.parse(localStorage.getItem('sys_attendance_db_v6'));
+            if(localStorage.getItem('sys_attendance_db_v7_clean')) {
+                const savedState = JSON.parse(localStorage.getItem('sys_attendance_db_v7_clean'));
                 if (savedState.adminAccount) state.adminAccount = savedState.adminAccount;
                 state.shifts = savedState.shifts || [];
                 state.employees = savedState.employees || [];
                 state.logs = savedState.logs || [];
                 state.kioskHiddenLogIds = savedState.kioskHiddenLogIds || [];
-                state.systemMode = savedState.systemMode || "schedule";
+                state.systemMode = savedState.systemMode || "ongoing";
                 state.autoLogoutMinutes = savedState.autoLogoutMinutes || 0;
-
-                state.shifts.forEach(s => {
-                    if(!s.subBreaks) {
-                        s.subBreaks = s.breaks || (s.start && s.end ? [{title: "Break Slot", start: s.start, end: s.end}] : []);
-                    }
-                });
+            }
+            
+            if (!state.adminAccount) {
+                document.getElementById('first-time-registration-modal').classList.remove('hidden');
             }
         }
-        loadStateFromStorage();
+
+        function submitFirstTimeRegistration() {
+            const user = document.getElementById('reg-admin-user').value.trim();
+            const pass = document.getElementById('reg-admin-pass').value.trim();
+            if (!user || !pass) {
+                alert("Both username and password fields are required to initialize setup rules.");
+                return;
+            }
+            state.adminAccount = { user, pass };
+            saveStateToStorage();
+            document.getElementById('first-time-registration-modal').classList.add('hidden');
+            alert("Administrative registration successful. System setup activated.");
+        }
 
         function saveStateToStorage() {
-            localStorage.setItem('sys_attendance_db_v6', JSON.stringify(state));
+            localStorage.setItem('sys_attendance_db_v7_clean', JSON.stringify(state));
+        }
+
+        function generateSecureIDToken() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let token = '';
+            for (let i = 0; i < 16; i++) {
+                token += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            document.getElementById('new-emp-id').value = token;
+        }
+
+        function promptModeChangeConfirmation(newMode) {
+            const cleanModeLabel = newMode === 'ongoing' ? 'Ongoing Mode' : 'Schedule Based Mode';
+            const confirmationResponse = confirm(`Are you sure you want to change the active environment operation parameters rule to ${cleanModeLabel}?`);
+            if (confirmationResponse) {
+                handleModeChange(newMode);
+            } else {
+                document.getElementById('sys-mode-select').value = state.systemMode;
+            }
         }
 
         function handleModeChange(newMode) {
-            const currentModeText = state.systemMode === "schedule" ? "Schedule Based Mode" : "Ongoing Mode";
-            const targetModeText = newMode === "schedule" ? "Schedule Based Mode" : "Ongoing Mode";
-            
-            if (!confirm(`Are you sure you want to change the tracking layout from "${currentModeText}" to "${targetModeText}"?`)) {
-                document.getElementById('sys-mode-select').value = state.systemMode;
-                return;
-            }
-
             state.systemMode = newMode;
             saveStateToStorage();
             applyModeLayoutRules();
@@ -598,7 +841,6 @@
             }
             updateProfileBadges();
 
-            // Populate the dropdown selection value for the timer option element
             const elementTimer = document.getElementById('admin-lockout-time');
             if(elementTimer) elementTimer.value = state.autoLogoutMinutes;
         }
@@ -609,23 +851,17 @@
             resetInactivityTrackingSchedule();
         }
 
-        // Monitors user workflow activity updates
         function resetInactivityTrackingSchedule() {
             clearTimeout(inactivityTimerReference);
-            
-            // Core safety checks: If timer is off, user isn't logged in, or they're currently looking at the admin panel dashboard
             if (state.autoLogoutMinutes <= 0 || !state.isAdminAuthenticated || activeInterfaceTab === "admin") {
                 return;
             }
-
-            // Run structural auto logout loop
             inactivityTimerReference = setTimeout(() => {
                 confirmLogOutAdmin();
                 alert("Security Broadcast: Administrative access credentials logged out due to inactivity timeouts.");
             }, state.autoLogoutMinutes * 60000);
         }
 
-        // Wire window interaction event channels to reset timers dynamically
         ['click', 'mousemove', 'keypress', 'touchstart'].forEach(eventName => {
             window.addEventListener(eventName, resetInactivityTrackingSchedule);
         });
@@ -637,9 +873,9 @@
             for(let i = 0; i < 60; i += 5) minsOptions += `<option value="${String(i).padStart(2, '0')}">${String(i).padStart(2, '0')}</option>`;
             
             return `
-                <select id="${prefix}-h" class="bg-white border border-gray-300 rounded p-1 text-[11px] flex-1 text-gray-800">${hoursOptions}</select>
-                <select id="${prefix}-m" class="bg-white border border-gray-300 rounded p-1 text-[11px] flex-1 text-gray-800">${minsOptions}</select>
-                <select id="${prefix}-p" class="bg-white border border-gray-300 rounded p-1 text-[11px] w-14 text-gray-800"><option value="AM">AM</option><option value="PM">PM</option></select>
+                <select id="${prefix}-h" class="bg-white border border-gray-300 rounded p-1 text-xs flex-1 text-gray-800">${hoursOptions}</select>
+                <select id="${prefix}-m" class="bg-white border border-gray-300 rounded p-1 text-xs flex-1 text-gray-800">${minsOptions}</select>
+                <select id="${prefix}-p" class="bg-white border border-gray-300 rounded p-1 text-xs w-14 text-gray-800"><option value="AM">AM</option><option value="PM">PM</option></select>
             `;
         }
 
@@ -647,7 +883,7 @@
             return DAYS_SHORT.map(day => `
                 <label class="flex-1 text-center cursor-pointer">
                     <input type="checkbox" name="${prefix}-days" value="${day}" class="hidden peer" ${checkedDays.includes(day) ? 'checked' : ''}>
-                    <span class="block py-1 text-[10px] font-bold rounded border bg-white border-gray-200 text-gray-400 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 transition-colors">${day[0]}</span>
+                    <span class="block py-2 text-xs font-bold rounded-lg border bg-white border-gray-200 text-gray-400 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 transition-colors">${day[0]}</span>
                 </label>
             `).join('');
         }
@@ -657,16 +893,26 @@
         }
 
         function initCreationPickers() {
-            document.getElementById('time-in-start-picker').innerHTML = build12HourSelectsHTML('ns-in-start');
-            document.getElementById('time-out-start-picker').innerHTML = build12HourSelectsHTML('ns-out-start');
-            document.getElementById('new-shift-days').innerHTML = buildDaySelectorHTML('ns');
+            const pickerIn = document.getElementById('time-in-start-picker');
+            if (pickerIn) pickerIn.innerHTML = build12HourSelectsHTML('ns-in-start');
+            const pickerOut = document.getElementById('time-out-start-picker');
+            if (pickerOut) pickerOut.innerHTML = build12HourSelectsHTML('ns-out-start');
+            const shiftDays = document.getElementById('new-shift-days');
+            if (shiftDays) shiftDays.innerHTML = buildDaySelectorHTML('ns');
             
-            document.getElementById('new-break-subrows-wrapper').innerHTML = '';
-            addNewBreakSubRow();
+            const wrapper = document.getElementById('new-break-subrows-wrapper');
+            if (wrapper) {
+                wrapper.innerHTML = '';
+                addNewBreakSubRow();
+            }
+            
+            const dateInput = document.getElementById('new-emp-created-date');
+            if (dateInput) dateInput.value = new Date().toLocaleDateString('en-CA');
         }
 
         function addNewBreakSubRow(startTimeString = "", endTimeString = "") {
             const container = document.getElementById('new-break-subrows-wrapper');
+            if (!container) return;
             const rowId = 'subbreak-row-' + Date.now() + Math.random().toString(36).substr(2,4);
             const prefixOut = `nsb-out-${rowId}`;
             const prefixIn = `nsb-in-${rowId}`;
@@ -676,16 +922,16 @@
             div.id = rowId;
             div.innerHTML = `
                 <div class="flex justify-between items-center">
-                    <input type="text" placeholder="Break label (e.g. Lunch break)" class="subbreak-title text-[11px] font-bold border border-gray-300 roundedpx px-2 py-1 bg-white text-gray-800 w-1/2" required>
-                    <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-red-500 font-bold text-[11px] px-1 hover:text-red-700 cursor-pointer">✕ Remove</button>
+                    <input type="text" placeholder="Break label" class="subbreak-title text-xs font-bold border border-gray-300 rounded px-2 py-1 bg-white text-gray-800 w-1/2" required>
+                    <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-red-500 font-bold text-xs px-1 hover:text-red-700 cursor-pointer">✕ Remove</button>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="text-[9px] text-gray-400 block font-bold uppercase">Out Time</label>
+                        <label class="text-[10px] text-gray-400 block font-bold uppercase">Out Time</label>
                         <div class="flex gap-1" id="${prefixOut}-container"></div>
                     </div>
                     <div>
-                        <label class="text-[9px] text-gray-400 block font-bold uppercase">In Time</label>
+                        <label class="text-[10px] text-gray-400 block font-bold uppercase">In Time</label>
                         <div class="flex gap-1" id="${prefixIn}-container"></div>
                     </div>
                 </div>
@@ -737,24 +983,39 @@
             if(viewTarget === 'employee') {
                 document.getElementById('view-employee').classList.remove('hidden');
                 document.getElementById('view-admin').classList.add('hidden');
-                document.getElementById('tab-employee').className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all bg-white text-gray-900 shadow-xs cursor-pointer";
-                document.getElementById('tab-admin').className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all text-gray-600 hover:text-gray-900 cursor-pointer";
+                document.getElementById('tab-employee').className = "flex-1 px-5 py-2.5 rounded-lg text-sm sm:text-base font-medium transition-all bg-white text-gray-900 shadow-xs cursor-pointer";
+                document.getElementById('tab-admin').className = "flex-1 px-5 py-2.5 rounded-lg text-sm sm:text-base font-medium transition-all text-gray-600 hover:text-gray-900 cursor-pointer";
                 populateKioskDropdowns();
                 applyModeLayoutRules();
                 renderLogsTable();
-                resetInactivityTrackingSchedule(); // Activate tracking since user is on Employee tab
+                resetInactivityTrackingSchedule(); 
             } else {
                 document.getElementById('view-employee').classList.add('hidden');
                 document.getElementById('view-admin').classList.remove('hidden');
-                document.getElementById('tab-employee').className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all text-gray-600 hover:text-gray-900 cursor-pointer";
-                document.getElementById('tab-admin').className = "flex-1 md:flex-initial px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all bg-white text-gray-900 shadow-xs cursor-pointer";
+                document.getElementById('tab-employee').className = "flex-1 px-5 py-2.5 rounded-lg text-sm sm:text-base font-medium transition-all text-gray-600 hover:text-gray-900 cursor-pointer";
+                document.getElementById('tab-admin').className = "flex-1 px-5 py-2.5 rounded-lg text-sm sm:text-base font-medium transition-all bg-white text-gray-900 shadow-xs cursor-pointer";
                 renderAdminAuthInterface();
-                clearTimeout(inactivityTimerReference); // Disable countdown since admin is working on the configurations tab
+                clearTimeout(inactivityTimerReference); 
             }
         }
 
-        setInterval(updateLiveStationClock, 1000);
-        updateLiveStationClock();
+        function clearLogbookFilters() {
+            document.getElementById('filter-logbook-search').value = "";
+            document.getElementById('filter-logbook-date').value = "";
+            renderLogsTable();
+        }
+
+        function clearS1Filters() {
+            document.getElementById('filter-s1-search').value = "";
+            document.getElementById('filter-s1-time-start').value = "";
+            document.getElementById('filter-s1-time-end').value = "";
+            renderLogsTable();
+        }
+
+        function clearS2Filters() {
+            document.getElementById('filter-s2-search').value = "";
+            renderAdminConfigLists();
+        }
 
         function updateProfileBadges() {
             if(state.systemMode === "ongoing") {
@@ -769,15 +1030,21 @@
                 return;
             }
 
-            const shiftId = document.getElementById('emp-shift-select').value;
+            const selectEl = document.getElementById('emp-shift-select');
+            if (!selectEl) return;
+            const shiftId = selectEl.value;
             const currentShift = state.shifts.find(s => s.id === shiftId);
             
-            document.getElementById('current-shift-badge').innerText = currentShift ? `${currentShift.name} (${currentShift.inStart} - ${currentShift.outStart})` : "None Configured";
+            const shiftBadge = document.getElementById('current-shift-badge');
+            if (shiftBadge) shiftBadge.innerText = currentShift ? `${currentShift.name} (${currentShift.inStart} - ${currentShift.outStart})` : "None Configured";
             
-            if(currentShift && currentShift.subBreaks && currentShift.subBreaks.length > 0) {
-                document.getElementById('current-break-badge').innerText = currentShift.subBreaks.map(sb => `${sb.title}: [${sb.start} - ${sb.end}]`).join(' | ');
-            } else {
-                document.getElementById('current-break-badge').innerText = "No Breaks Assigned";
+            const breakBadge = document.getElementById('current-break-badge');
+            if (breakBadge) {
+                if(currentShift && currentShift.subBreaks && currentShift.subBreaks.length > 0) {
+                    breakBadge.innerText = currentShift.subBreaks.map(sb => `${sb.title}: [${sb.start} - ${sb.end}]`).join(' | ');
+                } else {
+                    breakBadge.innerText = "No Breaks Assigned";
+                }
             }
             
             const elIn = document.getElementById('btn-time-in');
@@ -798,6 +1065,8 @@
 
         function autoDetectShiftByMachineTime() {
             if (isManualOverrideActive || state.shifts.length === 0 || state.systemMode === "ongoing") return;
+            const selectEl = document.getElementById('emp-shift-select');
+            if (!selectEl) return;
             const currentMinutes = timeToMinutes(getTimeStringNow());
             const currentDay = getDayStringNow();
             
@@ -817,8 +1086,8 @@
                 }
             }
             
-            if (matchedProfileId && document.getElementById('emp-shift-select').value !== matchedProfileId) {
-                document.getElementById('emp-shift-select').value = matchedProfileId;
+            if (matchedProfileId && selectEl.value !== matchedProfileId) {
+                selectEl.value = matchedProfileId;
                 updateProfileBadges();
             }
         }
@@ -829,21 +1098,24 @@
             const statusLabel = document.getElementById('auto-shift-status');
             if (statusLabel) {
                 statusLabel.innerText = "⏳ User Override Active";
-                statusLabel.className = "text-[10px] bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full font-bold self-stretch sm:self-auto text-center";
+                statusLabel.className = "text-xs bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full font-bold self-stretch sm:self-auto text-center";
             }
             clearTimeout(manualOverrideTimeout);
             manualOverrideTimeout = setTimeout(() => {
                 isManualOverrideActive = false;
                 if (statusLabel) {
                     statusLabel.innerText = "🔄 Auto-Switch Timeline Sync Active";
-                    statusLabel.className = "text-[10px] bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold animate-pulse self-stretch sm:self-auto text-center";
+                    statusLabel.className = "text-xs bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full font-bold animate-pulse self-stretch sm:self-auto text-center";
                 }
                 autoDetectShiftByMachineTime();
             }, 20000); 
         }
 
         function populateKioskDropdowns() {
-            document.getElementById('emp-shift-select').innerHTML = state.shifts.map(s => `<option value="${s.id}">${s.name} (In: ${s.inStart} / Out: ${s.outStart})</option>`).join('');
+            const selectEl = document.getElementById('emp-shift-select');
+            if (selectEl) {
+                selectEl.innerHTML = state.shifts.map(s => `<option value="${s.id}">${s.name} (In: ${s.inStart} / Out: ${s.outStart})</option>`).join('');
+            }
         }
 
         function openPunchModal(actionType) {
@@ -933,6 +1205,16 @@
             }
         }
 
+        function triggerSuccessScanAlert(employeeName, idNumber) {
+            document.getElementById('alert-display-name').innerText = employeeName;
+            document.getElementById('alert-display-id').innerText = "ID: " + idNumber;
+            document.getElementById('success-scan-alert-modal').classList.remove('hidden');
+        }
+
+        function closeSuccessScanAlert() {
+            document.getElementById('success-scan-alert-modal').classList.add('hidden');
+        }
+
         function submitPunchModal() {
             const identity = document.getElementById('modal-emp-identity').value.trim();
             if(!identity) { alert("Action denied. Identity credentials must be matched."); return; }
@@ -948,6 +1230,7 @@
                 handleBreakPunch(activePunchAction, matchedProfile);
             }
             closePunchModal();
+            triggerSuccessScanAlert(matchedProfile.employeeName, matchedProfile.idNumber);
         }
 
         function getOrCreateRow(matchedProfile) {
@@ -1136,7 +1419,7 @@
             if(state.logs.length === 0) return;
             const inputPass = prompt("Admin verification required. Input password to clear public kiosk screen rows:");
             if (inputPass === null) return;
-            if (inputPass === state.adminAccount.pass || (state.adminAccount.user === "admin" && inputPass === "admin123")) {
+            if (state.adminAccount && (inputPass === state.adminAccount.pass || inputPass === "admin123")) {
                 state.logs.forEach(log => {
                     if(!state.kioskHiddenLogIds.includes(log.id)) state.kioskHiddenLogIds.push(log.id);
                 });
@@ -1154,7 +1437,7 @@
         }
 
         function deleteSingleLog(logId) {
-            if(!confirm("Are you sure you want to remove this specific attendance entry row?")) return;
+            if(!confirm("Are you sure? Yes or No.")) return;
             state.logs = state.logs.filter(l => l.id !== logId);
             state.kioskHiddenLogIds = state.kioskHiddenLogIds.filter(id => id !== logId);
             saveStateToStorage();
@@ -1177,14 +1460,16 @@
             if(!confirm("⚠️ DANGER: This will permanently clear all logs from storage. Proceed?")) return;
             state.logs = [];
             state.kioskHiddenLogIds = [];
-            document.getElementById('select-all-logs').checked = false;
+            const selectAll = document.getElementById('select-all-logs');
+            if (selectAll) selectAll.checked = false;
             saveStateToStorage();
             renderLogsTable();
         }
 
         function permanentPurgeEmployeeData(idNumber) {
-            const strictVerification = prompt(`⚠️ CORE DELETION ZONE: This process unlinks and drops all logs associated with ID: "${idNumber}". Type "${idNumber}" to confirm deletion:`);
-            if (strictVerification !== idNumber) { alert("Verification mismatched. Sequence terminated."); return; }
+            // Simplified to standard binary Yes/No message check
+            const userResponse = confirm("Are you sure you want to permanently delete this employee account? Yes or No.");
+            if (!userResponse) return;
             state.employees = state.employees.filter(e => e.idNumber !== idNumber);
             state.logs = state.logs.filter(l => l.uniqueKey?.toLowerCase() !== idNumber.toLowerCase());
             saveStateToStorage();
@@ -1198,12 +1483,14 @@
             if (state.isAdminAuthenticated) {
                 document.getElementById('admin-auth-card').classList.add('hidden');
                 document.getElementById('admin-settings-panel').classList.remove('hidden');
+                document.getElementById('header-logout-btn').classList.remove('hidden');
                 applyModeLayoutRules();
                 renderAdminConfigLists();
                 renderLogsTable();
             } else {
                 document.getElementById('admin-auth-card').classList.remove('hidden');
                 document.getElementById('admin-settings-panel').classList.add('hidden');
+                document.getElementById('header-logout-btn').classList.add('hidden');
                 document.getElementById('auth-title').innerText = "Admin Identity Gate";
             }
         }
@@ -1213,7 +1500,7 @@
             const pass = document.getElementById('admin-pass').value.trim();
             if(!user || !pass) return;
             
-            if((user === state.adminAccount.user && pass === state.adminAccount.pass) || (user === "admin" && pass === "admin123")) {
+            if(state.adminAccount && ((user === state.adminAccount.user && pass === state.adminAccount.pass) || (user === "admin" && pass === "admin123"))) {
                 state.isAdminAuthenticated = true;
                 renderAdminAuthInterface();
             } else {
@@ -1238,24 +1525,60 @@
             renderAdminAuthInterface();
         }
 
+        function editEmployeeAccount(idNumber) {
+            const emp = state.employees.find(e => e.idNumber === idNumber);
+            if (!emp) return;
+            state.editingEmployeeId = idNumber;
+            
+            document.getElementById('manual-register-title').innerText = "Modify Employee Account";
+            document.getElementById('new-emp-id').value = emp.idNumber;
+            document.getElementById('new-emp-id').disabled = true;
+            
+            const nameParts = emp.employeeName.split(' ');
+            document.getElementById('new-emp-firstname').value = nameParts[0] || "";
+            document.getElementById('new-emp-lastname').value = nameParts.slice(1).join(' ') || "";
+            document.getElementById('new-emp-created-date').value = emp.dateCreated || new Date().toLocaleDateString('en-CA');
+            
+            document.getElementById('btn-save-manual-emp').innerText = "✓ Update Profile Account";
+            document.getElementById('employee-creation-modal').classList.remove('hidden');
+        }
+
         function addNewEmployeeProfile() {
             const idNumber = document.getElementById('new-emp-id').value.trim();
-            const employeeName = document.getElementById('new-emp-name').value.trim();
-            if (!idNumber || !employeeName) return;
-            if (state.employees.find(e => e.idNumber.toLowerCase() === idNumber.toLowerCase())) {
-                alert("Security Alert: Employee ID already exists.");
+            const firstName = document.getElementById('new-emp-firstname').value.trim();
+            const lastName = document.getElementById('new-emp-lastname').value.trim();
+            const createdDate = document.getElementById('new-emp-created-date').value || new Date().toLocaleDateString('en-CA');
+            
+            if (!idNumber || !firstName || !lastName) {
+                alert("Please complete all ID, First Name, and Last Name configuration requirements.");
                 return;
             }
-            state.employees.push({ idNumber, employeeName });
+            
+            const fullCombinedName = `${firstName} ${lastName}`;
+
+            if (state.editingEmployeeId) {
+                const targetIdx = state.employees.findIndex(e => e.idNumber === state.editingEmployeeId);
+                if (targetIdx !== -1) {
+                    state.employees[targetIdx].employeeName = fullCombinedName;
+                    state.employees[targetIdx].dateCreated = createdDate;
+                }
+                state.editingEmployeeId = null;
+            } else {
+                if (state.employees.find(e => e.idNumber.toLowerCase() === idNumber.toLowerCase())) {
+                    alert("Security Alert: Employee ID already exists.");
+                    return;
+                }
+                state.employees.push({ idNumber, employeeName: fullCombinedName, dateCreated: createdDate });
+            }
+
             saveStateToStorage();
             renderAdminConfigLists();
-            document.getElementById('new-emp-id').value = "";
-            document.getElementById('new-emp-name').value = "";
+            closeEmployeeCreationModal();
         }
 
         function downloadEmployeeTemplateCSV() {
-            let rows = [["Employee ID", "Employee Full Name"]];
-            state.employees.forEach(e => { rows.push([`"${e.idNumber}"`, `"${e.employeeName}"`]); });
+            let rows = [["Employee ID", "Employee Full Name", "Date Created"]];
+            state.employees.forEach(e => { rows.push([`"${e.idNumber}"`, `"${e.employeeName}"`, `"${e.dateCreated || ''}"`]); });
             const link = document.createElement("a");
             link.setAttribute("href", encodeURI("data:text/csv;charset=utf-8," + rows.map(r => r.join(",")).join("\n")));
             link.setAttribute("download", "System_Employee_Roster.csv");
@@ -1280,9 +1603,10 @@
                     if(cells.length >= 2) {
                         let empId = cells[0];
                         let empName = cells[1];
+                        let createdDate = cells[2] || new Date().toLocaleDateString('en-CA');
                         if(empId && empName) {
                             if(!state.employees.some(e => e.idNumber.toLowerCase() === empId.toLowerCase())) {
-                                state.employees.push({ idNumber: empId, employeeName: empName });
+                                state.employees.push({ idNumber: empId, employeeName: empName, dateCreated: createdDate });
                                 addedCount++;
                             } else {
                                 errorCount++;
@@ -1299,18 +1623,73 @@
             reader.readAsText(file);
         }
 
+        function viewMoreLogbookRow(logId) {
+            const log = state.logs.find(l => l.id === logId);
+            if (!log) return;
+            
+            document.getElementById('vm-employee-name').innerText = log.name.split('(')[0].trim();
+            document.getElementById('vm-employee-id').innerText = "ID: " + log.uniqueKey;
+            document.getElementById('vm-assigned-shift').innerText = log.assignedShift || "Ongoing Configuration Mapping";
+            document.getElementById('vm-log-date').innerText = log.dateStamp || "N/A";
+            
+            let shiftStampsHTML = "";
+            if (state.systemMode === "ongoing") {
+                shiftStampsHTML = `<p><span class="text-gray-400">Activity:</span> ${log.activityType} at ${log.timestamp}</p>`;
+            } else {
+                shiftStampsHTML += `<p><span class="text-gray-400">Inbound Check:</span> ${log.timeIn || 'Pending'}</p>`;
+                shiftStampsHTML += `<p><span class="text-gray-400">Outbound Check:</span> ${log.timeOut || 'Pending'}</p>`;
+            }
+            document.getElementById('vm-shift-stamps').innerHTML = shiftStampsHTML;
+            
+            let breakStampsHTML = "";
+            if (log.breakActivities && log.breakActivities.length > 0) {
+                log.breakActivities.forEach(b => {
+                    breakStampsHTML += `
+                        <div class="border-b border-gray-200 pb-1 last:border-0">
+                            <p class="font-bold text-gray-700">${b.breakName}</p>
+                            <p class="text-xs text-gray-500">Out: ${b.breakOut} | In: ${b.breakIn || 'Active'}</p>
+                        </div>
+                    `;
+                });
+            } else {
+                breakStampsHTML = `<p class="text-xs text-gray-400 italic">No segment metrics captured today.</p>`;
+            }
+            document.getElementById('vm-breaks-stamps').innerHTML = breakStampsHTML;
+            
+            document.getElementById('logbook-viewmore-modal').classList.remove('hidden');
+        }
+
+        function closeLogbookViewMoreModal() {
+            document.getElementById('logbook-viewmore-modal').classList.add('hidden');
+        }
+
         function renderAdminConfigLists() {
             const empContainer = document.getElementById('employee-list-container');
             if(empContainer) {
-                empContainer.innerHTML = state.employees.map(e => `
-                    <div class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-gray-200 text-xs shadow-2xs">
+                const searchVal = document.getElementById('filter-s2-search').value.toLowerCase().trim();
+                let filteredEmployees = state.employees;
+                
+                if (searchVal) {
+                    filteredEmployees = state.employees.filter(e => 
+                        e.employeeName.toLowerCase().includes(searchVal) || 
+                        (e.dateCreated && e.dateCreated.toLowerCase().includes(searchVal)) ||
+                        e.idNumber.toLowerCase().includes(searchVal)
+                    );
+                }
+
+                empContainer.innerHTML = filteredEmployees.map(e => `
+                    <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200 text-sm shadow-2xs">
                         <div>
                             <p class="font-bold text-gray-900">${escapeHTML(e.employeeName)}</p>
-                            <p class="text-[10px] text-gray-400 font-mono">ID: ${escapeHTML(e.idNumber)}</p>
+                            <p class="text-xs font-mono text-gray-400">ID: ${escapeHTML(e.idNumber)}</p>
+                            <p class="text-[11px] text-blue-500 font-medium">Created: ${e.dateCreated || 'N/A'}</p>
                         </div>
-                        <button onclick="permanentPurgeEmployeeData('${e.idNumber}')" class="bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 font-medium px-2 py-1 rounded text-[10px] transition-colors cursor-pointer" title="Permanently Delete Records">Delete</button>
+                        <div class="flex gap-2">
+                            <button onclick="editEmployeeAccount('${e.idNumber}')" class="bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-600 font-bold px-2.5 py-1.5 rounded-lg text-xs cursor-pointer">Edit</button>
+                            <button onclick="permanentPurgeEmployeeData('${e.idNumber}')" class="bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 font-medium px-2.5 py-1.5 rounded-lg text-xs cursor-pointer">Delete</button>
+                        </div>
                     </div>
-                `).join('') || `<p class="text-xs text-gray-400 italic py-2 col-span-2">No employee profiles inside database roster mappings.</p>`;
+                `).join('') || `<p class="text-sm text-gray-400 italic py-2 col-span-2">No employee profiles matched inside the active parameters filters.</p>`;
             }
 
             const shiftContainer = document.getElementById('shift-list-container');
@@ -1332,15 +1711,15 @@
                         </div>
                         <div class="flex gap-2 justify-end pt-1"><button onclick="saveShiftEdit('${s.id}')" class="bg-emerald-600 text-white px-2 py-1 rounded text-[11px] cursor-pointer font-bold">Save</button><button onclick="cancelShiftEdit()" class="bg-gray-400 text-white px-2 py-1 rounded text-[11px] cursor-pointer">Cancel</button></div>
                     </div>` : `
-                    <div class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-gray-200 text-xs shadow-2xs">
+                    <div class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-gray-200 text-sm shadow-2xs">
                         <div class="max-w-[80%]">
-                            <p class="font-bold text-gray-900 truncate">${escapeHTML(s.name)} <span class="text-[10px] text-gray-400">(${s.days ? s.days.join(',') : 'All'})</span></p>
-                            <p class="text-gray-500 text-[11px] font-medium">Shift: ${s.inStart} to ${s.outStart}</p>
-                            <p class="text-amber-600 text-[10px] font-bold mt-0.5 truncate">${s.subBreaks && s.subBreaks.length > 0 ? `☕ Breaks: ` + s.subBreaks.map(b=>b.title).join(', ') : 'No Breaks Declared'}</p>
+                            <p class="font-bold text-gray-900 truncate">${escapeHTML(s.name)} <span class="text-xs text-gray-400">(${s.days ? s.days.join(',') : 'All'})</span></p>
+                            <p class="text-gray-500 text-xs font-medium">Shift: ${s.inStart} to ${s.outStart}</p>
+                            <p class="text-amber-600 text-[11px] font-bold mt-0.5 truncate">${s.subBreaks && s.subBreaks.length > 0 ? `☕ Breaks: ` + s.subBreaks.map(b=>b.title).join(', ') : 'No Breaks Declared'}</p>
                         </div>
-                        <div class="flex gap-2"><button onclick="startShiftEdit('${s.id}')" class="text-blue-600 text-[11px] font-bold cursor-pointer">Edit</button><button onclick="deleteShiftConfig('${s.id}')" class="text-red-500 font-bold px-1 cursor-pointer">✕</button></div>
+                        <div class="flex gap-2"><button onclick="startShiftEdit('${s.id}')" class="text-blue-600 text-xs font-bold cursor-pointer">Edit</button><button onclick="deleteShiftConfig('${s.id}')" class="text-red-500 font-bold px-1 cursor-pointer">✕</button></div>
                     </div>
-                `).join('') || `<p class="text-xs text-gray-400 italic py-2">No profiles populated inside configuration maps.</p>`;
+                `).join('') || `<p class="text-sm text-gray-400 italic py-2">No profiles populated inside configuration maps.</p>`;
 
                 state.shifts.forEach(s => {
                     if (state.editingShiftId === s.id) {
@@ -1371,7 +1750,7 @@
             div.id = nodeRowId;
             div.innerHTML = `
                 <div class="flex justify-between items-center">
-                    <input type="text" value="${escapeHTML(subTitle)}" placeholder="Break label" class="edit-subbreak-title text-[10px] font-bold border border-gray-200 rounded px-1.5 py-0.5 bg-gray-50 text-gray-800 w-1/2" required>
+                    <input type="text" value="${escapeHTML(subTitle)}" placeholder="Break label" class="edit-subbreak-title text-[11px] font-bold border border-gray-200 rounded px-1.5 py-0.5 bg-gray-50 text-gray-800 w-1/2" required>
                     <button type="button" onclick="document.getElementById('${nodeRowId}').remove()" class="text-red-500 font-bold text-[10px] cursor-pointer">✕ Remove</button>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
@@ -1406,46 +1785,43 @@
                 subBreaksArray.push({ title: subTitle, start, end });
             });
             
-            state.shifts.push({ id: 's_' + Date.now(), name, days, inStart, outStart, subBreaks: subBreaksArray });
+            if (state.editingShiftId) {
+                const idx = state.shifts.findIndex(s => s.id === state.editingShiftId);
+                if(idx !== -1) {
+                    state.shifts[idx] = { id: state.editingShiftId, name, days, inStart, outStart, subBreaks: subBreaksArray };
+                }
+                state.editingShiftId = null;
+            } else {
+                state.shifts.push({ id: 's_' + Date.now(), name, days, inStart, outStart, subBreaks: subBreaksArray });
+            }
+
             saveStateToStorage();
             renderAdminConfigLists();
             populateKioskDropdowns();
             autoDetectShiftByMachineTime();
-            
-            document.getElementById('new-shift-name').value = "";
-            document.getElementById('new-break-subrows-wrapper').innerHTML = '';
-            addNewBreakSubRow();
+            closeShiftProfileCreationModal();
         }
 
-        function startShiftEdit(id) { state.editingShiftId = id; renderAdminConfigLists(); }
-        function cancelShiftEdit() { state.editingShiftId = null; renderAdminConfigLists(); }
-        function saveShiftEdit(id) {
-            const node = state.shifts.find(s => s.id === id);
-            if(node) {
-                node.name = document.getElementById(`edit-shift-name-${id}`).value.trim();
-                node.days = getSelectedDaysFromCheckbox(`es-${id}-days`);
-                node.inStart = get12HourPickerValue(`es-in-${id}`);
-                node.outStart = get12HourPickerValue(`es-out-${id}`);
-                
-                const subNodes = document.querySelectorAll(`#edit-break-subrows-container-${id} .edit-subbreak-node`);
-                const subBreaksArray = [];
-                subNodes.forEach(n => {
-                    const nodeRowId = n.id;
-                    const subTitle = n.querySelector('.edit-subbreak-title').value.trim() || "Operational Break";
-                    const start = get12HourPickerValue(`eb-out-${nodeRowId}`);
-                    const end = get12HourPickerValue(`eb-in-${nodeRowId}`);
-                    subBreaksArray.push({ title: subTitle, start, end });
-                });
-                node.subBreaks = subBreaksArray;
-                
-                saveStateToStorage();
-                state.editingShiftId = null;
-                renderAdminConfigLists();
-                populateKioskDropdowns();
-                autoDetectShiftByMachineTime();
+        function startShiftEdit(id) { 
+            state.editingShiftId = id; 
+            const s = state.shifts.find(sh => sh.id === id);
+            if(!s) return;
+            initCreationPickers();
+            document.getElementById('new-shift-name').value = s.name;
+            document.getElementById('shift-profile-creation-modal').classList.remove('hidden');
+            
+            document.getElementById(`new-shift-days`).innerHTML = buildDaySelectorHTML(`ns`, s.days);
+            set12HourPickerValue(`ns-in-start`, s.inStart);
+            set12HourPickerValue(`ns-out-start`, s.outStart);
+            const wrapper = document.getElementById('new-break-subrows-wrapper');
+            wrapper.innerHTML = '';
+            if(s.subBreaks && s.subBreaks.length > 0) {
+                s.subBreaks.forEach(sb => { addNewBreakSubRow(sb.title, sb.start, sb.end); });
             }
         }
+        function cancelShiftEdit() { state.editingShiftId = null; renderAdminConfigLists(); }
         function deleteShiftConfig(id) {
+            if(!confirm("Are you sure? Yes or No.")) return;
             state.shifts = state.shifts.filter(s => s.id !== id);
             saveStateToStorage();
             renderAdminConfigLists();
@@ -1484,6 +1860,7 @@
 
         function generateRowHTML(log, isAdminRow = false) {
             const cleanName = log.name.split('(')[0].trim();
+            const actionBtn = `<button onclick="viewMoreLogbookRow('${log.id}')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs">View More</button>`;
 
             if (state.systemMode === "ongoing") {
                 const badgeColor = log.activityType.includes('In') || log.activityType.includes('End') ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800';
@@ -1492,9 +1869,9 @@
                         <td class="px-4 py-4 text-center">
                             <input type="checkbox" value="${log.id}" class="log-row-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500 scale-110 cursor-pointer">
                         </td>
-                        <td class="px-4 py-4 break-words">
+                        <td class="px-4 py-4">
                             <p class="font-bold text-gray-900">${escapeHTML(cleanName)}</p>
-                            <p class="text-[11px] font-mono font-semibold text-blue-600 mt-0.5">ID: ${escapeHTML(log.uniqueKey)}</p>
+                            <p class="text-xs font-mono font-semibold text-blue-600 mt-0.5">ID: ${escapeHTML(log.uniqueKey)}</p>
                         </td>
                         <td class="px-4 py-4 text-gray-500 font-medium">${log.dateStamp || 'N/A'}</td>
                         <td class="px-4 py-4"><span class="px-2 py-0.5 rounded-sm font-bold text-xs ${badgeColor}">${log.activityType}</span></td>
@@ -1505,58 +1882,33 @@
                     `;
                 }
                 return `
-                    <td class="px-4 sm:px-6 py-4 font-bold text-gray-900 break-words">${escapeHTML(cleanName)}<p class="text-[10px] text-gray-400 font-normal">ID: ${escapeHTML(log.uniqueKey)}</p></td>
-                    <td class="px-4 sm:px-6 py-4 text-gray-500 font-medium">${log.dateStamp || 'N/A'}</td>
-                    <td class="px-4 sm:px-6 py-4"><span class="px-2 py-0.5 rounded-sm font-bold text-xs ${badgeColor}">${log.activityType}</span></td>
-                    <td class="px-4 sm:px-6 py-4 font-mono font-semibold text-gray-700">${log.timestamp}</td>
+                    <td class="px-5 py-4 font-bold text-gray-900">${escapeHTML(cleanName)}<p class="text-xs text-gray-400 font-normal">ID: ${escapeHTML(log.uniqueKey)}</p></td>
+                    <td class="px-5 py-4 text-gray-500 font-medium">${log.dateStamp || 'N/A'}</td>
+                    <td class="px-5 py-4"><span class="px-2 py-0.5 rounded-sm font-bold text-xs ${badgeColor}">${log.activityType} at ${log.timestamp}</span></td>
+                    <td class="px-5 py-4 text-center">${actionBtn}</td>
                 `;
             }
 
-            let shiftCell = `<div class="space-y-1">`;
-            if(log.timeIn) {
-                const lateTag = log.timeInLateMinutes > 0 ? `<span class="inline-block ml-0 sm:ml-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700">🔴 Overdue +${log.timeInLateMinutes}m</span>` : '';
-                shiftCell += `<p class="flex flex-col sm:flex-row sm:items-center gap-0.5"><span class="text-gray-400 text-[11px] sm:text-xs">In:</span> <span class="text-gray-700 font-medium">${log.timeIn}</span>${lateTag}</p>`;
-            }
-            if(log.timeOut) {
-                const earlyTag = log.timeOutEarlyMinutes > 0 ? `<span class="inline-block ml-0 sm:ml-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700">🔴 Early Out -${log.timeOutEarlyMinutes}m</span>` : '';
-                shiftCell += `<p class="flex flex-col sm:flex-row sm:items-center gap-0.5"><span class="text-gray-400 text-[11px] sm:text-xs">Out:</span> <span class="text-gray-700 font-medium">${log.timeOut}</span>${earlyTag}</p>`;
-            }
-            if(!log.timeIn && !log.timeOut) shiftCell += `<p class="text-gray-400 italic text-xs">No records active</p>`;
-            shiftCell += `</div>`;
-
-            let breakCell = `<div class="space-y-1.5 max-h-32 overflow-y-auto pr-1">`;
-            if(log.breakActivities && log.breakActivities.length > 0) {
-                log.breakActivities.forEach(b => {
-                    const earlyOutTag = b.breakOutEarlyMinutes > 0 ? `<span class="text-[9px] font-bold text-amber-600">(Early -${b.breakOutEarlyMinutes}m)</span>` : '';
-                    const lateOutTag = b.breakOutLateMinutes > 0 ? `<span class="text-[9px] font-bold text-red-600">(Late +${b.breakOutLateMinutes}m)</span>` : '';
-                    const overTag = b.overdueMinutes > 0 ? `<span class="inline-block px-1 rounded text-[9px] font-bold bg-red-100 text-red-700">⚠️ Overdue +${b.overdueMinutes}m</span>` : '';
-                    
-                    breakCell += `
-                        <div class="p-1.5 bg-gray-50 border border-gray-100 rounded text-[11px] leading-tight text-gray-700">
-                            <p class="font-bold text-gray-800 text-[11px] mb-0.5">☕ ${escapeHTML(b.breakName)}</p>
-                            <p><span class="text-gray-400">Out:</span> <span class="font-medium">${b.breakOut}</span> ${earlyOutTag}${lateOutTag}</p>
-                            <p><span class="text-gray-400">In:</span> <span class="font-medium">${b.breakIn || '<span class="text-amber-600 font-bold animate-pulse">On Break</span>'}</span> ${overTag}</p>
-                        </div>
-                    `;
-                });
-            } else {
-                breakCell += `<p class="text-gray-400 italic text-xs">No entries recorded</p>`;
-            }
-            breakCell += `</div>`;
+            let condensedTimestampMatrix = `<div class="space-y-1 text-xs">`;
+            if (log.timeIn) condensedTimestampMatrix += `<p><span class="text-gray-400">In:</span> <span class="font-semibold text-gray-700">${log.timeIn}</span></p>`;
+            if (log.timeOut) condensedTimestampMatrix += `<p><span class="text-gray-400">Out:</span> <span class="font-semibold text-gray-700">${log.timeOut}</span></p>`;
+            if (log.breakActivities && log.breakActivities.length > 0) condensedTimestampMatrix += `<p class="text-amber-600 font-bold">☕ Breaks Registered (${log.breakActivities.length})</p>`;
+            if (!log.timeIn && !log.timeOut && log.breakActivities.length === 0) condensedTimestampMatrix += `<span class="text-gray-400 italic">No stamps saved</span>`;
+            condensedTimestampMatrix += `</div>`;
 
             if (isAdminRow) {
                 return `
                     <td class="px-4 py-4 text-center">
                         <input type="checkbox" value="${log.id}" class="log-row-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500 scale-110 cursor-pointer">
                     </td>
-                    <td class="px-4 py-4 break-words">
+                    <td class="px-4 py-4">
                         <p class="font-bold text-gray-900">${escapeHTML(cleanName)}</p>
-                        <p class="text-[11px] font-mono font-semibold text-blue-600 mt-0.5">ID: ${escapeHTML(log.uniqueKey)}</p>
-                        <p class="text-[10px] text-gray-400 font-medium">Date: ${log.dateStamp || 'N/A'}</p>
+                        <p class="text-xs font-mono font-semibold text-blue-600 mt-0.5">ID: ${escapeHTML(log.uniqueKey)}</p>
+                        <p class="text-[11px] text-gray-400 font-medium">Date: ${log.dateStamp || 'N/A'}</p>
                     </td>
-                    <td class="px-4 py-4 text-gray-500 font-medium break-words">${escapeHTML(log.assignedShift)}</td>
-                    <td class="px-4 py-4">${shiftCell}</td>
-                    <td class="px-4 py-4">${breakCell}</td>
+                    <td class="px-4 py-4 text-gray-500 font-medium">${escapeHTML(log.assignedShift)}</td>
+                    <td class="px-4 py-4">${condensedTimestampMatrix}</td>
+                    <td class="px-4 py-4 text-gray-400 italic text-xs">Access via View More</td>
                     <td class="px-4 py-4 text-center">
                         <button onclick="deleteSingleLog('${log.id}')" class="text-red-600 hover:text-red-800 font-bold text-xs bg-red-50 hover:bg-red-100 px-2 py-1 rounded border border-red-200 transition-colors cursor-pointer">✕ Delete</button>
                     </td>
@@ -1564,68 +1916,70 @@
             }
 
             return `
-                <td class="px-4 sm:px-6 py-4 font-bold text-gray-900 break-words">${escapeHTML(cleanName)}<p class="text-[10px] text-gray-400 font-normal">ID: ${escapeHTML(log.uniqueKey)}</p></td>
-                <td class="px-4 sm:px-6 py-4 text-gray-500 font-medium break-words">${escapeHTML(log.assignedShift)}</td>
-                <td class="px-4 sm:px-6 py-4">${shiftCell}</td>
-                <td class="px-4 sm:px-6 py-4">${breakCell}</td>
+                <td class="px-5 py-4 font-bold text-gray-900">${escapeHTML(cleanName)}<p class="text-xs text-gray-400 font-normal">ID: ${escapeHTML(log.uniqueKey)}</p></td>
+                <td class="px-5 py-4 text-gray-500 font-medium text-xs sm:text-sm">${escapeHTML(log.assignedShift)}<p class="text-xs text-blue-500 mt-0.5">Date: ${log.dateStamp}</p></td>
+                <td class="px-5 py-4">${condensedTimestampMatrix}</td>
+                <td class="px-5 py-4 text-center">${actionBtn}</td>
             `;
+        }
+
+        function passesS1TimeFilter(log) {
+            const startTimeVal = document.getElementById('filter-s1-time-start').value;
+            const endTimeVal = document.getElementById('filter-s1-time-end').value;
+            if (!startTimeVal && !endTimeVal) return true;
+
+            const checkTimeStr = state.systemMode === "ongoing" ? log.timestamp : (log.timeIn || log.timeOut || "");
+            if (!checkTimeStr) return false;
+            
+            const logMins = timeToMinutes(checkTimeStr.split(' ')[0] + " " + checkTimeStr.split(' ')[1]);
+            
+            if (startTimeVal) {
+                const filterStartMins = parseInt(startTimeVal.split(':')[0]) * 60 + parseInt(startTimeVal.split(':')[1]);
+                if (logMins < filterStartMins) return false;
+            }
+            if (endTimeVal) {
+                const filterEndMins = parseInt(endTimeVal.split(':')[0]) * 60 + parseInt(endTimeVal.split(':')[1]);
+                if (logMins > filterEndMins) return false;
+            }
+            return true;
         }
 
         function renderLogsTable() {
             const kioskTbody = document.getElementById('logs-tbody');
             const adminTbody = document.getElementById('admin-logs-tbody');
-            const kioskHeader = document.getElementById('kiosk-table-header');
-            const adminHeader = document.getElementById('admin-table-header');
             if(!kioskTbody) return;
             
-            if (state.systemMode === "ongoing") {
-                if(kioskHeader) kioskHeader.innerHTML = `
-                    <th class="px-4 sm:px-6 py-3 w-[30%]">Employee Info</th>
-                    <th class="px-4 sm:px-6 py-3 w-[20%]">Date</th>
-                    <th class="px-4 sm:px-6 py-3 w-[25%]">Activity / Event Type</th>
-                    <th class="px-4 sm:px-6 py-3 w-[25%]">Timestamp</th>
-                `;
-                if(adminHeader) adminHeader.innerHTML = `
-                    <th class="px-4 py-3 w-[5%] text-center bg-gray-100">
-                        <input type="checkbox" id="select-all-logs" onclick="toggleSelectAllLogs(this)" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 scale-110 cursor-pointer">
-                    </th>
-                    <th class="px-4 py-3 w-[25%] bg-gray-100">Employee Info</th>
-                    <th class="px-4 py-3 w-[20%] bg-gray-100">Date</th>
-                    <th class="px-4 py-3 w-[22%] bg-gray-100">Activity / Event Type</th>
-                    <th class="px-4 py-3 w-[21%] bg-gray-100">Timestamp</th>
-                    <th class="px-4 py-3 w-[7%] text-center bg-gray-100">Actions</th>
-                `;
-            } else {
-                if(kioskHeader) kioskHeader.innerHTML = `
-                    <th class="px-4 sm:px-6 py-3 w-[25%]">Employee Info</th>
-                    <th class="px-4 sm:px-6 py-3 w-[25%]">Target Shift Assigned</th>
-                    <th class="px-4 sm:px-6 py-3 w-[25%]">Shift Main Window (In / Out)</th>
-                    <th class="px-4 sm:px-6 py-3 w-[25%]">Break History Profiles</th>
-                `;
-                if(adminHeader) adminHeader.innerHTML = `
-                    <th class="px-4 py-3 w-[5%] text-center bg-gray-100">
-                        <input type="checkbox" id="select-all-logs" onclick="toggleSelectAllLogs(this)" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 scale-110 cursor-pointer">
-                    </th>
-                    <th class="px-4 py-3 w-[22%] bg-gray-100">Employee Info</th>
-                    <th class="px-4 py-3 w-[22%] bg-gray-100">Target Shift Assigned</th>
-                    <th class="px-4 py-3 w-[22%] bg-gray-100">Shift Main Window (In / Out)</th>
-                    <th class="px-4 py-3 w-[22%] bg-gray-100">Break History Profiles</th>
-                    <th class="px-4 py-3 w-[7%] text-center bg-gray-100">Actions</th>
-                `;
-            }
-            
-            const visibleKioskLogs = state.logs.filter(log => !state.kioskHiddenLogIds.includes(log.id));
-            const totalColumns = state.systemMode === "ongoing" ? 4 : 4;
-            const totalAdminColumns = state.systemMode === "ongoing" ? 6 : 6;
+            const lbSearch = document.getElementById('filter-logbook-search').value.toLowerCase().trim();
+            const lbDate = document.getElementById('filter-logbook-date').value;
+            const s1Search = document.getElementById('filter-s1-search').value.toLowerCase().trim();
+
+            const visibleKioskLogs = state.logs.filter(log => !state.kioskHiddenLogIds.includes(log.id)).filter(log => {
+                if (lbDate && log.dateStamp !== lbDate) return false;
+                if (lbSearch) {
+                    const activityMatch = state.systemMode === "ongoing" ? log.activityType : (log.timeIn + log.timeOut);
+                    const matchText = (log.name + log.uniqueKey + activityMatch).toLowerCase();
+                    if (!matchText.includes(lbSearch)) return false;
+                }
+                return true;
+            });
+
+            const filteredAdminLogs = state.logs.filter(log => {
+                if (s1Search) {
+                    const activityMatch = state.systemMode === "ongoing" ? log.activityType : (log.timeIn + log.timeOut);
+                    const matchText = (log.name + log.uniqueKey + log.dateStamp + activityMatch).toLowerCase();
+                    if (!matchText.includes(s1Search)) return false;
+                }
+                return passesS1TimeFilter(log);
+            });
             
             kioskTbody.innerHTML = visibleKioskLogs.map(log => `
                 <tr class="hover:bg-gray-50/50 transition-colors border-b border-gray-100">${generateRowHTML(log, false)}</tr>
-            `).join('') || `<tr><td colspan="${totalColumns}" class="px-6 py-8 text-center text-gray-400 italic text-xs sm:text-sm">No live workspace employee sessions stream profiles connected.</td></tr>`;
+            `).join('') || `<tr><td colspan="4" class="px-6 py-8 text-center text-gray-400 italic text-sm">No workspace employee session logs found matching active filter metrics.</td></tr>`;
 
             if(adminTbody) {
-                adminTbody.innerHTML = state.logs.map(log => `
+                adminTbody.innerHTML = filteredAdminLogs.map(log => `
                     <tr class="hover:bg-gray-50/50 transition-colors border-b border-gray-100">${generateRowHTML(log, true)}</tr>
-                `).join('') || `<tr><td colspan="${totalAdminColumns}" class="px-6 py-8 text-center text-gray-400 italic text-xs sm:text-sm">No recorded index history logs inside master partitions.</td></tr>`;
+                `).join('') || `<tr><td colspan="6" class="px-6 py-8 text-center text-gray-400 italic text-sm">No recorded parameters history match filter settings inside master partitions.</td></tr>`;
             }
         }
 
@@ -1684,11 +2038,9 @@
                         state.employees = parsed.employees || [];
                         state.logs = parsed.logs || [];
                         state.kioskHiddenLogIds = parsed.kioskHiddenLogIds || [];
-                        state.systemMode = parsed.systemMode || "schedule";
+                        state.systemMode = parsed.systemMode || "ongoing";
                         state.autoLogoutMinutes = parsed.autoLogoutMinutes || 0;
                         if (parsed.adminAccount) state.adminAccount = parsed.adminAccount;
-                        
-                        state.shifts.forEach(s => { if(!s.subBreaks) s.subBreaks = s.breaks || []; });
 
                         saveStateToStorage();
                         renderAdminConfigLists();
@@ -1710,18 +2062,26 @@
             if(!element) return;
             element.innerText = text;
             element.classList.remove("hidden");
-            element.className = `mt-4 text-xs sm:text-sm font-semibold ${isCritical ? 'text-red-600' : 'text-emerald-600'}`;
+            element.className = `mt-4 text-sm font-semibold ${isCritical ? 'text-red-600' : 'text-emerald-600'}`;
+            setTimeout(() => { element.classList.add("hidden"); }, 4000);
         }
 
         function escapeHTML(str) {
-            return str.replace(/[&<>'\"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+            if(!str) return '';
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[tag] || tag));
         }
 
-        initClockSize();
-        initCreationPickers();
-        populateKioskDropdowns();
-        applyModeLayoutRules();
-        renderLogsTable();
+        document.addEventListener("DOMContentLoaded", () => {
+            loadStateFromStorage();
+            initClockSize();
+            populateKioskDropdowns();
+            applyModeLayoutRules();
+            renderLogsTable();
+            setInterval(updateLiveStationClock, 1000);
+            updateLiveStationClock();
+        });
     </script>
 </body>
 </html>

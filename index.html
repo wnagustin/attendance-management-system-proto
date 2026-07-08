@@ -125,23 +125,31 @@
                 <div class="px-5 py-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div class="w-full sm:w-auto">
                         <h3 class="font-bold text-gray-900 text-base sm:text-lg">Attendance Log Book</h3>
-                        <!-- LOGBOOK CATEGORY FILTER CONTROLS -->
-                        <div class="flex flex-wrap gap-2 mt-3 items-center">
-                            <div class="relative inline-block text-left">
-                                <button onclick="toggleFilterDropdown('logbook-filter-menu')" class="px-3 py-1.5 bg-blue-600 text-white font-semibold rounded-lg text-xs hover:bg-blue-700 flex items-center gap-1">
-                                    🔍 Filter Category ⚙️
-                                </button>
-                                <div id="logbook-filter-menu" class="hidden absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-40 p-3 space-y-2">
-                                    <div>
-                                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Search Keywords</label>
-                                        <input type="text" id="filter-logbook-search" oninput="renderLogsTable()" placeholder="Name or activity..." class="px-2 py-1 bg-gray-50 border border-gray-200 rounded-md text-xs w-full focus:outline-hidden">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Target Date</label>
-                                        <input type="date" id="filter-logbook-date" onchange="renderLogsTable()" class="px-2 py-1 bg-gray-50 border border-gray-200 rounded-md text-xs w-full focus:outline-hidden">
-                                    </div>
-                                    <button onclick="clearLogbookFilters(); toggleFilterDropdown('logbook-filter-menu');" class="w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 rounded text-[10px] font-bold">Reset Filters</button>
+                        <!-- LOGBOOK DROPDOWN CATEGORY & SEARCH FILTER CONTROLS -->
+                        <div class="flex flex-wrap gap-3 mt-3 items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Filter Category</label>
+                                <select id="logbook-filter-category" onchange="handleLogbookCategoryChange()" class="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs font-medium focus:outline-hidden text-gray-800">
+                                    <option value="search">Search Keywords</option>
+                                    <option value="date">Entry Log Date</option>
+                                </select>
+                            </div>
+                            <div id="logbook-input-search-container" class="flex items-end gap-2">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Keywords</label>
+                                    <input type="text" id="filter-logbook-search" placeholder="Name or activity..." class="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs w-48 focus:outline-hidden text-gray-800">
                                 </div>
+                                <button onclick="renderLogsTable()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs transition-colors cursor-pointer">Find</button>
+                            </div>
+                            <div id="logbook-input-date-container" class="hidden flex items-end gap-2">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Entry Log Date</label>
+                                    <input type="date" id="filter-logbook-date" class="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs w-40 focus:outline-hidden text-gray-800">
+                                </div>
+                                <button onclick="renderLogsTable()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs transition-colors cursor-pointer">Find</button>
+                            </div>
+                            <div class="flex items-end pt-4">
+                                <button onclick="clearLogbookFilters();" class="text-center bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer">Reset Filters</button>
                             </div>
                         </div>
                     </div>
@@ -171,7 +179,7 @@
         <section id="view-admin" class="hidden space-y-6">
             
             <div id="admin-auth-card" class="max-w-md mx-auto bg-white rounded-2xl shadow-xs border border-gray-200 p-6 sm:p-8">
-                <h2 id="auth-title" class="text-lg sm:text-xl font-bold mb-2">Admin Identity Gate</h2>
+                <h2 id="auth-title" class="text-lg sm:text-xl font-bold mb-2">Admin Sign-In</h2>
                 <p id="auth-desc" class="text-sm text-gray-500 mb-4">Initialize or input credentials to modify scheduling rosters.</p>
                 
                 <div class="space-y-4">
@@ -183,7 +191,7 @@
                         <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Password</label>
                         <input type="password" id="admin-pass" class="w-full px-4 py-3 border border-gray-300 bg-white text-gray-800 rounded-xl text-base">
                     </div>
-                    <button onclick="handleAuthSubmit()" id="btn-auth-submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-base transition-colors cursor-pointer">Enter Settings Panel</button>
+                    <button onclick="handleAuthSubmit()" id="btn-auth-submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-base transition-colors cursor-pointer">Enter Admin Settings Panel</button>
                 </div>
                 <p id="auth-feedback" class="mt-3 text-base font-medium hidden"></p>
             </div>
@@ -315,7 +323,7 @@
                 <div><span class="text-gray-400 font-medium block">Assigned Window Group:</span> <p class="font-semibold text-gray-800 text-base" id="vm-assigned-shift">--</p></div>
                 <div><span class="text-gray-400 font-medium block">Log Activation Date:</span> <p class="font-semibold text-gray-800" id="vm-log-date">--</p></div>
                 <div class="border-t border-gray-100 pt-2"><span class="text-gray-400 font-medium block mb-1">Main Work Stamps:</span> <div class="bg-gray-50 rounded-xl p-3 space-y-1 font-medium" id="vm-shift-stamps">--</div></div>
-                <div><span class="text-gray-400 font-medium block mb-1">Allocated Break Summary Matrix:</span> <div class="bg-gray-50 rounded-xl p-3 max-h-40 overflow-y-auto space-y-2" id="vm-breaks-stamps">--</div></div>
+                <div id="vm-breaks-stamps-container"><span class="text-gray-400 font-medium block mb-1">Allocated Break Summary Matrix:</span> <div class="bg-gray-50 rounded-xl p-3 max-h-40 overflow-y-auto space-y-2" id="vm-breaks-stamps">--</div></div>
             </div>
             <div class="flex justify-end pt-2">
                 <button onclick="closeLogbookViewMoreModal()" class="px-5 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-xl text-sm">Close View</button>
@@ -347,25 +355,35 @@
                 <div>
                     <h3 class="font-bold text-gray-900 text-lg flex items-center gap-2">🛡️ Attendance Management</h3>
                     <p class="text-sm text-gray-500 font-normal">Master live log matrix data view.</p>
-                    <!-- SECTION 1 CATEGORY FILTER CONTROLS -->
-                    <div class="flex flex-wrap gap-2 mt-3 relative">
-                        <button onclick="toggleFilterDropdown('section1-filter-menu')" class="px-3 py-1 bg-blue-600 text-white rounded text-xs font-semibold hover:bg-blue-700 flex items-center gap-1">
-                            🔍 Filter Category ⚙️
-                        </button>
-                        <div id="section1-filter-menu" class="hidden absolute left-0 top-full mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 p-3 space-y-2 text-left">
+                    <!-- SECTION 1 DROPDOWN CATEGORY FILTER CONTROLS -->
+                    <div class="flex flex-wrap gap-3 mt-3 relative items-center bg-white p-3 rounded-lg border border-gray-200">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Filter Category</label>
+                            <select id="s1-filter-category" onchange="handleS1CategoryChange()" class="px-2 py-1 bg-gray-50 border border-gray-300 rounded text-xs font-medium focus:outline-hidden text-gray-800">
+                                <option value="search">Keywords Input</option>
+                                <option value="time">Log Entry Date Range</option>
+                            </select>
+                        </div>
+                        <div id="s1-input-search-container" class="flex items-end gap-2">
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Keywords Input</label>
-                                <input type="text" id="filter-s1-search" oninput="renderLogsTable()" placeholder="Name, Date, Activity..." class="px-2 py-1 bg-white border border-gray-300 rounded text-xs w-full focus:outline-hidden">
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Keywords</label>
+                                <input type="text" id="filter-s1-search" placeholder="Name, Date, Activity..." class="px-2 py-1 bg-white border border-gray-300 rounded text-xs w-48 focus:outline-hidden text-gray-800">
                             </div>
+                            <button onclick="renderLogsTable()" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded transition-colors cursor-pointer">Find</button>
+                        </div>
+                        <div id="s1-input-time-container" class="hidden flex items-end gap-2">
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Inactivity Windows Range</label>
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Log Entry Date Range</label>
                                 <div class="flex items-center gap-1">
-                                    <input type="time" id="filter-s1-time-start" onchange="renderLogsTable()" class="text-xs bg-gray-50 border border-gray-300 rounded p-1 w-full">
+                                    <input type="time" id="filter-s1-time-start" class="text-xs bg-gray-50 border border-gray-300 rounded p-1 w-24 text-gray-800">
                                     <span class="text-xs text-gray-400">-</span>
-                                    <input type="time" id="filter-s1-time-end" onchange="renderLogsTable()" class="text-xs bg-gray-50 border border-gray-300 rounded p-1 w-full">
+                                    <input type="time" id="filter-s1-time-end" class="text-xs bg-gray-50 border border-gray-300 rounded p-1 w-24 text-gray-800">
                                 </div>
                             </div>
-                            <button onclick="clearS1Filters(); toggleFilterDropdown('section1-filter-menu');" class="w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 rounded text-[10px] font-bold">Reset Filters</button>
+                            <button onclick="renderLogsTable()" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded transition-colors cursor-pointer">Find</button>
+                        </div>
+                        <div class="flex items-end pt-4">
+                            <button onclick="clearS1Filters();" class="text-center bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 px-2.5 rounded text-[10px] font-bold transition-colors cursor-pointer">Reset Filters</button>
                         </div>
                     </div>
                 </div>
@@ -413,10 +431,10 @@
                     <button onclick="openEmployeeCreationModal()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-4 rounded-xl shadow-xs transition-colors">+ Add Account Profile</button>
                     
                     <div class="bg-gray-50 px-3 py-2 rounded-xl border border-gray-200 flex items-center gap-2">
-                        <span class="text-xs font-bold text-gray-500 uppercase">Roster Bulk Matrix:</span>
+                        <span class="text-xs font-bold text-gray-500 uppercase">Download Registered Accounts:</span>
                         <button onclick="downloadEmployeeTemplateCSV()" class="bg-slate-700 hover:bg-slate-800 text-white text-xs font-semibold py-1 px-2 rounded">Export CSV</button>
                         <label class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold py-1 px-2 rounded cursor-pointer">
-                            Import CSV
+                             Import CSV
                             <input type="file" id="emp-csv-import" accept=".csv" onchange="importEmployeesFromCSV(event)" class="hidden">
                         </label>
                     </div>
@@ -426,17 +444,23 @@
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-1 border-b border-gray-200">
                         <label class="text-sm font-bold text-gray-500 uppercase tracking-wider block">Registered Employee Accounts</label>
                         
-                        <!-- SECTION 2 CATEGORY FILTER CONTROLS -->
-                        <div class="flex gap-2 w-full sm:w-auto relative">
-                            <button onclick="toggleFilterDropdown('section2-filter-menu')" class="px-3 py-1 bg-blue-600 text-white rounded text-xs font-semibold hover:bg-blue-700 flex items-center gap-1">
-                                🔍 Filter Category ⚙️
-                            </button>
-                            <div id="section2-filter-menu" class="hidden absolute right-0 top-full mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 p-3 space-y-2 text-left">
+                        <!-- SECTION 2 DROPDOWN CATEGORY FILTER CONTROLS -->
+                        <div class="flex flex-wrap gap-3 items-center bg-gray-50 p-2.5 rounded-lg border border-gray-200">
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Filter Category</label>
+                                <select id="s2-filter-category" onchange="handleS2CategoryChange()" class="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-medium focus:outline-hidden text-gray-800">
+                                    <option value="search">Keywords Input</option>
+                                </select>
+                            </div>
+                            <div id="s2-input-search-container" class="flex items-end gap-2">
                                 <div>
-                                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Keywords Input</label>
-                                    <input type="text" id="filter-s2-search" oninput="renderAdminConfigLists()" placeholder="Filter name or date..." class="px-2 py-1 bg-white border border-gray-300 rounded text-xs w-full focus:outline-hidden">
+                                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Keywords</label>
+                                    <input type="text" id="filter-s2-search" placeholder="Filter name or date..." class="px-2 py-1 bg-white border border-gray-300 rounded text-xs w-44 focus:outline-hidden text-gray-800">
                                 </div>
-                                <button onclick="clearS2Filters(); toggleFilterDropdown('section2-filter-menu');" class="w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 rounded text-[10px] font-bold">Reset Filters</button>
+                                <button onclick="renderAdminConfigLists()" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded transition-colors cursor-pointer">Find</button>
+                            </div>
+                            <div class="flex items-end pt-4">
+                                <button onclick="clearS2Filters();" class="text-center bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 px-2 rounded text-[10px] font-bold transition-colors cursor-pointer">Reset Filters</button>
                             </div>
                         </div>
                     </div>
@@ -460,8 +484,8 @@
                 <div>
                     <label class="text-xs text-gray-500 font-bold uppercase block mb-1">Employee ID Number</label>
                     <div class="flex gap-1">
-                        <input type="text" id="new-emp-id" placeholder="insert employee ID" class="flex-1 px-3 py-2 bg-white border border-gray-300 text-gray-800 rounded-lg text-sm">
-                        <button onclick="generateSecureIDToken()" class="bg-slate-700 hover:bg-slate-800 text-white px-2.5 rounded-lg text-sm font-mono" title="Generate 16-Digit Alpha-Numeric Token">🎲 Key</button>
+                        <input type="text" id="new-emp-id" placeholder="insert employee ID" class="flex-1 px-3 py-2 bg-white border border-gray-300 text-gray-800 rounded-lg text-sm disabled:bg-gray-100 disabled:text-gray-400">
+                        <button id="btn-generate-id" onclick="generateSecureIDToken()" class="bg-slate-700 hover:bg-slate-800 text-white px-2.5 rounded-lg text-sm font-mono" title="Generate 16-Digit Alpha-Numeric Token">🎲 Key</button>
                     </div>
                 </div>
                 
@@ -527,7 +551,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="text-xs text-gray-500 font-bold uppercase block mb-1">Profile Name / Designation</label>
-                        <input type="text" id="new-shift-name" placeholder="e.g., Standard Day Roster" class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-800 rounded-lg text-sm">
+                        <input type="text" id="new-shift-name" placeholder="e.g., Compressed Day Shift" class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-800 rounded-lg text-sm">
                     </div>
                     <div>
                         <label class="text-xs text-gray-500 font-bold uppercase block mb-1">Active Scheduled Rota Days</label>
@@ -677,6 +701,33 @@
             if(targetMenu) targetMenu.classList.toggle('hidden');
         }
 
+        // Dropdown toggle logic handlers for newly added category dropdowns
+        function handleLogbookCategoryChange() {
+            const selected = document.getElementById('logbook-filter-category').value;
+            if (selected === 'search') {
+                document.getElementById('logbook-input-search-container').classList.remove('hidden');
+                document.getElementById('logbook-input-date-container').classList.add('hidden');
+            } else {
+                document.getElementById('logbook-input-search-container').classList.add('hidden');
+                document.getElementById('logbook-input-date-container').classList.remove('hidden');
+            }
+        }
+
+        function handleS1CategoryChange() {
+            const selected = document.getElementById('s1-filter-category').value;
+            if (selected === 'search') {
+                document.getElementById('s1-input-search-container').classList.remove('hidden');
+                document.getElementById('s1-input-time-container').classList.add('hidden');
+            } else {
+                document.getElementById('s1-input-search-container').classList.add('hidden');
+                document.getElementById('s1-input-time-container').classList.remove('hidden');
+            }
+        }
+
+        function handleS2CategoryChange() {
+            // Future expanded filter logic space
+        }
+
         function openAdminSectionModal(modalId) {
             document.getElementById(modalId).classList.remove('hidden');
             renderAdminConfigLists();
@@ -692,6 +743,7 @@
             document.getElementById('manual-register-title').innerText = "Register Account Manually";
             document.getElementById('new-emp-id').value = "";
             document.getElementById('new-emp-id').disabled = false;
+            document.getElementById('btn-generate-id').classList.remove('hidden');
             document.getElementById('new-emp-firstname').value = "";
             document.getElementById('new-emp-lastname').value = "";
             document.getElementById('new-emp-created-date').value = new Date().toLocaleDateString('en-CA');
@@ -1017,6 +1069,7 @@
             renderAdminConfigLists();
         }
 
+        // Logic adjusted to process view layouts dynamically
         function updateProfileBadges() {
             if(state.systemMode === "ongoing") {
                 const elIn = document.getElementById('btn-time-in');
@@ -1467,7 +1520,6 @@
         }
 
         function permanentPurgeEmployeeData(idNumber) {
-            // Simplified to standard binary Yes/No message check
             const userResponse = confirm("Are you sure you want to permanently delete this employee account? Yes or No.");
             if (!userResponse) return;
             state.employees = state.employees.filter(e => e.idNumber !== idNumber);
@@ -1491,7 +1543,7 @@
                 document.getElementById('admin-auth-card').classList.remove('hidden');
                 document.getElementById('admin-settings-panel').classList.add('hidden');
                 document.getElementById('header-logout-btn').classList.add('hidden');
-                document.getElementById('auth-title').innerText = "Admin Identity Gate";
+                document.getElementById('auth-title').innerText = "Admin Sign-In";
             }
         }
 
@@ -1533,6 +1585,7 @@
             document.getElementById('manual-register-title').innerText = "Modify Employee Account";
             document.getElementById('new-emp-id').value = emp.idNumber;
             document.getElementById('new-emp-id').disabled = true;
+            document.getElementById('btn-generate-id').classList.add('hidden');
             
             const nameParts = emp.employeeName.split(' ');
             document.getElementById('new-emp-firstname').value = nameParts[0] || "";
@@ -1581,7 +1634,7 @@
             state.employees.forEach(e => { rows.push([`"${e.idNumber}"`, `"${e.employeeName}"`, `"${e.dateCreated || ''}"`]); });
             const link = document.createElement("a");
             link.setAttribute("href", encodeURI("data:text/csv;charset=utf-8," + rows.map(r => r.join(",")).join("\n")));
-            link.setAttribute("download", "System_Employee_Roster.csv");
+            link.setAttribute("download", "Registered_Employee_Accounts.csv");
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -1635,26 +1688,30 @@
             let shiftStampsHTML = "";
             if (state.systemMode === "ongoing") {
                 shiftStampsHTML = `<p><span class="text-gray-400">Activity:</span> ${log.activityType} at ${log.timestamp}</p>`;
+                document.getElementById('vm-breaks-stamps-container').style.display = "none";
             } else {
                 shiftStampsHTML += `<p><span class="text-gray-400">Inbound Check:</span> ${log.timeIn || 'Pending'}</p>`;
                 shiftStampsHTML += `<p><span class="text-gray-400">Outbound Check:</span> ${log.timeOut || 'Pending'}</p>`;
+                document.getElementById('vm-breaks-stamps-container').style.display = "block";
             }
             document.getElementById('vm-shift-stamps').innerHTML = shiftStampsHTML;
             
             let breakStampsHTML = "";
-            if (log.breakActivities && log.breakActivities.length > 0) {
-                log.breakActivities.forEach(b => {
-                    breakStampsHTML += `
-                        <div class="border-b border-gray-200 pb-1 last:border-0">
-                            <p class="font-bold text-gray-700">${b.breakName}</p>
-                            <p class="text-xs text-gray-500">Out: ${b.breakOut} | In: ${b.breakIn || 'Active'}</p>
-                        </div>
-                    `;
-                });
-            } else {
-                breakStampsHTML = `<p class="text-xs text-gray-400 italic">No segment metrics captured today.</p>`;
+            if (state.systemMode !== "ongoing") {
+                if (log.breakActivities && log.breakActivities.length > 0) {
+                    log.breakActivities.forEach(b => {
+                        breakStampsHTML += `
+                            <div class="border-b border-gray-200 pb-1 last:border-0">
+                                <p class="font-bold text-gray-700">${b.breakName}</p>
+                                <p class="text-xs text-gray-500">Out: ${b.breakOut} | In: ${b.breakIn || 'Active'}</p>
+                            </div>
+                        `;
+                    });
+                } else {
+                    breakStampsHTML = `<p class="text-xs text-gray-400 italic">No segment metrics captured today.</p>`;
+                }
+                document.getElementById('vm-breaks-stamps').innerHTML = breakStampsHTML;
             }
-            document.getElementById('vm-breaks-stamps').innerHTML = breakStampsHTML;
             
             document.getElementById('logbook-viewmore-modal').classList.remove('hidden');
         }
@@ -1892,127 +1949,170 @@
             let condensedTimestampMatrix = `<div class="space-y-1 text-xs">`;
             if (log.timeIn) condensedTimestampMatrix += `<p><span class="text-gray-400">In:</span> <span class="font-semibold text-gray-700">${log.timeIn}</span></p>`;
             if (log.timeOut) condensedTimestampMatrix += `<p><span class="text-gray-400">Out:</span> <span class="font-semibold text-gray-700">${log.timeOut}</span></p>`;
-            if (log.breakActivities && log.breakActivities.length > 0) condensedTimestampMatrix += `<p class="text-amber-600 font-bold">☕ Breaks Registered (${log.breakActivities.length})</p>`;
-            if (!log.timeIn && !log.timeOut && log.breakActivities.length === 0) condensedTimestampMatrix += `<span class="text-gray-400 italic">No stamps saved</span>`;
             condensedTimestampMatrix += `</div>`;
+
+            let breakMatrixHTML = `<div class="space-y-1 text-xs font-medium">`;
+            if (log.breakActivities && log.breakActivities.length > 0) {
+                log.breakActivities.forEach(b => {
+                    breakMatrixHTML += `<p class="truncate"><span class="text-gray-400">${b.breakName.split('-')[1]?.trim() || 'Break'}:</span> Out: ${b.breakOut} | In: ${b.breakIn || 'Active'}</p>`;
+                });
+            } else {
+                breakMatrixHTML += `<p class="text-gray-400 italic">No Breaks Capt.</p>`;
+            }
+            breakMatrixHTML += `</div>`;
 
             if (isAdminRow) {
                 return `
-                    <td class="px-4 py-4 text-center">
+                    <td class="px-4 py-3 text-center">
                         <input type="checkbox" value="${log.id}" class="log-row-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500 scale-110 cursor-pointer">
                     </td>
-                    <td class="px-4 py-4">
+                    <td class="px-4 py-3">
                         <p class="font-bold text-gray-900">${escapeHTML(cleanName)}</p>
-                        <p class="text-xs font-mono font-semibold text-blue-600 mt-0.5">ID: ${escapeHTML(log.uniqueKey)}</p>
-                        <p class="text-[11px] text-gray-400 font-medium">Date: ${log.dateStamp || 'N/A'}</p>
+                        <p class="text-xs font-mono font-semibold text-blue-600">ID: ${escapeHTML(log.uniqueKey)}</p>
                     </td>
-                    <td class="px-4 py-4 text-gray-500 font-medium">${escapeHTML(log.assignedShift)}</td>
-                    <td class="px-4 py-4">${condensedTimestampMatrix}</td>
-                    <td class="px-4 py-4 text-gray-400 italic text-xs">Access via View More</td>
-                    <td class="px-4 py-4 text-center">
-                        <button onclick="deleteSingleLog('${log.id}')" class="text-red-600 hover:text-red-800 font-bold text-xs bg-red-50 hover:bg-red-100 px-2 py-1 rounded border border-red-200 transition-colors cursor-pointer">✕ Delete</button>
+                    <td class="px-4 py-3 text-xs font-semibold text-gray-600">${escapeHTML(log.assignedShift || 'Custom Base')}</td>
+                    <td class="px-4 py-3">${condensedTimestampMatrix}</td>
+                    <td class="px-4 py-3">${breakMatrixHTML}</td>
+                    <td class="px-4 py-3 text-center">
+                        <button onclick="deleteSingleLog('${log.id}')" class="text-red-500 hover:text-red-700 font-bold text-xs cursor-pointer">✕ Purge</button>
                     </td>
                 `;
             }
 
             return `
                 <td class="px-5 py-4 font-bold text-gray-900">${escapeHTML(cleanName)}<p class="text-xs text-gray-400 font-normal">ID: ${escapeHTML(log.uniqueKey)}</p></td>
-                <td class="px-5 py-4 text-gray-500 font-medium text-xs sm:text-sm">${escapeHTML(log.assignedShift)}<p class="text-xs text-blue-500 mt-0.5">Date: ${log.dateStamp}</p></td>
+                <td class="px-5 py-4 text-xs font-semibold text-gray-600">${escapeHTML(log.assignedShift || 'Custom Operational')}</td>
                 <td class="px-5 py-4">${condensedTimestampMatrix}</td>
                 <td class="px-5 py-4 text-center">${actionBtn}</td>
             `;
         }
 
-        function passesS1TimeFilter(log) {
-            const startTimeVal = document.getElementById('filter-s1-time-start').value;
-            const endTimeVal = document.getElementById('filter-s1-time-end').value;
-            if (!startTimeVal && !endTimeVal) return true;
+        function renderLogsTable() {
+            const tableBody = document.getElementById('logs-tbody');
+            const adminTableBody = document.getElementById('admin-logs-tbody');
+            const kioskHeader = document.getElementById('kiosk-table-header');
+            const adminHeader = document.getElementById('admin-table-header');
 
-            const checkTimeStr = state.systemMode === "ongoing" ? log.timestamp : (log.timeIn || log.timeOut || "");
-            if (!checkTimeStr) return false;
-            
-            const logMins = timeToMinutes(checkTimeStr.split(' ')[0] + " " + checkTimeStr.split(' ')[1]);
-            
-            if (startTimeVal) {
-                const filterStartMins = parseInt(startTimeVal.split(':')[0]) * 60 + parseInt(startTimeVal.split(':')[1]);
-                if (logMins < filterStartMins) return false;
+            const searchLogVal = document.getElementById('filter-logbook-search').value.toLowerCase().trim();
+            const dateLogVal = document.getElementById('filter-logbook-date').value;
+            const s1SearchVal = document.getElementById('filter-s1-search').value.toLowerCase().trim();
+            const s1TimeStart = document.getElementById('filter-s1-time-start').value;
+            const s1TimeEnd = document.getElementById('filter-s1-time-end').value;
+
+            if (state.systemMode === "ongoing") {
+                if (kioskHeader) {
+                    kioskHeader.innerHTML = `
+                        <th class="px-5 py-4 w-[35%]">Employee Info</th>
+                        <th class="px-5 py-4 w-[25%]">Date Log Stamp</th>
+                        <th class="px-5 py-4 w-[30%]">Punch Type and Entry Log Timestamp</th>
+                        <th class="px-5 py-4 w-[10%] text-center">Actions</th>
+                    `;
+                }
+                if (adminHeader) {
+                    adminHeader.innerHTML = `
+                        <th class="px-4 py-3 w-[5%] text-center bg-gray-100"><input type="checkbox" id="select-all-logs" onclick="toggleSelectAllLogs(this)" class="scale-110"></th>
+                        <th class="px-4 py-3 w-[30%] bg-gray-100">Employee Info</th>
+                        <th class="px-4 py-3 w-[20%] bg-gray-100">Date Log Stamp</th>
+                        <th class="px-4 py-3 w-[25%] bg-gray-100">Punch Activity Node Type</th>
+                        <th class="px-4 py-3 w-[15%] bg-gray-100">Recorded Exact Time</th>
+                        <th class="px-4 py-3 w-[5%] text-center bg-gray-100">Actions</th>
+                    `;
+                }
+            } else {
+                if (kioskHeader) {
+                    kioskHeader.innerHTML = `
+                        <th class="px-5 py-4 w-[30%]">Employee Info</th>
+                        <th class="px-5 py-4 w-[25%]">Target Shift Assigned</th>
+                        <th class="px-5 py-4 w-[35%]">Activity Timestamps Matrix</th>
+                        <th class="px-5 py-4 w-[10%] text-center">Actions</th>
+                    `;
+                }
+                if (adminHeader) {
+                    adminHeader.innerHTML = `
+                        <th class="px-4 py-3 w-[5%] text-center bg-gray-100"><input type="checkbox" id="select-all-logs" onclick="toggleSelectAllLogs(this)" class="scale-110"></th>
+                        <th class="px-4 py-3 w-[22%] bg-gray-100">Employee Info</th>
+                        <th class="px-4 py-3 w-[22%] bg-gray-100">Target Shift Assigned</th>
+                        <th class="px-4 py-3 w-[22%] bg-gray-100">Shift Main Window (In / Out)</th>
+                        <th class="px-4 py-3 w-[22%] bg-gray-100">Break History Profiles</th>
+                        <th class="px-4 py-3 w-[7%] text-center bg-gray-100">Actions</th>
+                    `;
+                }
             }
-            if (endTimeVal) {
-                const filterEndMins = parseInt(endTimeVal.split(':')[0]) * 60 + parseInt(endTimeVal.split(':')[1]);
-                if (logMins > filterEndMins) return false;
-            }
-            return true;
+
+            let kioskLogsHTML = "";
+            let adminLogsHTML = "";
+
+            state.logs.forEach(log => {
+                let matchKiosk = true;
+                let matchAdmin = true;
+
+                if (searchLogVal && !log.name.toLowerCase().includes(searchLogVal) && !log.uniqueKey.toLowerCase().includes(searchLogVal) && !(log.activityType && log.activityType.toLowerCase().includes(searchLogVal))) matchKiosk = false;
+                if (dateLogVal && log.dateStamp !== dateLogVal) matchKiosk = false;
+
+                if (s1SearchVal && !log.name.toLowerCase().includes(s1SearchVal) && !log.uniqueKey.toLowerCase().includes(s1SearchVal) && !(log.assignedShift && log.assignedShift.toLowerCase().includes(s1SearchVal)) && !(log.activityType && log.activityType.toLowerCase().includes(s1SearchVal))) matchAdmin = false;
+                
+                if (s1TimeStart || s1TimeEnd) {
+                    const checkTimeStr = log.timestamp || (log.timeIn ? log.timeIn.split(' ')[0] : "");
+                    if (checkTimeStr) {
+                        const checkMins = timeToMinutes(checkTimeStr);
+                        if (s1TimeStart && checkMins < timeToMinutes(s1TimeStart + " AM")) matchAdmin = false;
+                        if (s1TimeEnd && checkMins > timeToMinutes(s1TimeEnd + " PM")) matchAdmin = false;
+                    }
+                }
+
+                if (matchAdmin && adminTableBody) {
+                    adminLogsHTML += `<tr class="hover:bg-slate-50 transition-colors">${generateRowHTML(log, true)}</tr>`;
+                }
+
+                if (matchKiosk && !state.kioskHiddenLogIds.includes(log.id) && tableBody) {
+                    kioskLogsHTML += `<tr class="hover:bg-gray-50 transition-colors animate-fade-in">${generateRowHTML(log, false)}</tr>`;
+                }
+            });
+
+            if (tableBody) tableBody.innerHTML = kioskLogsHTML || `<tr><td colspan="4" class="px-5 py-8 text-center text-gray-400 italic bg-gray-50/50">No dashboard entry records located matching current filter variables.</td></tr>`;
+            if (adminTableBody) adminTableBody.innerHTML = adminLogsHTML || `<tr><td colspan="6" class="px-4 py-8 text-center text-gray-400 italic">Roster logs archive matrix contains empty fields.</td></tr>`;
         }
 
-        function renderLogsTable() {
-            const kioskTbody = document.getElementById('logs-tbody');
-            const adminTbody = document.getElementById('admin-logs-tbody');
-            if(!kioskTbody) return;
-            
-            const lbSearch = document.getElementById('filter-logbook-search').value.toLowerCase().trim();
-            const lbDate = document.getElementById('filter-logbook-date').value;
-            const s1Search = document.getElementById('filter-s1-search').value.toLowerCase().trim();
+        function showFeedback(element, text, isError) {
+            if(!element) return;
+            element.innerText = text;
+            element.className = `mt-3 text-sm font-bold ${isError ? 'text-red-600' : 'text-emerald-600'}`;
+            element.classList.remove('hidden');
+            setTimeout(() => { element.classList.add('hidden'); }, 4000);
+        }
 
-            const visibleKioskLogs = state.logs.filter(log => !state.kioskHiddenLogIds.includes(log.id)).filter(log => {
-                if (lbDate && log.dateStamp !== lbDate) return false;
-                if (lbSearch) {
-                    const activityMatch = state.systemMode === "ongoing" ? log.activityType : (log.timeIn + log.timeOut);
-                    const matchText = (log.name + log.uniqueKey + activityMatch).toLowerCase();
-                    if (!matchText.includes(lbSearch)) return false;
-                }
-                return true;
-            });
-
-            const filteredAdminLogs = state.logs.filter(log => {
-                if (s1Search) {
-                    const activityMatch = state.systemMode === "ongoing" ? log.activityType : (log.timeIn + log.timeOut);
-                    const matchText = (log.name + log.uniqueKey + log.dateStamp + activityMatch).toLowerCase();
-                    if (!matchText.includes(s1Search)) return false;
-                }
-                return passesS1TimeFilter(log);
-            });
-            
-            kioskTbody.innerHTML = visibleKioskLogs.map(log => `
-                <tr class="hover:bg-gray-50/50 transition-colors border-b border-gray-100">${generateRowHTML(log, false)}</tr>
-            `).join('') || `<tr><td colspan="4" class="px-6 py-8 text-center text-gray-400 italic text-sm">No workspace employee session logs found matching active filter metrics.</td></tr>`;
-
-            if(adminTbody) {
-                adminTbody.innerHTML = filteredAdminLogs.map(log => `
-                    <tr class="hover:bg-gray-50/50 transition-colors border-b border-gray-100">${generateRowHTML(log, true)}</tr>
-                `).join('') || `<tr><td colspan="6" class="px-6 py-8 text-center text-gray-400 italic text-sm">No recorded parameters history match filter settings inside master partitions.</td></tr>`;
-            }
+        function escapeHTML(str) {
+            if(!str) return '';
+            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
         }
 
         function exportToCSV() {
-            if(state.logs.length === 0) { alert("No logs recorded to generate raw summaries."); return; }
-            const startVal = document.getElementById('csv-start-date').value; 
-            const endVal = document.getElementById('csv-end-date').value;
-
-            let filteredLogs = state.logs;
-            if(startVal) filteredLogs = filteredLogs.filter(l => !l.dateStamp || l.dateStamp >= startVal);
-            if(endVal) filteredLogs = filteredLogs.filter(l => !l.dateStamp || l.dateStamp <= endVal);
-
-            if(filteredLogs.length === 0) { alert("No records matches specified filtering parameters criteria."); return; }
-
-            let csvRows = [];
+            const startStr = document.getElementById('csv-start-date').value;
+            const endStr = document.getElementById('csv-end-date').value;
+            
+            let filtered = state.logs;
+            if(startStr) filtered = filtered.filter(l => l.dateStamp >= startStr);
+            if(endStr) filtered = filtered.filter(l => l.dateStamp <= endStr);
+            
+            let csvContent = "data:text/csv;charset=utf-8,";
+            
             if (state.systemMode === "ongoing") {
-                csvRows.push(["Date", "Employee ID", "Employee Name", "Activity Matrix", "Timestamp"]);
-                filteredLogs.forEach(log => {
-                    const cleanName = log.name.split('(')[0].trim();
-                    csvRows.push([log.dateStamp||"N/A", `"${log.uniqueKey}"`, `"${cleanName}"`, `"${log.activityType||""}"`, `"${log.timestamp||""}"`]);
+                csvContent += "Log ID,Date,Employee ID,Employee Name,Activity Type,Timestamp\n";
+                filtered.forEach(l => {
+                    csvContent += `"${l.id}","${l.dateStamp}","${l.uniqueKey}","${l.name}","${l.activityType}","${l.timestamp}"\n`;
                 });
             } else {
-                csvRows.push(["Date", "Employee ID", "Employee Name", "Assigned Shift Matrix", "Time In Stamp", "Time Out Stamp", "Allocated Break Summary"]);
-                filteredLogs.forEach(log => {
-                    const cleanName = log.name.split('(')[0].trim();
-                    let dynamicBreakSummary = log.breakActivities.map(b => `[${b.breakName} Out: ${b.breakOut} In: ${b.breakIn || 'Pending'}]`).join('; ');
-                    csvRows.push([log.dateStamp||"N/A", `"${log.uniqueKey}"`, `"${cleanName}"`, `"${log.assignedShift}"`, log.timeIn||"", log.timeOut||"", `"${dynamicBreakSummary}"`]);
+                csvContent += "Log ID,Date,Employee ID,Employee Name,Shift Assigned,Time In,Late (Mins),Time Out,Early Out (Mins),Break Summary Profiles Log Matrix\n";
+                filtered.forEach(l => {
+                    let breaksSummary = l.breakActivities ? l.breakActivities.map(b => `[${b.breakName}: Out ${b.breakOut} / In ${b.breakIn || 'Pending'}]`).join(' | ') : "";
+                    csvContent += `"${l.id}","${l.dateStamp}","${l.uniqueKey}","${l.name}","${l.assignedShift || ''}","${l.timeIn || ''}",${l.timeInLateMinutes || 0},"${l.timeOut || ''}",${l.timeOutEarlyMinutes || 0},"${breaksSummary}"\n`;
                 });
             }
             
+            const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
-            link.setAttribute("href", encodeURI("data:text/csv;charset=utf-8," + csvRows.map(e => e.join(",")).join("\n")));
-            link.setAttribute("download", `Attendance_Report_${startVal||'Start'}_to_${endVal||'End'}.csv`);
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Attendance_Report_Exported_${new Date().toLocaleDateString('en-CA')}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -2022,7 +2122,7 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
             const dlAnchorElem = document.createElement('a');
             dlAnchorElem.setAttribute("href", dataStr);
-            dlAnchorElem.setAttribute("download", `attendance_system_db_${Date.now()}.json`);
+            dlAnchorElem.setAttribute("download", `attendance_system_backup_${Date.now()}.json`);
             dlAnchorElem.click();
         }
 
@@ -2033,47 +2133,29 @@
             reader.onload = function(e) {
                 try {
                     const parsed = JSON.parse(e.target.result);
-                    if (parsed.shifts || parsed.employees || parsed.logs) {
-                        state.shifts = parsed.shifts || [];
-                        state.employees = parsed.employees || [];
-                        state.logs = parsed.logs || [];
-                        state.kioskHiddenLogIds = parsed.kioskHiddenLogIds || [];
-                        state.systemMode = parsed.systemMode || "ongoing";
-                        state.autoLogoutMinutes = parsed.autoLogoutMinutes || 0;
-                        if (parsed.adminAccount) state.adminAccount = parsed.adminAccount;
-
-                        saveStateToStorage();
-                        renderAdminConfigLists();
-                        renderLogsTable();
-                        populateKioskDropdowns();
-                        applyModeLayoutRules();
-                        alert("Database configuration maps imported successfully.");
-                    } else {
-                        alert("Import failed: Structure templates mismatch errors.");
-                    }
-                } catch (err) {
-                    alert("Fatal Parse Error: Ensure imported file is valid JSON data.");
+                    if(parsed.adminAccount) state.adminAccount = parsed.adminAccount;
+                    state.shifts = parsed.shifts || [];
+                    state.employees = parsed.employees || [];
+                    state.logs = parsed.logs || [];
+                    state.kioskHiddenLogIds = parsed.kioskHiddenLogIds || [];
+                    state.systemMode = parsed.systemMode || "ongoing";
+                    state.autoLogoutMinutes = parsed.autoLogoutMinutes || 0;
+                    
+                    saveStateToStorage();
+                    applyModeLayoutRules();
+                    renderAdminConfigLists();
+                    renderLogsTable();
+                    populateKioskDropdowns();
+                    alert("Database imported successfully.");
+                } catch(err) {
+                    alert("Invalid JSON schema parameters file upload rejected.");
                 }
+                event.target.value = "";
             };
             reader.readAsText(file);
         }
 
-        function showFeedback(element, text, isCritical) {
-            if(!element) return;
-            element.innerText = text;
-            element.classList.remove("hidden");
-            element.className = `mt-4 text-sm font-semibold ${isCritical ? 'text-red-600' : 'text-emerald-600'}`;
-            setTimeout(() => { element.classList.add("hidden"); }, 4000);
-        }
-
-        function escapeHTML(str) {
-            if(!str) return '';
-            return str.replace(/[&<>'"]/g, tag => ({
-                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-            }[tag] || tag));
-        }
-
-        document.addEventListener("DOMContentLoaded", () => {
+        window.onload = function() {
             loadStateFromStorage();
             initClockSize();
             populateKioskDropdowns();
@@ -2081,7 +2163,12 @@
             renderLogsTable();
             setInterval(updateLiveStationClock, 1000);
             updateLiveStationClock();
-        });
+            
+            const startIn = document.getElementById('csv-start-date');
+            const endIn = document.getElementById('csv-end-date');
+            if(startIn) startIn.value = new Date(Date.now() - 604800000).toLocaleDateString('en-CA');
+            if(endIn) endIn.value = new Date().toLocaleDateString('en-CA');
+        };
     </script>
 </body>
 </html>

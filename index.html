@@ -121,49 +121,94 @@
                 <p id="kiosk-feedback" class="mt-4 text-base hidden font-medium"></p>
             </div>
 
-            <div class="bg-white rounded-xl shadow-xs border border-gray-200 overflow-hidden">
-                <div class="px-5 py-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div class="w-full sm:w-auto">
-                        <h3 class="font-bold text-gray-900 text-base sm:text-lg">Attendance Log Book</h3>
-                        <!-- LOGBOOK DROPDOWN CATEGORY & SEARCH FILTER CONTROLS -->
-                        <div class="flex flex-wrap gap-3 mt-3 items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
-                            <div>
-                                <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Filter Category</label>
-                                <select id="logbook-filter-category" onchange="handleLogbookCategoryChange()" class="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs font-medium focus:outline-hidden text-gray-800">
-                                    <option value="search">Search Keywords</option>
-                                    <option value="date">Entry Log Date</option>
-                                </select>
-                            </div>
-                            <div id="logbook-input-search-container" class="flex items-end gap-2">
+            <div class="bg-white rounded-xl shadow-xs border border-gray-200 overflow-hidden flex flex-col">
+                <!-- HEADER -->
+                <div class="px-5 py-4 border-b border-gray-200 flex justify-between items-center bg-white">
+                    <h3 class="font-bold text-gray-900 text-base sm:text-lg">Attendance Log Book</h3>
+                    <button onclick="toggleLogbookSidePanel()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs transition-colors cursor-pointer flex items-center gap-2" title="Toggle filters and settings">
+                        ☰ Menu
+                    </button>
+                </div>
+
+                <!-- PAGINATION BAR (Above Table) -->
+                <div class="px-5 py-3 border-b border-gray-200 bg-white flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <div class="text-xs font-medium text-gray-600">
+                        Showing <span id="pagination-start" class="font-bold">1</span> to <span id="pagination-end" class="font-bold">10</span> of <span id="pagination-total" class="font-bold">0</span> records
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-center gap-3">
+                        <div class="flex items-center gap-2">
+                            <button onclick="goToLogbookPage('prev')" class="px-3 py-1.5 bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 rounded-lg text-xs font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" id="pagination-prev-btn">← Previous</button>
+                            <div id="pagination-buttons" class="flex gap-1"></div>
+                            <button onclick="goToLogbookPage('next')" class="px-3 py-1.5 bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 rounded-lg text-xs font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" id="pagination-next-btn">Next →</button>
+                        </div>
+                        <div class="border-l border-gray-300 h-6 hidden sm:block"></div>
+                        <div class="text-xs font-medium text-gray-600">
+                            <label for="logbook-items-per-page" class="mr-2">Items per page:</label>
+                            <select id="logbook-items-per-page" onchange="handleLogbookItemsPerPageChange()" class="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-medium text-gray-800 focus:outline-hidden">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HAMBURGER SIDE PANEL (Now a Pop-Up Modal Box) -->
+                <div id="logbook-side-panel" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 animate-fade-in">
+                    <!-- Backdrop closing element -->
+                    <div class="absolute inset-0" onclick="toggleLogbookSidePanel()"></div>
+                    
+                    <!-- Modal Box Panel -->
+                    <div class="relative bg-white rounded-2xl border border-gray-200 shadow-2xl p-6 w-full max-w-md flex flex-col max-h-[90vh] overflow-y-auto z-10 animate-fade-in">
+                        <div class="pb-4 border-b border-gray-200 flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-gray-900 text-lg">Filters & Settings</h3>
+                            <button onclick="toggleLogbookSidePanel()" class="text-gray-400 hover:text-gray-600 font-bold text-lg cursor-pointer">✕</button>
+                        </div>
+
+                        <div class="space-y-5">
+                            <!-- FILTER SECTION -->
+                            <div class="space-y-3">
+                                <h4 class="font-bold text-gray-700 text-sm">Search & Filter</h4>
                                 <div>
-                                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Keywords</label>
-                                    <input type="text" id="filter-logbook-search" placeholder="Name or activity..." class="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs w-48 focus:outline-hidden text-gray-800">
+                                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-2">Filter Category</label>
+                                    <select id="logbook-filter-category" onchange="handleLogbookCategoryChange()" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-medium focus:outline-hidden text-gray-800">
+                                        <option value="search">Search Keywords</option>
+                                        <option value="date">Entry Log Date</option>
+                                    </select>
                                 </div>
-                                <button onclick="renderLogsTable()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs transition-colors cursor-pointer">Find</button>
-                            </div>
-                            <div id="logbook-input-date-container" class="hidden flex items-end gap-2">
-                                <div>
-                                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Entry Log Date</label>
-                                    <input type="date" id="filter-logbook-date" class="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs w-40 focus:outline-hidden text-gray-800">
+                                <div id="logbook-input-search-container" class="space-y-2">
+                                    <label class="block text-[10px] font-bold text-gray-500 uppercase">Keywords</label>
+                                    <input type="text" id="filter-logbook-search" placeholder="Name or activity..." class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs focus:outline-hidden text-gray-800">
                                 </div>
-                                <button onclick="renderLogsTable()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs transition-colors cursor-pointer">Find</button>
+                                <div id="logbook-input-date-container" class="hidden space-y-2">
+                                    <label class="block text-[10px] font-bold text-gray-500 uppercase">Entry Log Date</label>
+                                    <input type="date" id="filter-logbook-date" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs focus:outline-hidden text-gray-800">
+                                </div>
+                                <div class="flex gap-2 pt-2">
+                                    <button onclick="renderLogsTable(); toggleLogbookSidePanel();" class="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs transition-colors cursor-pointer">Find</button>
+                                    <button onclick="clearLogbookFilters(); toggleLogbookSidePanel();" class="flex-1 px-3 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold rounded-lg text-xs transition-colors cursor-pointer">Reset</button>
+                                </div>
                             </div>
-                            <div class="flex items-end pt-4">
-                                <button onclick="clearLogbookFilters();" class="text-center bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer">Reset Filters</button>
+
+                            <div class="border-t border-gray-300"></div>
+
+                            <!-- ACTIONS SECTION -->
+                            <div class="space-y-3">
+                                <h4 class="font-bold text-gray-700 text-sm">Actions</h4>
+                                <button onclick="secureClearKioskDisplay(); toggleLogbookSidePanel();" class="w-full text-center bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs font-bold py-2.5 px-3 rounded-lg transition-colors cursor-pointer border border-amber-300 flex items-center justify-center gap-2">
+                                    🧹 <span>Clear Public Monitor</span>
+                                </button>
                             </div>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2 bg-gray-50 p-1.5 rounded-xl border border-gray-200 self-stretch sm:self-auto justify-end">
-                        <button onclick="toggleKioskButtonLabel()" class="text-gray-400 hover:text-gray-600 p-1 text-sm cursor-pointer" title="Toggle Button Description">⚙️</button>
-                        <button onclick="secureClearKioskDisplay()" class="text-center bg-gray-100 hover:bg-amber-50 hover:text-amber-800 text-gray-600 text-xs font-bold py-2 px-3 rounded-lg transition-colors cursor-pointer border border-gray-200 flex items-center gap-1">
-                            🧹 <span id="kiosk-btn-label" class="hidden">Clear Public Monitor</span>
-                        </button>
-                    </div>
                 </div>
-                <div class="w-full overflow-x-auto">
+
+                <!-- TABLE -->
+                <div class="flex-1 overflow-x-auto">
                     <table class="w-full text-left text-sm border-collapse min-w-[600px]">
                         <thead>
-                            <tr id="kiosk-table-header" class="bg-gray-50 text-gray-500 uppercase text-xs font-bold tracking-wider border-b border-gray-200">
+                            <tr id="kiosk-table-header" class="bg-gray-50 text-gray-500 uppercase text-xs font-bold tracking-wider border-b border-gray-200 sticky top-0">
                                 <th class="px-5 py-4 w-[30%]">Employee Info</th>
                                 <th class="px-5 py-4 w-[25%]">Target Shift Assigned</th>
                                 <th class="px-5 py-4 w-[35%]">Activity Timestamps Matrix</th>
@@ -315,7 +360,6 @@
             <div class="flex justify-between items-start border-b border-gray-100 pb-3">
                 <div>
                     <h3 class="text-lg font-bold text-gray-900" id="vm-employee-name">Employee Details</h3>
-                    <p class="text-sm font-mono text-blue-600 font-semibold" id="vm-employee-id">ID: --</p>
                 </div>
                 <button onclick="closeLogbookViewMoreModal()" class="text-gray-400 hover:text-gray-600 font-bold text-xl p-1">✕</button>
             </div>
@@ -339,12 +383,17 @@
                 <h3 class="text-xl font-bold text-gray-900">Scanning Successful!</h3>
                 <p class="text-sm text-gray-500 mt-1">Punch station validation transaction authenticated.</p>
             </div>
-            <div class="bg-gray-50 border border-gray-100 rounded-xl p-4 text-left">
-                <p class="text-xs uppercase font-bold text-gray-400 tracking-wider">Employee Workspace Account</p>
-                <p class="text-lg font-bold text-gray-800 mt-0.5" id="alert-display-name">--</p>
-                <p class="text-sm font-mono text-blue-600 font-semibold mt-0.5" id="alert-display-id">ID: --</p>
+            <div class="bg-gray-50 border border-gray-100 rounded-xl p-4 text-center">
+                <p class="text-lg font-bold text-gray-800" id="alert-display-name">--</p>
             </div>
-            <button onclick="closeSuccessScanAlert()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition-colors shadow-xs">Dismiss Alert</button>
+            <div class="relative w-full">
+                <button onclick="closeSuccessScanAlert()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition-colors shadow-xs">
+                    <span id="countdown-text">Dismiss Alert</span>
+                </button>
+                <div class="mt-2 text-xs text-gray-400 font-medium">
+                    <span id="countdown-timer" class="hidden">Auto-dismissing in <span id="countdown-number">5</span>s</span>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -353,46 +402,63 @@
         <div class="bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-6xl max-h-[90vh] flex flex-col">
             <div class="px-6 py-4 border-b border-gray-200 bg-slate-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h3 class="font-bold text-gray-900 text-lg flex items-center gap-2">🛡️ Attendance Management</h3>
-                    <p class="text-sm text-gray-500 font-normal">Master live log matrix data view.</p>
-                    <!-- SECTION 1 DROPDOWN CATEGORY FILTER CONTROLS -->
-                    <div class="flex flex-wrap gap-3 mt-3 relative items-center bg-white p-3 rounded-lg border border-gray-200">
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Filter Category</label>
-                            <select id="s1-filter-category" onchange="handleS1CategoryChange()" class="px-2 py-1 bg-gray-50 border border-gray-300 rounded text-xs font-medium focus:outline-hidden text-gray-800">
-                                <option value="search">Keywords Input</option>
-                                <option value="time">Log Entry Date Range</option>
-                            </select>
-                        </div>
-                        <div id="s1-input-search-container" class="flex items-end gap-2">
-                            <div>
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Keywords</label>
-                                <input type="text" id="filter-s1-search" placeholder="Name, Date, Activity..." class="px-2 py-1 bg-white border border-gray-300 rounded text-xs w-48 focus:outline-hidden text-gray-800">
-                            </div>
-                            <button onclick="renderLogsTable()" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded transition-colors cursor-pointer">Find</button>
-                        </div>
-                        <div id="s1-input-time-container" class="hidden flex items-end gap-2">
-                            <div>
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Log Entry Date Range</label>
-                                <div class="flex items-center gap-1">
-                                    <input type="time" id="filter-s1-time-start" class="text-xs bg-gray-50 border border-gray-300 rounded p-1 w-24 text-gray-800">
-                                    <span class="text-xs text-gray-400">-</span>
-                                    <input type="time" id="filter-s1-time-end" class="text-xs bg-gray-50 border border-gray-300 rounded p-1 w-24 text-gray-800">
-                                </div>
-                            </div>
-                            <button onclick="renderLogsTable()" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded transition-colors cursor-pointer">Find</button>
-                        </div>
-                        <div class="flex items-end pt-4">
-                            <button onclick="clearS1Filters();" class="text-center bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 px-2.5 rounded text-[10px] font-bold transition-colors cursor-pointer">Reset Filters</button>
-                        </div>
+                    <div class="flex items-center gap-3">
+                        <h3 class="font-bold text-gray-900 text-lg flex items-center gap-2">🛡️ Attendance Management</h3>
                     </div>
+                    <p class="text-sm text-gray-500 font-normal">Manage here the attendance log of the employees.</p>
                 </div>
                 <div class="flex items-center gap-2 self-end sm:self-auto">
                     <button onclick="deleteSelectedLogs()" class="bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 text-xs font-semibold py-2 px-3 rounded-lg transition-colors cursor-pointer">Delete Selected</button>
                     <button onclick="clearAllLogs()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold py-2 px-3 rounded-lg transition-colors cursor-pointer">Clear All Data</button>
+                    <button onclick="toggleAdminFiltersModal()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs transition-colors cursor-pointer flex items-center gap-2" title="Toggle filters and settings">
+                        ☰ Menu
+                    </button>
                     <button onclick="closeAdminSectionModal('admin-modal-section-1')" class="text-gray-400 hover:text-gray-600 font-bold text-lg p-1.5 ml-2 cursor-pointer">✕</button>
                 </div>
             </div>
+
+    <!-- ADMIN FILTERS POP-UP MODAL BOX -->
+    <div id="admin-filters-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 animate-fade-in">
+        <!-- Backdrop closing element -->
+        <div class="absolute inset-0" onclick="toggleAdminFiltersModal()"></div>
+        
+        <!-- Modal Box Panel -->
+        <div class="relative bg-white rounded-2xl border border-gray-200 shadow-2xl p-6 w-full max-w-md flex flex-col max-h-[90vh] overflow-y-auto z-10 animate-fade-in">
+            <div class="pb-4 border-b border-gray-200 flex justify-between items-center mb-4">
+                <h3 class="font-bold text-gray-900 text-lg">Search & Filter</h3>
+                <button onclick="toggleAdminFiltersModal()" class="text-gray-400 hover:text-gray-600 font-bold text-lg cursor-pointer">✕</button>
+            </div>
+
+            <div class="space-y-5">
+                <!-- FILTER SECTION -->
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-2">Filter Category</label>
+                        <select id="s1-filter-category" onchange="handleS1CategoryChange()" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-medium focus:outline-hidden text-gray-800">
+                            <option value="search">Keywords Input</option>
+                            <option value="time">Log Entry Date Range</option>
+                        </select>
+                    </div>
+                    <div id="s1-input-search-container" class="space-y-2">
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase">Keywords</label>
+                        <input type="text" id="filter-s1-search" placeholder="Name, Date, Activity..." class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs focus:outline-hidden text-gray-800">
+                    </div>
+                    <div id="s1-input-time-container" class="hidden space-y-2">
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase">Log Entry Date Range</label>
+                        <div class="flex items-center gap-1">
+                            <input type="time" id="filter-s1-time-start" class="text-xs bg-white border border-gray-300 rounded-lg p-2 flex-1 text-gray-800">
+                            <span class="text-xs text-gray-400 font-bold px-1">to</span>
+                            <input type="time" id="filter-s1-time-end" class="text-xs bg-white border border-gray-300 rounded-lg p-2 flex-1 text-gray-800">
+                        </div>
+                    </div>
+                    <div class="flex gap-2 pt-2">
+                        <button onclick="renderLogsTable(); toggleAdminFiltersModal();" class="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs transition-colors cursor-pointer">Find</button>
+                        <button onclick="clearS1Filters(); toggleAdminFiltersModal();" class="flex-1 px-3 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold rounded-lg text-xs transition-colors cursor-pointer">Reset</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
             <div class="p-0 overflow-auto flex-1">
                 <table class="w-full text-left text-sm border-collapse min-w-[800px]">
                     <thead>
@@ -484,7 +550,7 @@
                 <div>
                     <label class="text-xs text-gray-500 font-bold uppercase block mb-1">Employee ID Number</label>
                     <div class="flex gap-1">
-                        <input type="text" id="new-emp-id" placeholder="insert employee ID" class="flex-1 px-3 py-2 bg-white border border-gray-300 text-gray-800 rounded-lg text-sm disabled:bg-gray-100 disabled:text-gray-400">
+                        <input type="text" id="new-emp-id" placeholder="Insert Employee ID" class="flex-1 px-3 py-2 bg-white border border-gray-300 text-gray-800 rounded-lg text-sm disabled:bg-gray-100 disabled:text-gray-400">
                         <button id="btn-generate-id" onclick="generateSecureIDToken()" class="bg-slate-700 hover:bg-slate-800 text-white px-2.5 rounded-lg text-sm font-mono" title="Generate 16-Digit Alpha-Numeric Token">🎲 Key</button>
                     </div>
                 </div>
@@ -492,11 +558,11 @@
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="text-xs text-gray-500 font-bold uppercase block mb-1">First Name</label>
-                        <input type="text" id="new-emp-firstname" placeholder="insert employee Name" class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-800 rounded-lg text-sm">
+                        <input type="text" id="new-emp-firstname" placeholder="First Name" class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-800 rounded-lg text-sm">
                     </div>
                     <div>
                         <label class="text-xs text-gray-500 font-bold uppercase block mb-1">Last Name</label>
-                        <input type="text" id="new-emp-lastname" placeholder="insert employee Name" class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-800 rounded-lg text-sm">
+                        <input type="text" id="new-emp-lastname" placeholder="Last Name" class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-800 rounded-lg text-sm">
                     </div>
                 </div>
 
@@ -647,9 +713,8 @@
             
             <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-2">Employee ID Number</label>
                     <div class="relative flex items-center">
-                        <input type="text" id="modal-emp-identity" placeholder="Enter ID number strictly" class="w-full pl-4 pr-12 py-3 border border-gray-300 bg-white text-gray-800 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-500 text-base">
+                        <input type="text" id="modal-emp-identity" placeholder="Scan or enter credentials" class="w-full pl-4 pr-12 py-3 border border-gray-300 bg-white text-gray-800 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-500 text-base">
                         <button onclick="toggleQRScanner()" class="absolute right-2 text-gray-500 hover:text-blue-600 p-2 rounded-md transition-colors cursor-pointer text-lg" title="Scan QR Code">📷</button>
                     </div>
                     <div id="qr-reader-container" class="hidden mt-3 p-2 bg-gray-50 border border-gray-200 rounded-xl">
@@ -686,14 +751,37 @@
         let isManualOverrideActive = false;
         let activePunchAction = null; 
         
+        let paginationState = {
+            currentPage: 1,
+            itemsPerPage: 10,
+            totalItems: 0,
+            filteredLogs: []
+        };
+        
         let html5QrcodeInstance = null;
         let isCameraStreamRunning = false;
         let inactivityTimerReference = null;
         let activeInterfaceTab = "employee";
+        let countdownTimerReference = null;
+        let countdownSeconds = 0;
 
         function toggleKioskButtonLabel() {
             const label = document.getElementById('kiosk-btn-label');
             label.classList.toggle('hidden');
+        }
+
+        function toggleLogbookSidePanel() {
+            const panel = document.getElementById('logbook-side-panel');
+            if (panel) {
+                panel.classList.toggle('hidden');
+            }
+        }
+
+        function toggleAdminFiltersModal() {
+            const panel = document.getElementById('admin-filters-modal');
+            if (panel) {
+                panel.classList.toggle('hidden');
+            }
         }
 
         function toggleFilterDropdown(menuId) {
@@ -1260,11 +1348,39 @@
 
         function triggerSuccessScanAlert(employeeName, idNumber) {
             document.getElementById('alert-display-name').innerText = employeeName;
-            document.getElementById('alert-display-id').innerText = "ID: " + idNumber;
             document.getElementById('success-scan-alert-modal').classList.remove('hidden');
+            startCountdownTimer(5);
+        }
+
+        function startCountdownTimer(seconds) {
+            clearTimeout(countdownTimerReference);
+            countdownSeconds = seconds;
+            
+            const timerDisplay = document.getElementById('countdown-timer');
+            const countdownNumber = document.getElementById('countdown-number');
+            const countdownText = document.getElementById('countdown-text');
+            
+            if (timerDisplay) timerDisplay.classList.remove('hidden');
+            
+            function updateCountdown() {
+                if (countdownNumber) countdownNumber.innerText = countdownSeconds;
+                
+                if (countdownSeconds <= 0) {
+                    closeSuccessScanAlert();
+                    return;
+                }
+                
+                countdownSeconds--;
+                countdownTimerReference = setTimeout(updateCountdown, 1000);
+            }
+            
+            updateCountdown();
         }
 
         function closeSuccessScanAlert() {
+            clearTimeout(countdownTimerReference);
+            const timerDisplay = document.getElementById('countdown-timer');
+            if (timerDisplay) timerDisplay.classList.add('hidden');
             document.getElementById('success-scan-alert-modal').classList.add('hidden');
         }
 
@@ -1681,7 +1797,6 @@
             if (!log) return;
             
             document.getElementById('vm-employee-name').innerText = log.name.split('(')[0].trim();
-            document.getElementById('vm-employee-id').innerText = "ID: " + log.uniqueKey;
             document.getElementById('vm-assigned-shift').innerText = log.assignedShift || "Ongoing Configuration Mapping";
             document.getElementById('vm-log-date').innerText = log.dateStamp || "N/A";
             
@@ -1928,7 +2043,6 @@
                         </td>
                         <td class="px-4 py-4">
                             <p class="font-bold text-gray-900">${escapeHTML(cleanName)}</p>
-                            <p class="text-xs font-mono font-semibold text-blue-600 mt-0.5">ID: ${escapeHTML(log.uniqueKey)}</p>
                         </td>
                         <td class="px-4 py-4 text-gray-500 font-medium">${log.dateStamp || 'N/A'}</td>
                         <td class="px-4 py-4"><span class="px-2 py-0.5 rounded-sm font-bold text-xs ${badgeColor}">${log.activityType}</span></td>
@@ -1939,7 +2053,7 @@
                     `;
                 }
                 return `
-                    <td class="px-5 py-4 font-bold text-gray-900">${escapeHTML(cleanName)}<p class="text-xs text-gray-400 font-normal">ID: ${escapeHTML(log.uniqueKey)}</p></td>
+                    <td class="px-5 py-4 font-bold text-gray-900">${escapeHTML(cleanName)}</td>
                     <td class="px-5 py-4 text-gray-500 font-medium">${log.dateStamp || 'N/A'}</td>
                     <td class="px-5 py-4"><span class="px-2 py-0.5 rounded-sm font-bold text-xs ${badgeColor}">${log.activityType} at ${log.timestamp}</span></td>
                     <td class="px-5 py-4 text-center">${actionBtn}</td>
@@ -1968,7 +2082,6 @@
                     </td>
                     <td class="px-4 py-3">
                         <p class="font-bold text-gray-900">${escapeHTML(cleanName)}</p>
-                        <p class="text-xs font-mono font-semibold text-blue-600">ID: ${escapeHTML(log.uniqueKey)}</p>
                     </td>
                     <td class="px-4 py-3 text-xs font-semibold text-gray-600">${escapeHTML(log.assignedShift || 'Custom Base')}</td>
                     <td class="px-4 py-3">${condensedTimestampMatrix}</td>
@@ -1980,7 +2093,7 @@
             }
 
             return `
-                <td class="px-5 py-4 font-bold text-gray-900">${escapeHTML(cleanName)}<p class="text-xs text-gray-400 font-normal">ID: ${escapeHTML(log.uniqueKey)}</p></td>
+                <td class="px-5 py-4 font-bold text-gray-900">${escapeHTML(cleanName)}</td>
                 <td class="px-5 py-4 text-xs font-semibold text-gray-600">${escapeHTML(log.assignedShift || 'Custom Operational')}</td>
                 <td class="px-5 py-4">${condensedTimestampMatrix}</td>
                 <td class="px-5 py-4 text-center">${actionBtn}</td>
@@ -2041,6 +2154,7 @@
 
             let kioskLogsHTML = "";
             let adminLogsHTML = "";
+            let filteredKioskLogs = [];
 
             state.logs.forEach(log => {
                 let matchKiosk = true;
@@ -2065,12 +2179,97 @@
                 }
 
                 if (matchKiosk && !state.kioskHiddenLogIds.includes(log.id) && tableBody) {
-                    kioskLogsHTML += `<tr class="hover:bg-gray-50 transition-colors animate-fade-in">${generateRowHTML(log, false)}</tr>`;
+                    filteredKioskLogs.push(log);
                 }
             });
 
-            if (tableBody) tableBody.innerHTML = kioskLogsHTML || `<tr><td colspan="4" class="px-5 py-8 text-center text-gray-400 italic bg-gray-50/50">No dashboard entry records located matching current filter variables.</td></tr>`;
+            paginationState.filteredLogs = filteredKioskLogs;
+            paginationState.totalItems = filteredKioskLogs.length;
+            paginationState.currentPage = 1;
+
+            renderKioskLogsWithPagination(tableBody, filteredKioskLogs);
             if (adminTableBody) adminTableBody.innerHTML = adminLogsHTML || `<tr><td colspan="6" class="px-4 py-8 text-center text-gray-400 italic">Roster logs archive matrix contains empty fields.</td></tr>`;
+        }
+
+        function renderKioskLogsWithPagination(tableBody, logs) {
+            if (!tableBody) return;
+            
+            const itemsPerPage = parseInt(document.getElementById('logbook-items-per-page').value) || paginationState.itemsPerPage;
+            paginationState.itemsPerPage = itemsPerPage;
+            
+            const totalPages = Math.ceil(logs.length / itemsPerPage);
+            if (paginationState.currentPage > totalPages && totalPages > 0) {
+                paginationState.currentPage = totalPages;
+            }
+
+            const startIndex = (paginationState.currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, logs.length);
+            const paginatedLogs = logs.slice(startIndex, endIndex);
+
+            let kioskLogsHTML = "";
+            paginatedLogs.forEach(log => {
+                kioskLogsHTML += `<tr class="hover:bg-gray-50 transition-colors animate-fade-in">${generateRowHTML(log, false)}</tr>`;
+            });
+
+            if (tableBody) {
+                tableBody.innerHTML = kioskLogsHTML || `<tr><td colspan="4" class="px-5 py-8 text-center text-gray-400 italic bg-gray-50/50">No dashboard entry records located matching current filter variables.</td></tr>`;
+            }
+
+            updatePaginationControls(logs.length);
+        }
+
+        function updatePaginationControls(totalItems) {
+            const itemsPerPage = paginationState.itemsPerPage;
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            const currentPage = paginationState.currentPage;
+
+            document.getElementById('pagination-start').innerText = totalItems === 0 ? 0 : ((currentPage - 1) * itemsPerPage) + 1;
+            document.getElementById('pagination-end').innerText = Math.min(currentPage * itemsPerPage, totalItems);
+            document.getElementById('pagination-total').innerText = totalItems;
+
+            const prevBtn = document.getElementById('pagination-prev-btn');
+            const nextBtn = document.getElementById('pagination-next-btn');
+            if (prevBtn) prevBtn.disabled = currentPage === 1;
+            if (nextBtn) nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+
+            const buttonsContainer = document.getElementById('pagination-buttons');
+            if (buttonsContainer) {
+                buttonsContainer.innerHTML = '';
+                const maxButtons = 5;
+                let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+                let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+                if (endPage - startPage + 1 < maxButtons) {
+                    startPage = Math.max(1, endPage - maxButtons + 1);
+                }
+
+                for (let page = startPage; page <= endPage; page++) {
+                    const btn = document.createElement('button');
+                    btn.className = `px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${page === currentPage ? 'bg-blue-600 text-white' : 'bg-white hover:bg-gray-100 border border-gray-300 text-gray-700'}`;
+                    btn.innerText = page;
+                    btn.onclick = () => goToLogbookPage(page);
+                    buttonsContainer.appendChild(btn);
+                }
+            }
+        }
+
+        function goToLogbookPage(direction) {
+            const itemsPerPage = paginationState.itemsPerPage;
+            const totalPages = Math.ceil(paginationState.totalItems / itemsPerPage);
+
+            if (direction === 'next' && paginationState.currentPage < totalPages) {
+                paginationState.currentPage++;
+            } else if (direction === 'prev' && paginationState.currentPage > 1) {
+                paginationState.currentPage--;
+            } else if (typeof direction === 'number') {
+                paginationState.currentPage = direction;
+            }
+
+            renderKioskLogsWithPagination(document.getElementById('logs-tbody'), paginationState.filteredLogs);
+        }
+
+        function handleLogbookItemsPerPageChange() {
+            paginationState.currentPage = 1;
+            renderLogsTable();
         }
 
         function showFeedback(element, text, isError) {
